@@ -803,7 +803,7 @@ static unsigned long __fget_light(unsigned int fd, fmode_t mask)
 	}
 }
 
-unsigned long __fdget(unsigned int fd)
+unsigned long /*(struct file *)*/ __fdget(unsigned int fd)
 {
 	return __fget_light(fd, FMODE_PATH);
 }
@@ -814,6 +814,7 @@ unsigned long __fdget_raw(unsigned int fd)
 	return __fget_light(fd, 0);
 }
 
+// fd : int -> file : struct file *
 unsigned long __fdget_pos(unsigned int fd)
 {
 	unsigned long v = __fdget(fd);

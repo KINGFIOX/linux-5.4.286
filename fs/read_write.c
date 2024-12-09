@@ -356,7 +356,7 @@ out_putf:
 }
 #endif
 
-int rw_verify_area(int read_write, struct file *file, const loff_t *ppos, size_t count)
+int rw_verify_area(int /*0 -> read, 1 -> write*/ read_write, struct file *file, const loff_t *ppos, size_t count)
 {
 	struct inode *inode;
 	int retval = -EINVAL;
@@ -528,6 +528,7 @@ ssize_t kernel_write(struct file *file, const void *buf, size_t count, loff_t *p
 }
 EXPORT_SYMBOL(kernel_write);
 
+// ssize_t vfs_write(struct file *file, const char *buf, size_t count, loff_t *pos)
 ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_t *pos)
 {
 	ssize_t ret;
@@ -589,7 +590,7 @@ SYSCALL_DEFINE3(read, unsigned int, fd, char __user *, buf, size_t, count)
 // ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count)
 ssize_t ksys_write(unsigned int fd, const char *buf, size_t count)
 {
-	struct fd f = fdget_pos(fd);
+	struct fd f = fdget_pos(fd); // get struct file *
 	ssize_t ret = -EBADF; // bad file number
 
 	if (f.file) {
@@ -598,10 +599,10 @@ ssize_t ksys_write(unsigned int fd, const char *buf, size_t count)
 			pos = *ppos;
 			ppos = &pos;
 		}
-		ret = vfs_write(f.file, buf, count, ppos);
+		ret = vfs_write(f.file, buf, count, ppos); // 传指针, 因为 file 可能是 stream => ppos == NULL
 		if (ret >= 0 && ppos)
 			f.file->f_pos = pos;
-		fdput_pos(f);
+		fdput_pos(f); // apply to the file that fd points to
 	}
 
 	return ret;

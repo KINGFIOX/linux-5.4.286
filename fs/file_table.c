@@ -33,9 +33,7 @@
 #include "internal.h"
 
 /* sysctl tunables... */
-struct files_stat_struct files_stat = {
-	.max_files = NR_FILE
-};
+struct files_stat_struct files_stat = { .max_files = NR_FILE };
 
 /* SLAB cache for file structures */
 static struct kmem_cache *filp_cachep __read_mostly;
@@ -79,15 +77,13 @@ EXPORT_SYMBOL_GPL(get_max_files);
  * Handle nr_files sysctl
  */
 #if defined(CONFIG_SYSCTL) && defined(CONFIG_PROC_FS)
-int proc_nr_files(struct ctl_table *table, int write,
-                     void __user *buffer, size_t *lenp, loff_t *ppos)
+int proc_nr_files(struct ctl_table *table, int write, void __user *buffer, size_t *lenp, loff_t *ppos)
 {
 	files_stat.nr_files = get_nr_files();
 	return proc_doulongvec_minmax(table, write, buffer, lenp, ppos);
 }
 #else
-int proc_nr_files(struct ctl_table *table, int write,
-                     void __user *buffer, size_t *lenp, loff_t *ppos)
+int proc_nr_files(struct ctl_table *table, int write, void __user *buffer, size_t *lenp, loff_t *ppos)
 {
 	return -ENOSYS;
 }
@@ -185,8 +181,7 @@ struct file *alloc_empty_file_noaccount(int flags, const struct cred *cred)
  * @flags: O_... flags with which the new file will be opened
  * @fop: the 'struct file_operations' for the new file
  */
-static struct file *alloc_file(const struct path *path, int flags,
-		const struct file_operations *fop)
+static struct file *alloc_file(const struct path *path, int flags, const struct file_operations *fop)
 {
 	struct file *file;
 
@@ -198,11 +193,9 @@ static struct file *alloc_file(const struct path *path, int flags,
 	file->f_inode = path->dentry->d_inode;
 	file->f_mapping = path->dentry->d_inode->i_mapping;
 	file->f_wb_err = filemap_sample_wb_err(file->f_mapping);
-	if ((file->f_mode & FMODE_READ) &&
-	     likely(fop->read || fop->read_iter))
+	if ((file->f_mode & FMODE_READ) && likely(fop->read || fop->read_iter))
 		file->f_mode |= FMODE_CAN_READ;
-	if ((file->f_mode & FMODE_WRITE) &&
-	     likely(fop->write || fop->write_iter))
+	if ((file->f_mode & FMODE_WRITE) && likely(fop->write || fop->write_iter))
 		file->f_mode |= FMODE_CAN_WRITE;
 	file->f_mode |= FMODE_OPENED;
 	file->f_op = fop;
@@ -211,13 +204,9 @@ static struct file *alloc_file(const struct path *path, int flags,
 	return file;
 }
 
-struct file *alloc_file_pseudo(struct inode *inode, struct vfsmount *mnt,
-				const char *name, int flags,
-				const struct file_operations *fops)
+struct file *alloc_file_pseudo(struct inode *inode, struct vfsmount *mnt, const char *name, int flags, const struct file_operations *fops)
 {
-	static const struct dentry_operations anon_ops = {
-		.d_dname = simple_dname
-	};
+	static const struct dentry_operations anon_ops = { .d_dname = simple_dname };
 	struct qstr this = QSTR_INIT(name, strlen(name));
 	struct path path;
 	struct file *file;
@@ -238,8 +227,7 @@ struct file *alloc_file_pseudo(struct inode *inode, struct vfsmount *mnt,
 }
 EXPORT_SYMBOL(alloc_file_pseudo);
 
-struct file *alloc_file_clone(struct file *base, int flags,
-				const struct file_operations *fops)
+struct file *alloc_file_clone(struct file *base, int flags, const struct file_operations *fops)
 {
 	struct file *f = alloc_file(&base->f_path, flags, fops);
 	if (!IS_ERR(f)) {
@@ -278,8 +266,7 @@ static void __fput(struct file *file)
 	}
 	if (file->f_op->release)
 		file->f_op->release(inode, file);
-	if (unlikely(S_ISCHR(inode->i_mode) && inode->i_cdev != NULL &&
-		     !(mode & FMODE_PATH))) {
+	if (unlikely(S_ISCHR(inode->i_mode) && inode->i_cdev != NULL && !(mode & FMODE_PATH))) {
 		cdev_put(inode->i_cdev);
 	}
 	fops_put(file->f_op);
@@ -304,7 +291,7 @@ static void delayed_fput(struct work_struct *unused)
 	struct llist_node *node = llist_del_all(&delayed_fput_list);
 	struct file *f, *t;
 
-	llist_for_each_entry_safe(f, t, node, f_u.fu_llist)
+	llist_for_each_entry_safe (f, t, node, f_u.fu_llist)
 		__fput(f);
 }
 
@@ -379,8 +366,7 @@ EXPORT_SYMBOL(__fput_sync);
 
 void __init files_init(void)
 {
-	filp_cachep = kmem_cache_create("filp", sizeof(struct file), 0,
-			SLAB_HWCACHE_ALIGN | SLAB_PANIC | SLAB_ACCOUNT, NULL);
+	filp_cachep = kmem_cache_create("filp", sizeof(struct file), 0, SLAB_HWCACHE_ALIGN | SLAB_PANIC | SLAB_ACCOUNT, NULL);
 	percpu_counter_init(&nr_files, 0, GFP_KERNEL);
 }
 
@@ -392,7 +378,7 @@ void __init files_maxfiles_init(void)
 {
 	unsigned long n;
 	unsigned long nr_pages = totalram_pages();
-	unsigned long memreserve = (nr_pages - nr_free_pages()) * 3/2;
+	unsigned long memreserve = (nr_pages - nr_free_pages()) * 3 / 2;
 
 	memreserve = min(memreserve, nr_pages - 1);
 	n = ((nr_pages - memreserve) * (PAGE_SIZE / 1024)) / 10;

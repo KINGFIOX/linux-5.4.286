@@ -24,6 +24,7 @@
 #include <asm/processor.h>
 #include <asm/csr.h>
 
+// 用于表示: 进程/线程的内存地址限制
 typedef struct {
 	unsigned long seg;
 } mm_segment_t;

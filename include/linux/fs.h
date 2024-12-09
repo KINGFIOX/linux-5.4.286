@@ -159,6 +159,7 @@ typedef int(dio_iodone_t)(struct kiocb *iocb, loff_t offset, ssize_t bytes, void
 #define FMODE_CREATED ((__force fmode_t)0x100000)
 
 /* File is stream-like */
+// #define FMODE_STREAM ((fmode_t)0x200000)
 #define FMODE_STREAM ((__force fmode_t)0x200000)
 
 /* File was opened by fanotify and shouldn't generate fanotify events */

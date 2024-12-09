@@ -41,11 +41,12 @@ enum {
 #ifdef __KERNEL__
 
 #ifndef arch_set_restart_data
-#define arch_set_restart_data(restart) do { } while (0)
+#define arch_set_restart_data(restart)                                                                                                                         \
+	do {                                                                                                                                                   \
+	} while (0)
 #endif
 
-static inline long set_restart_fn(struct restart_block *restart,
-					long (*fn)(struct restart_block *))
+static inline long set_restart_fn(struct restart_block *restart, long (*fn)(struct restart_block *))
 {
 	restart->fn = fn;
 	arch_set_restart_data(restart);
@@ -53,10 +54,10 @@ static inline long set_restart_fn(struct restart_block *restart,
 }
 
 #ifndef THREAD_ALIGN
-#define THREAD_ALIGN	THREAD_SIZE
+#define THREAD_ALIGN THREAD_SIZE
 #endif
 
-#define THREADINFO_GFP		(GFP_KERNEL_ACCOUNT | __GFP_ZERO)
+#define THREADINFO_GFP (GFP_KERNEL_ACCOUNT | __GFP_ZERO)
 
 /*
  * flag set/clear/test wrappers
@@ -73,8 +74,7 @@ static inline void clear_ti_thread_flag(struct thread_info *ti, int flag)
 	clear_bit(flag, (unsigned long *)&ti->flags);
 }
 
-static inline void update_ti_thread_flag(struct thread_info *ti, int flag,
-					 bool value)
+static inline void update_ti_thread_flag(struct thread_info *ti, int flag, bool value)
 {
 	if (value)
 		set_ti_thread_flag(ti, flag);
@@ -97,58 +97,45 @@ static inline int test_ti_thread_flag(struct thread_info *ti, int flag)
 	return test_bit(flag, (unsigned long *)&ti->flags);
 }
 
-#define set_thread_flag(flag) \
-	set_ti_thread_flag(current_thread_info(), flag)
-#define clear_thread_flag(flag) \
-	clear_ti_thread_flag(current_thread_info(), flag)
-#define update_thread_flag(flag, value) \
-	update_ti_thread_flag(current_thread_info(), flag, value)
-#define test_and_set_thread_flag(flag) \
-	test_and_set_ti_thread_flag(current_thread_info(), flag)
-#define test_and_clear_thread_flag(flag) \
-	test_and_clear_ti_thread_flag(current_thread_info(), flag)
-#define test_thread_flag(flag) \
-	test_ti_thread_flag(current_thread_info(), flag)
+#define set_thread_flag(flag) set_ti_thread_flag(current_thread_info(), flag)
+#define clear_thread_flag(flag) clear_ti_thread_flag(current_thread_info(), flag)
+#define update_thread_flag(flag, value) update_ti_thread_flag(current_thread_info(), flag, value)
+#define test_and_set_thread_flag(flag) test_and_set_ti_thread_flag(current_thread_info(), flag)
+#define test_and_clear_thread_flag(flag) test_and_clear_ti_thread_flag(current_thread_info(), flag)
+#define test_thread_flag(flag) test_ti_thread_flag(current_thread_info(), flag)
 
 #define tif_need_resched() test_thread_flag(TIF_NEED_RESCHED)
 
 #ifndef CONFIG_HAVE_ARCH_WITHIN_STACK_FRAMES
-static inline int arch_within_stack_frames(const void * const stack,
-					   const void * const stackend,
-					   const void *obj, unsigned long len)
+static inline int arch_within_stack_frames(const void *const stack, const void *const stackend, const void *obj, unsigned long len)
 {
 	return 0;
 }
 #endif
 
 #ifdef CONFIG_HARDENED_USERCOPY
-extern void __check_object_size(const void *ptr, unsigned long n,
-					bool to_user);
+extern void __check_object_size(const void *ptr, unsigned long n, bool to_user);
 
-static __always_inline void check_object_size(const void *ptr, unsigned long n,
-					      bool to_user)
+static __always_inline void check_object_size(const void *ptr, unsigned long n, bool to_user)
 {
 	if (!__builtin_constant_p(n))
 		__check_object_size(ptr, n, to_user);
 }
 #else
-static inline void check_object_size(const void *ptr, unsigned long n,
-				     bool to_user)
-{ }
+static inline void check_object_size(const void *ptr, unsigned long n, bool to_user)
+{
+}
 #endif /* CONFIG_HARDENED_USERCOPY */
 
-extern void __compiletime_error("copy source size is too small")
-__bad_copy_from(void);
-extern void __compiletime_error("copy destination size is too small")
-__bad_copy_to(void);
+extern void __compiletime_error("copy source size is too small") __bad_copy_from(void);
+extern void __compiletime_error("copy destination size is too small") __bad_copy_to(void);
 
 static inline void copy_overflow(int size, unsigned long count)
 {
 	WARN(1, "Buffer overflow detected (%d < %lu)!\n", size, count);
 }
 
-static __always_inline __must_check bool
-check_copy_size(const void *addr, size_t bytes, bool is_source)
+static __always_inline __must_check bool check_copy_size(const void *addr, size_t bytes, bool is_source)
 {
 	int sz = __compiletime_object_size(addr);
 	if (unlikely(sz >= 0 && sz < bytes)) {
@@ -167,9 +154,11 @@ check_copy_size(const void *addr, size_t bytes, bool is_source)
 }
 
 #ifndef arch_setup_new_exec
-static inline void arch_setup_new_exec(void) { }
+static inline void arch_setup_new_exec(void)
+{
+}
 #endif
 
-#endif	/* __KERNEL__ */
+#endif /* __KERNEL__ */
 
 #endif /* _LINUX_THREAD_INFO_H */

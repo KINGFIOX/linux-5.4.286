@@ -33,8 +33,8 @@ struct fd {
 	struct file *file;
 	unsigned int flags;
 };
-#define FDPUT_FPUT 1
-#define FDPUT_POS_UNLOCK 2
+#define FDPUT_FPUT 1 // indicate that the file should be put after the fd is put, put means: refcnt--
+#define FDPUT_POS_UNLOCK 2 // indicate that the file should be unlocked after the fd is put
 
 static inline void fdput(struct fd fd)
 {
@@ -52,7 +52,7 @@ extern void __f_unlock_pos(struct file *);
 
 static inline struct fd __to_fd(unsigned long v)
 {
-	return (struct fd){ (struct file *)(v & ~3), v & 3 };
+	return (struct fd){ .file = (struct file *)(v & ~3), .flags = v & 3 };
 }
 
 static inline struct fd fdget(unsigned int fd)
@@ -65,6 +65,7 @@ static inline struct fd fdget_raw(unsigned int fd)
 	return __to_fd(__fdget_raw(fd));
 }
 
+// fd : int -> fd : struct fd
 static inline struct fd fdget_pos(int fd)
 {
 	return __to_fd(__fdget_pos(fd));
