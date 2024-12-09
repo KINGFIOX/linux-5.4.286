@@ -12,76 +12,67 @@
  * Note: DISABLE_BRANCH_PROFILING can be used by special lowlevel code
  * to disable branch tracing on a per file basis.
  */
-#if defined(CONFIG_TRACE_BRANCH_PROFILING) \
-    && !defined(DISABLE_BRANCH_PROFILING) && !defined(__CHECKER__)
-void ftrace_likely_update(struct ftrace_likely_data *f, int val,
-			  int expect, int is_constant);
+#if defined(CONFIG_TRACE_BRANCH_PROFILING) && !defined(DISABLE_BRANCH_PROFILING) && !defined(__CHECKER__)
+void ftrace_likely_update(struct ftrace_likely_data *f, int val, int expect, int is_constant);
 
-#define likely_notrace(x)	__builtin_expect(!!(x), 1)
-#define unlikely_notrace(x)	__builtin_expect(!!(x), 0)
+#define likely_notrace(x) __builtin_expect(!!(x), 1)
+#define unlikely_notrace(x) __builtin_expect(!!(x), 0)
 
-#define __branch_check__(x, expect, is_constant) ({			\
-			long ______r;					\
-			static struct ftrace_likely_data		\
-				__aligned(4)				\
-				__section(_ftrace_annotated_branch)	\
-				______f = {				\
-				.data.func = __func__,			\
-				.data.file = __FILE__,			\
-				.data.line = __LINE__,			\
-			};						\
-			______r = __builtin_expect(!!(x), expect);	\
-			ftrace_likely_update(&______f, ______r,		\
-					     expect, is_constant);	\
-			______r;					\
-		})
+#define __branch_check__(x, expect, is_constant)                                                                                                               \
+	({                                                                                                                                                     \
+		long ______r;                                                                                                                                  \
+		static struct ftrace_likely_data __aligned(4) __section(_ftrace_annotated_branch) ______f = {                                                  \
+			.data.func = __func__,                                                                                                                 \
+			.data.file = __FILE__,                                                                                                                 \
+			.data.line = __LINE__,                                                                                                                 \
+		};                                                                                                                                             \
+		______r = __builtin_expect(!!(x), expect);                                                                                                     \
+		ftrace_likely_update(&______f, ______r, expect, is_constant);                                                                                  \
+		______r;                                                                                                                                       \
+	})
 
 /*
  * Using __builtin_constant_p(x) to ignore cases where the return
  * value is always the same.  This idea is taken from a similar patch
  * written by Daniel Walker.
  */
-# ifndef likely
-#  define likely(x)	(__branch_check__(x, 1, __builtin_constant_p(x)))
-# endif
-# ifndef unlikely
-#  define unlikely(x)	(__branch_check__(x, 0, __builtin_constant_p(x)))
-# endif
+#ifndef likely
+#define likely(x) (__branch_check__(x, 1, __builtin_constant_p(x)))
+#endif
+#ifndef unlikely
+#define unlikely(x) (__branch_check__(x, 0, __builtin_constant_p(x)))
+#endif
 
 #ifdef CONFIG_PROFILE_ALL_BRANCHES
 /*
  * "Define 'is'", Bill Clinton
  * "Define 'if'", Steven Rostedt
  */
-#define if(cond, ...) if ( __trace_if_var( !!(cond , ## __VA_ARGS__) ) )
+#define if (cond, ...) if (__trace_if_var(!!(cond, ##__VA_ARGS__)))
 
 #define __trace_if_var(cond) (__builtin_constant_p(cond) ? (cond) : __trace_if_value(cond))
 
-#define __trace_if_value(cond) ({			\
-	static struct ftrace_branch_data		\
-		__aligned(4)				\
-		__section(_ftrace_branch)		\
-		__if_trace = {				\
-			.func = __func__,		\
-			.file = __FILE__,		\
-			.line = __LINE__,		\
-		};					\
-	(cond) ?					\
-		(__if_trace.miss_hit[1]++,1) :		\
-		(__if_trace.miss_hit[0]++,0);		\
-})
+#define __trace_if_value(cond)                                                                                                                                 \
+	({                                                                                                                                                     \
+		static struct ftrace_branch_data __aligned(4) __section(_ftrace_branch) __if_trace = {                                                         \
+			.func = __func__,                                                                                                                      \
+			.file = __FILE__,                                                                                                                      \
+			.line = __LINE__,                                                                                                                      \
+		};                                                                                                                                             \
+		(cond) ? (__if_trace.miss_hit[1]++, 1) : (__if_trace.miss_hit[0]++, 0);                                                                        \
+	})
 
 #endif /* CONFIG_PROFILE_ALL_BRANCHES */
 
 #else
-# define likely(x)	__builtin_expect(!!(x), 1)
-# define unlikely(x)	__builtin_expect(!!(x), 0)
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
 #endif
 
 /* Optimization barrier */
 #ifndef barrier
 /* The "volatile" is due to gcc bugs */
-# define barrier() __asm__ __volatile__("": : :"memory")
+#define barrier() __asm__ __volatile__("" : : : "memory")
 #endif
 
 #ifndef barrier_data
@@ -98,12 +89,14 @@ void ftrace_likely_update(struct ftrace_likely_data *f, int val,
  * the compiler that the inline asm absolutely may see the contents
  * of @ptr. See also: https://llvm.org/bugs/show_bug.cgi?id=15495
  */
-# define barrier_data(ptr) __asm__ __volatile__("": :"r"(ptr) :"memory")
+#define barrier_data(ptr) __asm__ __volatile__("" : : "r"(ptr) : "memory")
 #endif
 
 /* workaround for GCC PR82365 if needed */
 #ifndef barrier_before_unreachable
-# define barrier_before_unreachable() do { } while (0)
+#define barrier_before_unreachable()                                                                                                                           \
+	do {                                                                                                                                                   \
+	} while (0)
 #endif
 
 /* Unreachable code */
@@ -113,22 +106,28 @@ void ftrace_likely_update(struct ftrace_likely_data *f, int val,
  * The __COUNTER__ based labels are a hack to make each instance of the macros
  * unique, to convince GCC not to merge duplicate inline asm statements.
  */
-#define annotate_reachable() ({						\
-	asm volatile("%c0:\n\t"						\
-		     ".pushsection .discard.reachable\n\t"		\
-		     ".long %c0b - .\n\t"				\
-		     ".popsection\n\t" : : "i" (__COUNTER__));		\
-})
-#define annotate_unreachable() ({					\
-	asm volatile("%c0:\n\t"						\
-		     ".pushsection .discard.unreachable\n\t"		\
-		     ".long %c0b - .\n\t"				\
-		     ".popsection\n\t" : : "i" (__COUNTER__));		\
-})
-#define ASM_UNREACHABLE							\
-	"999:\n\t"							\
-	".pushsection .discard.unreachable\n\t"				\
-	".long 999b - .\n\t"						\
+#define annotate_reachable()                                                                                                                                   \
+	({                                                                                                                                                     \
+		asm volatile("%c0:\n\t"                                                                                                                        \
+			     ".pushsection .discard.reachable\n\t"                                                                                             \
+			     ".long %c0b - .\n\t"                                                                                                              \
+			     ".popsection\n\t"                                                                                                                 \
+			     :                                                                                                                                 \
+			     : "i"(__COUNTER__));                                                                                                              \
+	})
+#define annotate_unreachable()                                                                                                                                 \
+	({                                                                                                                                                     \
+		asm volatile("%c0:\n\t"                                                                                                                        \
+			     ".pushsection .discard.unreachable\n\t"                                                                                           \
+			     ".long %c0b - .\n\t"                                                                                                              \
+			     ".popsection\n\t"                                                                                                                 \
+			     :                                                                                                                                 \
+			     : "i"(__COUNTER__));                                                                                                              \
+	})
+#define ASM_UNREACHABLE                                                                                                                                        \
+	"999:\n\t"                                                                                                                                             \
+	".pushsection .discard.unreachable\n\t"                                                                                                                \
+	".long 999b - .\n\t"                                                                                                                                   \
 	".popsection\n\t"
 
 /* Annotate a C jump table to allow objtool to follow the code flow */
@@ -136,12 +135,15 @@ void ftrace_likely_update(struct ftrace_likely_data *f, int val,
 
 #ifdef CONFIG_DEBUG_ENTRY
 /* Begin/end of an instrumentation safe region */
-#define instrumentation_begin() ({					\
-	asm volatile("%c0:\n\t"						\
-		     ".pushsection .discard.instr_begin\n\t"		\
-		     ".long %c0b - .\n\t"				\
-		     ".popsection\n\t" : : "i" (__COUNTER__));		\
-})
+#define instrumentation_begin()                                                                                                                                \
+	({                                                                                                                                                     \
+		asm volatile("%c0:\n\t"                                                                                                                        \
+			     ".pushsection .discard.instr_begin\n\t"                                                                                           \
+			     ".long %c0b - .\n\t"                                                                                                              \
+			     ".popsection\n\t"                                                                                                                 \
+			     :                                                                                                                                 \
+			     : "i"(__COUNTER__));                                                                                                              \
+	})
 
 /*
  * Because instrumentation_{begin,end}() can nest, objtool validation considers
@@ -174,12 +176,15 @@ void ftrace_likely_update(struct ftrace_likely_data *f, int val,
  * To avoid this, have _end() be a NOP instruction, this ensures it will be
  * part of the condition block and does not escape.
  */
-#define instrumentation_end() ({					\
-	asm volatile("%c0: nop\n\t"					\
-		     ".pushsection .discard.instr_end\n\t"		\
-		     ".long %c0b - .\n\t"				\
-		     ".popsection\n\t" : : "i" (__COUNTER__));		\
-})
+#define instrumentation_end()                                                                                                                                  \
+	({                                                                                                                                                     \
+		asm volatile("%c0: nop\n\t"                                                                                                                    \
+			     ".pushsection .discard.instr_end\n\t"                                                                                             \
+			     ".long %c0b - .\n\t"                                                                                                              \
+			     ".popsection\n\t"                                                                                                                 \
+			     :                                                                                                                                 \
+			     : "i"(__COUNTER__));                                                                                                              \
+	})
 #endif /* CONFIG_DEBUG_ENTRY */
 
 #else
@@ -189,18 +194,23 @@ void ftrace_likely_update(struct ftrace_likely_data *f, int val,
 #endif
 
 #ifndef instrumentation_begin
-#define instrumentation_begin()		do { } while(0)
-#define instrumentation_end()		do { } while(0)
+#define instrumentation_begin()                                                                                                                                \
+	do {                                                                                                                                                   \
+	} while (0)
+#define instrumentation_end()                                                                                                                                  \
+	do {                                                                                                                                                   \
+	} while (0)
 #endif
 
 #ifndef ASM_UNREACHABLE
-# define ASM_UNREACHABLE
+#define ASM_UNREACHABLE
 #endif
 #ifndef unreachable
-# define unreachable() do {		\
-	annotate_unreachable();		\
-	__builtin_unreachable();	\
-} while (0)
+#define unreachable()                                                                                                                                          \
+	do {                                                                                                                                                   \
+		annotate_unreachable();                                                                                                                        \
+		__builtin_unreachable();                                                                                                                       \
+	} while (0)
 #endif
 
 /*
@@ -218,52 +228,58 @@ void ftrace_likely_update(struct ftrace_likely_data *f, int val,
  * boot/exception vector code rather than annotate each function and data.
  */
 #ifndef KENTRY
-# define KENTRY(sym)						\
-	extern typeof(sym) sym;					\
-	static const unsigned long __kentry_##sym		\
-	__used							\
-	__section("___kentry" "+" #sym )			\
-	= (unsigned long)&sym;
+#define KENTRY(sym)                                                                                                                                            \
+	extern typeof(sym) sym;                                                                                                                                \
+	static const unsigned long __kentry_##sym __used __section("___kentry"                                                                                 \
+								   "+" #sym) = (unsigned long)&sym;
 #endif
 
 #ifndef RELOC_HIDE
-# define RELOC_HIDE(ptr, off)					\
-  ({ unsigned long __ptr;					\
-     __ptr = (unsigned long) (ptr);				\
-    (typeof(ptr)) (__ptr + (off)); })
+#define RELOC_HIDE(ptr, off)                                                                                                                                   \
+	({                                                                                                                                                     \
+		unsigned long __ptr;                                                                                                                           \
+		__ptr = (unsigned long)(ptr);                                                                                                                  \
+		(typeof(ptr))(__ptr + (off));                                                                                                                  \
+	})
 #endif
 
-#define absolute_pointer(val)	RELOC_HIDE((void *)(val), 0)
+#define absolute_pointer(val) RELOC_HIDE((void *)(val), 0)
 
 #ifndef OPTIMIZER_HIDE_VAR
 /* Make the optimizer believe the variable can be manipulated arbitrarily. */
-#define OPTIMIZER_HIDE_VAR(var)						\
-	__asm__ ("" : "=r" (var) : "0" (var))
+#define OPTIMIZER_HIDE_VAR(var) __asm__("" : "=r"(var) : "0"(var))
 #endif
 
 /* Not-quite-unique ID. */
 #ifndef __UNIQUE_ID
-# define __UNIQUE_ID(prefix) __PASTE(__PASTE(__UNIQUE_ID_, prefix), __LINE__)
+#define __UNIQUE_ID(prefix) __PASTE(__PASTE(__UNIQUE_ID_, prefix), __LINE__)
 #endif
 
 #include <uapi/linux/types.h>
 
-#define __READ_ONCE_SIZE						\
-({									\
-	switch (size) {							\
-	case 1: *(__u8 *)res = *(volatile __u8 *)p; break;		\
-	case 2: *(__u16 *)res = *(volatile __u16 *)p; break;		\
-	case 4: *(__u32 *)res = *(volatile __u32 *)p; break;		\
-	case 8: *(__u64 *)res = *(volatile __u64 *)p; break;		\
-	default:							\
-		barrier();						\
-		__builtin_memcpy((void *)res, (const void *)p, size);	\
-		barrier();						\
-	}								\
-})
+#define __READ_ONCE_SIZE                                                                                                                                       \
+	({                                                                                                                                                     \
+		switch (size) {                                                                                                                                \
+		case 1:                                                                                                                                        \
+			*(__u8 *)res = *(volatile __u8 *)p;                                                                                                    \
+			break;                                                                                                                                 \
+		case 2:                                                                                                                                        \
+			*(__u16 *)res = *(volatile __u16 *)p;                                                                                                  \
+			break;                                                                                                                                 \
+		case 4:                                                                                                                                        \
+			*(__u32 *)res = *(volatile __u32 *)p;                                                                                                  \
+			break;                                                                                                                                 \
+		case 8:                                                                                                                                        \
+			*(__u64 *)res = *(volatile __u64 *)p;                                                                                                  \
+			break;                                                                                                                                 \
+		default:                                                                                                                                       \
+			barrier();                                                                                                                             \
+			__builtin_memcpy((void *)res, (const void *)p, size);                                                                                  \
+			barrier();                                                                                                                             \
+		}                                                                                                                                              \
+	})
 
-static __always_inline
-void __read_once_size(const volatile void *p, void *res, int size)
+static __always_inline void __read_once_size(const volatile void *p, void *res, int size)
 {
 	__READ_ONCE_SIZE;
 }
@@ -275,13 +291,13 @@ void __read_once_size(const volatile void *p, void *res, int size)
  * 	https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67368
  * '__maybe_unused' allows us to avoid defined-but-not-used warnings.
  */
-# define __no_kasan_or_inline __no_sanitize_address notrace __maybe_unused
+#define __no_kasan_or_inline __no_sanitize_address notrace __maybe_unused
 #else
-# define __no_kasan_or_inline __always_inline
+#define __no_kasan_or_inline __always_inline
 #endif
 
-static __no_kasan_or_inline
-void __read_once_size_nocheck(const volatile void *p, void *res, int size)
+// static __always_inline void __read_once_size_nocheck(const volatile void *p, void *res, int size)
+static __no_kasan_or_inline void __read_once_size_nocheck(const volatile void *p, void *res, int size)
 {
 	__READ_ONCE_SIZE;
 }
@@ -289,10 +305,18 @@ void __read_once_size_nocheck(const volatile void *p, void *res, int size)
 static __always_inline void __write_once_size(volatile void *p, void *res, int size)
 {
 	switch (size) {
-	case 1: *(volatile __u8 *)p = *(__u8 *)res; break;
-	case 2: *(volatile __u16 *)p = *(__u16 *)res; break;
-	case 4: *(volatile __u32 *)p = *(__u32 *)res; break;
-	case 8: *(volatile __u64 *)p = *(__u64 *)res; break;
+	case 1:
+		*(volatile __u8 *)p = *(__u8 *)res;
+		break;
+	case 2:
+		*(volatile __u16 *)p = *(__u16 *)res;
+		break;
+	case 4:
+		*(volatile __u32 *)p = *(__u32 *)res;
+		break;
+	case 8:
+		*(volatile __u64 *)p = *(__u64 *)res;
+		break;
 	default:
 		barrier();
 		__builtin_memcpy((void *)p, (const void *)res, size);
@@ -325,17 +349,21 @@ static __always_inline void __write_once_size(volatile void *p, void *res, int s
 #include <asm/barrier.h>
 #include <linux/kasan-checks.h>
 
-#define __READ_ONCE(x, check)						\
-({									\
-	union { typeof(x) __val; char __c[1]; } __u;			\
-	if (check)							\
-		__read_once_size(&(x), __u.__c, sizeof(x));		\
-	else								\
-		__read_once_size_nocheck(&(x), __u.__c, sizeof(x));	\
-	smp_read_barrier_depends(); /* Enforce dependency ordering from x */ \
-	__u.__val;							\
-})
-#define READ_ONCE(x) __READ_ONCE(x, 1)
+#define __READ_ONCE(x, check)                                                                                                                                  \
+	({                                                                                                                                                     \
+		union {                                                                                                                                        \
+			typeof(x) __val;                                                                                                                       \
+			char __c[1];                                                                                                                           \
+		} __u;                                                                                                                                         \
+		if (check)                                                                                                                                     \
+			__read_once_size(&(x), __u.__c /*这个实际上就是__u*/, sizeof(x));                                                                      \
+		else                                                                                                                                           \
+			__read_once_size_nocheck(&(x), __u.__c, sizeof(x));                                                                                    \
+		smp_read_barrier_depends(); /* Enforce dependency ordering from x */                                                                           \
+		__u.__val;                                                                                                                                     \
+	})
+
+#define READ_ONCE(x) __READ_ONCE(x, /*check*/ 1) //
 
 /*
  * Use READ_ONCE_NOCHECK() instead of READ_ONCE() if you need
@@ -343,20 +371,21 @@ static __always_inline void __write_once_size(volatile void *p, void *res, int s
  */
 #define READ_ONCE_NOCHECK(x) __READ_ONCE(x, 0)
 
-static __no_kasan_or_inline
-unsigned long read_word_at_a_time(const void *addr)
+static __no_kasan_or_inline unsigned long read_word_at_a_time(const void *addr)
 {
 	kasan_check_read(addr, 1);
 	return *(unsigned long *)addr;
 }
 
-#define WRITE_ONCE(x, val) \
-({							\
-	union { typeof(x) __val; char __c[1]; } __u =	\
-		{ .__val = (__force typeof(x)) (val) }; \
-	__write_once_size(&(x), __u.__c, sizeof(x));	\
-	__u.__val;					\
-})
+#define WRITE_ONCE(x, val)                                                                                                                                     \
+	({                                                                                                                                                     \
+		union {                                                                                                                                        \
+			typeof(x) __val;                                                                                                                       \
+			char __c[1];                                                                                                                           \
+		} __u = { .__val = (__force typeof(x))(val) };                                                                                                 \
+		__write_once_size(&(x), __u.__c, sizeof(x));                                                                                                   \
+		__u.__val;                                                                                                                                     \
+	})
 
 #endif /* __KERNEL__ */
 
@@ -366,9 +395,7 @@ unsigned long read_word_at_a_time(const void *addr)
  * otherwise, or eliminated entirely due to lack of references that are
  * visible to the compiler.
  */
-#define __ADDRESSABLE(sym) \
-	static void * __section(.discard.addressable) __used \
-		__PASTE(__addressable_##sym, __LINE__) = (void *)&sym;
+#define __ADDRESSABLE(sym) static void *__section(.discard.addressable) __used __PASTE(__addressable_##sym, __LINE__) = (void *)&sym;
 
 /**
  * offset_to_ptr - convert a relative memory offset to an absolute pointer
@@ -383,28 +410,29 @@ static inline void *offset_to_ptr(const int *off)
 
 /* Compile time object size, -1 for unknown */
 #ifndef __compiletime_object_size
-# define __compiletime_object_size(obj) -1
+#define __compiletime_object_size(obj) -1
 #endif
 #ifndef __compiletime_warning
-# define __compiletime_warning(message)
+#define __compiletime_warning(message)
 #endif
 #ifndef __compiletime_error
-# define __compiletime_error(message)
+#define __compiletime_error(message)
 #endif
 
 #ifdef __OPTIMIZE__
-# define __compiletime_assert(condition, msg, prefix, suffix)		\
-	do {								\
-		extern void prefix ## suffix(void) __compiletime_error(msg); \
-		if (!(condition))					\
-			prefix ## suffix();				\
+#define __compiletime_assert(condition, msg, prefix, suffix)                                                                                                   \
+	do {                                                                                                                                                   \
+		extern void prefix##suffix(void) __compiletime_error(msg);                                                                                     \
+		if (!(condition))                                                                                                                              \
+			prefix##suffix();                                                                                                                      \
 	} while (0)
 #else
-# define __compiletime_assert(condition, msg, prefix, suffix) do { } while (0)
+#define __compiletime_assert(condition, msg, prefix, suffix)                                                                                                   \
+	do {                                                                                                                                                   \
+	} while (0)
 #endif
 
-#define _compiletime_assert(condition, msg, prefix, suffix) \
-	__compiletime_assert(condition, msg, prefix, suffix)
+#define _compiletime_assert(condition, msg, prefix, suffix) __compiletime_assert(condition, msg, prefix, suffix)
 
 /**
  * compiletime_assert - break build and emit msg if condition is false
@@ -415,20 +443,17 @@ static inline void *offset_to_ptr(const int *off)
  * supplied condition is *false*, emitting the supplied error message if the
  * compiler has support to do so.
  */
-#define compiletime_assert(condition, msg) \
-	_compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
+#define compiletime_assert(condition, msg) _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
 
-#define compiletime_assert_atomic_type(t)				\
-	compiletime_assert(__native_word(t),				\
-		"Need native word sized stores/loads for atomicity.")
+#define compiletime_assert_atomic_type(t) compiletime_assert(__native_word(t), "Need native word sized stores/loads for atomicity.")
 
 /* &a[0] degrades to a pointer: a different type from an array */
-#define __must_be_array(a)	BUILD_BUG_ON_ZERO(__same_type((a), &(a)[0]))
+#define __must_be_array(a) BUILD_BUG_ON_ZERO(__same_type((a), &(a)[0]))
 
 /*
  * This is needed in functions which generate the stack canary, see
  * arch/x86/kernel/smpboot.c::start_secondary() for an example.
  */
-#define prevent_tail_call_optimization()	mb()
+#define prevent_tail_call_optimization() mb()
 
 #endif /* __LINUX_COMPILER_H */

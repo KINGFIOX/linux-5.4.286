@@ -6,7 +6,6 @@
  * Copyright (C) 2017 SiFive
  */
 
-
 #ifndef __ASM_CURRENT_H
 #define __ASM_CURRENT_H
 

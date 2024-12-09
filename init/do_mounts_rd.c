@@ -14,21 +14,20 @@
 
 #include <linux/decompress/generic.h>
 
-
-int __initdata rd_prompt = 1;/* 1 = prompt for RAM disk, 0 = don't prompt */
+int __initdata rd_prompt = 1; /* 1 = prompt for RAM disk, 0 = don't prompt */
 
 static int __init prompt_ramdisk(char *str)
 {
-	rd_prompt = simple_strtol(str,NULL,0) & 1;
+	rd_prompt = simple_strtol(str, NULL, 0) & 1;
 	return 1;
 }
 __setup("prompt_ramdisk=", prompt_ramdisk);
 
-int __initdata rd_image_start;		/* starting block # of image */
+int __initdata rd_image_start; /* starting block # of image */
 
 static int __init ramdisk_start_setup(char *str)
 {
-	rd_image_start = simple_strtol(str,NULL,0);
+	rd_image_start = simple_strtol(str, NULL, 0);
 	return 1;
 }
 __setup("ramdisk_start=", ramdisk_start_setup);
@@ -54,8 +53,7 @@ static int __init crd_load(int in_fd, int out_fd, decompress_fn deco);
  *	lzo
  *	lz4
  */
-static int __init
-identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
+static int __init identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
 {
 	const int size = 512;
 	struct minix_super_block *minixsb;
@@ -71,10 +69,10 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
 	if (!buf)
 		return -ENOMEM;
 
-	minixsb = (struct minix_super_block *) buf;
-	romfsb = (struct romfs_super_block *) buf;
-	cramfsb = (struct cramfs_super *) buf;
-	squashfsb = (struct squashfs_super_block *) buf;
+	minixsb = (struct minix_super_block *)buf;
+	romfsb = (struct romfs_super_block *)buf;
+	cramfsb = (struct cramfs_super *)buf;
+	squashfsb = (struct squashfs_super_block *)buf;
 	memset(buf, 0xe5, size);
 
 	/*
@@ -85,41 +83,30 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
 
 	*decompressor = decompress_method(buf, size, &compress_name);
 	if (compress_name) {
-		printk(KERN_NOTICE "RAMDISK: %s image found at block %d\n",
-		       compress_name, start_block);
+		printk(KERN_NOTICE "RAMDISK: %s image found at block %d\n", compress_name, start_block);
 		if (!*decompressor)
-			printk(KERN_EMERG
-			       "RAMDISK: %s decompressor not configured!\n",
-			       compress_name);
+			printk(KERN_EMERG "RAMDISK: %s decompressor not configured!\n", compress_name);
 		nblocks = 0;
 		goto done;
 	}
 
 	/* romfs is at block zero too */
-	if (romfsb->word0 == ROMSB_WORD0 &&
-	    romfsb->word1 == ROMSB_WORD1) {
-		printk(KERN_NOTICE
-		       "RAMDISK: romfs filesystem found at block %d\n",
-		       start_block);
-		nblocks = (ntohl(romfsb->size)+BLOCK_SIZE-1)>>BLOCK_SIZE_BITS;
+	if (romfsb->word0 == ROMSB_WORD0 && romfsb->word1 == ROMSB_WORD1) {
+		printk(KERN_NOTICE "RAMDISK: romfs filesystem found at block %d\n", start_block);
+		nblocks = (ntohl(romfsb->size) + BLOCK_SIZE - 1) >> BLOCK_SIZE_BITS;
 		goto done;
 	}
 
 	if (cramfsb->magic == CRAMFS_MAGIC) {
-		printk(KERN_NOTICE
-		       "RAMDISK: cramfs filesystem found at block %d\n",
-		       start_block);
+		printk(KERN_NOTICE "RAMDISK: cramfs filesystem found at block %d\n", start_block);
 		nblocks = (cramfsb->size + BLOCK_SIZE - 1) >> BLOCK_SIZE_BITS;
 		goto done;
 	}
 
 	/* squashfs is at block zero too */
 	if (le32_to_cpu(squashfsb->s_magic) == SQUASHFS_MAGIC) {
-		printk(KERN_NOTICE
-		       "RAMDISK: squashfs filesystem found at block %d\n",
-		       start_block);
-		nblocks = (le64_to_cpu(squashfsb->bytes_used) + BLOCK_SIZE - 1)
-			 >> BLOCK_SIZE_BITS;
+		printk(KERN_NOTICE "RAMDISK: squashfs filesystem found at block %d\n", start_block);
+		nblocks = (le64_to_cpu(squashfsb->bytes_used) + BLOCK_SIZE - 1) >> BLOCK_SIZE_BITS;
 		goto done;
 	}
 
@@ -130,9 +117,7 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
 	ksys_read(fd, buf, size);
 
 	if (cramfsb->magic == CRAMFS_MAGIC) {
-		printk(KERN_NOTICE
-		       "RAMDISK: cramfs filesystem found at block %d\n",
-		       start_block);
+		printk(KERN_NOTICE "RAMDISK: cramfs filesystem found at block %d\n", start_block);
 		nblocks = (cramfsb->size + BLOCK_SIZE - 1) >> BLOCK_SIZE_BITS;
 		goto done;
 	}
@@ -140,15 +125,12 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
 	/*
 	 * Read block 1 to test for minix and ext2 superblock
 	 */
-	ksys_lseek(fd, (start_block+1) * BLOCK_SIZE, 0);
+	ksys_lseek(fd, (start_block + 1) * BLOCK_SIZE, 0);
 	ksys_read(fd, buf, size);
 
 	/* Try minix */
-	if (minixsb->s_magic == MINIX_SUPER_MAGIC ||
-	    minixsb->s_magic == MINIX_SUPER_MAGIC2) {
-		printk(KERN_NOTICE
-		       "RAMDISK: Minix filesystem found at block %d\n",
-		       start_block);
+	if (minixsb->s_magic == MINIX_SUPER_MAGIC || minixsb->s_magic == MINIX_SUPER_MAGIC2) {
+		printk(KERN_NOTICE "RAMDISK: Minix filesystem found at block %d\n", start_block);
 		nblocks = minixsb->s_nzones << minixsb->s_log_zone_size;
 		goto done;
 	}
@@ -156,16 +138,12 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
 	/* Try ext2 */
 	n = ext2_image_size(buf);
 	if (n) {
-		printk(KERN_NOTICE
-		       "RAMDISK: ext2 filesystem found at block %d\n",
-		       start_block);
+		printk(KERN_NOTICE "RAMDISK: ext2 filesystem found at block %d\n", start_block);
 		nblocks = n;
 		goto done;
 	}
 
-	printk(KERN_NOTICE
-	       "RAMDISK: Couldn't find valid RAM disk image starting at %d.\n",
-	       start_block);
+	printk(KERN_NOTICE "RAMDISK: Couldn't find valid RAM disk image starting at %d.\n", start_block);
 
 done:
 	ksys_lseek(fd, start_block * BLOCK_SIZE, 0);
@@ -183,7 +161,7 @@ int __init rd_load_image(char *from)
 	unsigned short rotate = 0;
 	decompress_fn decompressor = NULL;
 #if !defined(CONFIG_S390)
-	char rotator[4] = { '|' , '/' , '-' , '\\' };
+	char rotator[4] = { '|', '/', '-', '\\' };
 #endif
 
 	out_fd = ksys_open("/dev/ram", O_RDWR, 0);
@@ -214,8 +192,7 @@ int __init rd_load_image(char *from)
 		rd_blocks >>= 1;
 
 	if (nblocks > rd_blocks) {
-		printk("RAMDISK: image too big! (%dKiB/%ldKiB)\n",
-		       nblocks, rd_blocks);
+		printk("RAMDISK: image too big! (%dKiB/%ldKiB)\n", nblocks, rd_blocks);
 		goto done;
 	}
 
@@ -241,8 +218,7 @@ int __init rd_load_image(char *from)
 		goto done;
 	}
 
-	printk(KERN_NOTICE "RAMDISK: Loading %dKiB [%ld disk%s] into ram disk... ",
-		nblocks, ((nblocks-1)/devblocks)+1, nblocks>devblocks ? "s" : "");
+	printk(KERN_NOTICE "RAMDISK: Loading %dKiB [%ld disk%s] into ram disk... ", nblocks, ((nblocks - 1) / devblocks) + 1, nblocks > devblocks ? "s" : "");
 	for (i = 0, disk = 1; i < nblocks; i++) {
 		if (i && (i % devblocks == 0)) {
 			pr_cont("done disk #%d.\n", disk++);
@@ -253,7 +229,7 @@ int __init rd_load_image(char *from)
 			}
 			change_floppy("disk #%d", disk);
 			in_fd = ksys_open(from, O_RDONLY, 0);
-			if (in_fd < 0)  {
+			if (in_fd < 0) {
 				printk("Error opening disk.\n");
 				goto noclose_input;
 			}
@@ -310,9 +286,7 @@ static long __init compr_flush(void *window, unsigned long outcnt)
 	long written = ksys_write(crd_outfd, window, outcnt);
 	if (written != outcnt) {
 		if (decompress_error == 0)
-			printk(KERN_ERR
-			       "RAMDISK: incomplete write (%ld != %ld)\n",
-			       written, outcnt);
+			printk(KERN_ERR "RAMDISK: incomplete write (%ld != %ld)\n", written, outcnt);
 		decompress_error = 1;
 		return -1;
 	}

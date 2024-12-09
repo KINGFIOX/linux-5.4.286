@@ -60,14 +60,12 @@ struct pt_regs {
 
 #define user_mode(regs) (((regs)->sstatus & SR_SPP) == 0)
 
-
 /* Helpers for working with the instruction pointer */
 static inline unsigned long instruction_pointer(struct pt_regs *regs)
 {
 	return regs->sepc;
 }
-static inline void instruction_pointer_set(struct pt_regs *regs,
-					   unsigned long val)
+static inline void instruction_pointer_set(struct pt_regs *regs, unsigned long val)
 {
 	regs->sepc = val;
 }
@@ -79,10 +77,9 @@ static inline unsigned long user_stack_pointer(struct pt_regs *regs)
 {
 	return regs->sp;
 }
-static inline void user_stack_pointer_set(struct pt_regs *regs,
-					  unsigned long val)
+static inline void user_stack_pointer_set(struct pt_regs *regs, unsigned long val)
 {
-	regs->sp =  val;
+	regs->sp = val;
 }
 
 /* Helpers for working with the frame pointer */
@@ -90,8 +87,7 @@ static inline unsigned long frame_pointer(struct pt_regs *regs)
 {
 	return regs->s0;
 }
-static inline void frame_pointer_set(struct pt_regs *regs,
-				     unsigned long val)
+static inline void frame_pointer_set(struct pt_regs *regs, unsigned long val)
 {
 	regs->s0 = val;
 }

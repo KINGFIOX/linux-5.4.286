@@ -20,10 +20,8 @@ struct vfsmount;
 struct dentry;
 struct inode;
 struct path;
-extern struct file *alloc_file_pseudo(struct inode *, struct vfsmount *,
-	const char *, int flags, const struct file_operations *);
-extern struct file *alloc_file_clone(struct file *, int flags,
-	const struct file_operations *);
+extern struct file *alloc_file_pseudo(struct inode *, struct vfsmount *, const char *, int flags, const struct file_operations *);
+extern struct file *alloc_file_clone(struct file *, int flags, const struct file_operations *);
 
 static inline void fput_light(struct file *file, int fput_needed)
 {
@@ -35,7 +33,7 @@ struct fd {
 	struct file *file;
 	unsigned int flags;
 };
-#define FDPUT_FPUT       1
+#define FDPUT_FPUT 1
 #define FDPUT_POS_UNLOCK 2
 
 static inline void fdput(struct fd fd)
@@ -54,7 +52,7 @@ extern void __f_unlock_pos(struct file *);
 
 static inline struct fd __to_fd(unsigned long v)
 {
-	return (struct fd){(struct file *)(v & ~3),v & 3};
+	return (struct fd){ (struct file *)(v & ~3), v & 3 };
 }
 
 static inline struct fd fdget(unsigned int fd)

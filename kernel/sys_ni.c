@@ -350,7 +350,6 @@ COND_SYSCALL(pkey_mprotect);
 COND_SYSCALL(pkey_alloc);
 COND_SYSCALL(pkey_free);
 
-
 /*
  * Architecture specific weak syscall entries.
  */
@@ -387,7 +386,6 @@ COND_SYSCALL(spu_run);
 COND_SYSCALL(spu_create);
 COND_SYSCALL(subpage_prot);
 
-
 /*
  * Deprecated system calls which are still defined in
  * include/uapi/asm-generic/unistd.h and wanted by >= 1 arch
@@ -410,7 +408,6 @@ COND_SYSCALL_COMPAT(recv);
 COND_SYSCALL(send);
 COND_SYSCALL(bdflush);
 COND_SYSCALL(uselib);
-
 
 /*
  * The syscalls below are not found in include/uapi/asm-generic/unistd.h

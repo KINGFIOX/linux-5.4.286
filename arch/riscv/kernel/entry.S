@@ -233,27 +233,27 @@ ENTRY(handle_exception)
 
 handle_syscall:
 	 /* save the initial A0 value (needed in signal handlers) */
-	REG_S a0, PT_ORIG_A0(sp)
+	REG_S a0, PT_ORIG_A0(sp) // ecall's a0
 	/*
 	 * Advance SEPC to avoid executing the original
 	 * scall instruction on sret
 	 */
-	addi s2, s2, 0x4
+	addi s2, s2, 0x4 // sepc += 4. ecall 的指令长度
 	REG_S s2, PT_SEPC(sp)
-	/* Trace syscalls, but only if requested by the user. */
+	/* Trace syscalls(strace), but only if requested by the user. */
 	REG_L t0, TASK_TI_FLAGS(tp)
-	andi t0, t0, _TIF_SYSCALL_WORK
+	andi t0, t0, _TIF_SYSCALL_WORK 
 	bnez t0, handle_syscall_trace_enter
 check_syscall_nr:
-	/* Check to make sure we don't jump to a bogus syscall number. */
-	li t0, __NR_syscalls
-	la s0, sys_ni_syscall
+	/* Check to make sure we don't jump to a bogus(假的) syscall number. */
+	li t0, __NR_syscalls // 系统调用号的最大值
+	la s0, sys_ni_syscall // return -ENOSYS. 错误的系统调用号的处理例程
 	/* Syscall number held in a7 */
-	bgeu a7, t0, 1f
+	bgeu a7, t0, 1f // if a7 >= t0, goto sys_ni_syscall
 	la s0, sys_call_table
 	slli t0, a7, RISCV_LGPTR
-	add s0, s0, t0
-	REG_L s0, 0(s0)
+	add s0, s0, t0 // &sys_call_table[a7]
+	REG_L s0, 0(s0) // sys_call_table[a7]()
 1:
 	jalr s0
 
