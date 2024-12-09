@@ -28,13 +28,30 @@
 	 * If coming from userspace, preserve the user thread pointer and load
 	 * the kernel thread pointer.  If we came from the kernel, sscratch
 	 * will contain 0, and we should continue on the current TP.
+	 * 下面这段代码是: intr from user 与 intr from kernel 共用的
 	 */
 	csrrw tp, CSR_SSCRATCH, tp
 	bnez tp, _save_context
 
+/*
+struct thread_info {
+	unsigned long flags; // low level flags
+	int preempt_count; // 0=>preemptible, <0=>BUG
+	mm_segment_t addr_limit;
+	// 
+	// These stack pointers are overwritten on every system call or
+	// exception.  SP is also saved to the stack it can be recovered when
+	// overwritten.
+	// 
+	long kernel_sp; // Kernel stack pointer
+	long user_sp; // User stack pointer
+	int cpu;
+};
+*/
+
 _restore_kernel_tpsp:
 	csrr tp, CSR_SSCRATCH
-	REG_S sp, TASK_TI_KERNEL_SP(tp)
+	REG_S sp, TASK_TI_KERNEL_SP(tp) # 	OFFSET(TASK_TI_KERNEL_SP, task_struct, thread_info.kernel_sp); defined in asm-offsets.c
 _save_context:
 	REG_S sp, TASK_TI_USER_SP(tp)
 	REG_L sp, TASK_TI_KERNEL_SP(tp)
@@ -75,11 +92,12 @@ _save_context:
 	 *
 	 * Disable the FPU to detect illegal usage of floating point in kernel
 	 * space.
+	 * fp-regs 在 intr 前后保持不变, 实际上内核也不需要用到 fp-regs, 为了防止误用, 关闭
 	 */
 	li t0, SR_SUM | SR_FS
 
-	REG_L s0, TASK_TI_USER_SP(tp)
-	csrrc s1, CSR_SSTATUS, t0
+	REG_L s0, TASK_TI_USER_SP(tp) # 
+	csrrc s1, CSR_SSTATUS, t0 # csr read and clear(SR_SUM, SR_FS)
 	csrr s2, CSR_SEPC
 	csrr s3, CSR_STVAL
 	csrr s4, CSR_SCAUSE
@@ -165,6 +183,7 @@ ENTRY(handle_exception)
 	/*
 	 * Set sscratch register to 0, so that if a recursive exception
 	 * occurs, the exception vector knows it came from the kernel
+	 * SAVE_ALL 中有: bnez tp, _save_context
 	 */
 	csrw CSR_SSCRATCH, x0
 
@@ -175,37 +194,40 @@ ENTRY(handle_exception)
 .option pop
 
 	la ra, ret_from_exception
-	/*
-	 * MSB of cause differentiates between
-	 * interrupts and exceptions
+
+	/* if the most significant bit of s4 is 0,
+	 * then it is an interrupt,
+	 * else it is an exception
 	 */
 	bge s4, zero, 1f
 
 	/* Handle interrupts */
 	move a0, sp /* pt_regs */
-	tail do_IRQ
+	tail do_IRQ // defined in arch/riscv/kernel/irq.c
 1:
-	/* Exceptions run with interrupts enabled or disabled
-	   depending on the state of sstatus.SR_SPIE */
+	/* Exceptions run with interrupts enabled
+	 * or disabled depending on the state of sstatus.SR_SPIE
+	 * (supervisor previous interrupt enable)
+	 */
 	andi t0, s1, SR_SPIE
 	beqz t0, 1f
-	csrs CSR_SSTATUS, SR_SIE
+	csrs CSR_SSTATUS, SR_SIE // csr set
 
 1:
 	/* Handle syscalls */
-	li t0, EXC_SYSCALL
+	li t0, EXC_SYSCALL // exc(exception). 这一部分代码, xv6 中, 是用 C 写的
 	beq s4, t0, handle_syscall
 
 	/* Handle other exceptions */
-	slli t0, s4, RISCV_LGPTR
-	la t1, excp_vect_table
+	slli t0, s4, RISCV_LGPTR // scause * 8 => 为查表做准备
+	la t1, excp_vect_table // 
 	la t2, excp_vect_table_end
 	move a0, sp /* pt_regs */
-	add t0, t1, t0
+	add t0, t1, t0 // &excp_vect_table[scause]
 	/* Check if exception code lies within bounds */
 	bgeu t0, t2, 1f
 	REG_L t0, 0(t0)
-	jr t0
+	jr t0 // excp_vect_table[scause]()
 1:
 	tail do_trap_unknown
 
@@ -390,7 +412,7 @@ ENDPROC(__switch_to)
 	.align LGREG
 	/* Exception vector table */
 ENTRY(excp_vect_table)
-	RISCV_PTR do_trap_insn_misaligned
+	RISCV_PTR do_trap_insn_misaligned  // 这里 RISCV_PTR 是 .dword(64bit)
 	RISCV_PTR do_trap_insn_fault
 	RISCV_PTR do_trap_insn_illegal
 	RISCV_PTR do_trap_break

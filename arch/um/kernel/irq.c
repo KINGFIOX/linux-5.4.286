@@ -20,7 +20,6 @@
 #include <os.h>
 #include <irq_user.h>
 
-
 extern void free_irqs(void);
 
 /* When epoll triggers we do not know why it did so
@@ -41,7 +40,7 @@ static DEFINE_SPINLOCK(irq_lock);
 
 static void irq_io_loop(struct irq_fd *irq, struct uml_pt_regs *regs)
 {
-/*
+	/*
  * irq->active guards against reentry
  * irq->pending accumulates pending requests
  * if pending is raised the irq_handler is re-run
@@ -83,13 +82,12 @@ void sigio_handler(int sig, struct siginfo *unused_si, struct uml_pt_regs *regs)
 				break;
 		}
 
-		for (i = 0; i < n ; i++) {
+		for (i = 0; i < n; i++) {
 			/* Epoll back reference is the entry with 3 irq_fd
 			 * leaves - one for each irq type.
 			 */
-			irq_entry = (struct irq_entry *)
-				os_epoll_get_data_pointer(i);
-			for (j = 0; j < MAX_IRQ_TYPE ; j++) {
+			irq_entry = (struct irq_entry *)os_epoll_get_data_pointer(i);
+			for (j = 0; j < MAX_IRQ_TYPE; j++) {
 				irq = irq_entry->irq_array[j];
 				if (irq == NULL)
 					continue;
@@ -112,20 +110,18 @@ static int assign_epoll_events_to_irq(struct irq_entry *irq_entry)
 	int events = 0;
 	struct irq_fd *irq;
 
-	for (i = 0; i < MAX_IRQ_TYPE ; i++) {
+	for (i = 0; i < MAX_IRQ_TYPE; i++) {
 		irq = irq_entry->irq_array[i];
 		if (irq != NULL)
 			events = irq->events | events;
 	}
 	if (events > 0) {
-	/* os_add_epoll will call os_mod_epoll if this already exists */
+		/* os_add_epoll will call os_mod_epoll if this already exists */
 		return os_add_epoll_fd(events, irq_entry->fd, irq_entry);
 	}
 	/* No events - delete */
 	return os_del_epoll_fd(irq_entry->fd);
 }
-
-
 
 static int activate_fd(int irq, int fd, int type, void *dev_id)
 {
@@ -143,8 +139,7 @@ static int activate_fd(int irq, int fd, int type, void *dev_id)
 	/* Check if we have an entry for this fd */
 
 	err = -EBUSY;
-	for (irq_entry = active_fds;
-		irq_entry != NULL; irq_entry = irq_entry->next) {
+	for (irq_entry = active_fds; irq_entry != NULL; irq_entry = irq_entry->next) {
 		if (irq_entry->fd == fd)
 			break;
 	}
@@ -155,8 +150,7 @@ static int activate_fd(int irq, int fd, int type, void *dev_id)
 		 */
 		irq_entry = kmalloc(sizeof(struct irq_entry), GFP_ATOMIC);
 		if (irq_entry == NULL) {
-			printk(KERN_ERR
-				"Failed to allocate new IRQ entry\n");
+			printk(KERN_ERR "Failed to allocate new IRQ entry\n");
 			goto out_unlock;
 		}
 		irq_entry->fd = fd;
@@ -171,10 +165,7 @@ static int activate_fd(int irq, int fd, int type, void *dev_id)
 	 */
 
 	if (irq_entry->irq_array[type] != NULL) {
-		printk(KERN_ERR
-			"Trying to reregister IRQ %d FD %d TYPE %d ID %p\n",
-			irq, fd, type, dev_id
-		);
+		printk(KERN_ERR "Trying to reregister IRQ %d FD %d TYPE %d ID %p\n", irq, fd, type, dev_id);
 		goto out_unlock;
 	} else {
 		/* New entry for this fd */
@@ -186,15 +177,7 @@ static int activate_fd(int irq, int fd, int type, void *dev_id)
 
 		events = os_event_mask(type);
 
-		*new_fd = ((struct irq_fd) {
-			.id		= dev_id,
-			.irq		= irq,
-			.type		= type,
-			.events		= events,
-			.active		= true,
-			.pending	= false,
-			.purge		= false
-		});
+		*new_fd = ((struct irq_fd){ .id = dev_id, .irq = irq, .type = type, .events = events, .active = true, .pending = false, .purge = false });
 		/* Turn off any IO on this fd - allows us to
 		 * avoid locking the IRQ loop
 		 */
@@ -232,7 +215,7 @@ static void garbage_collect_irq_entries(void)
 	walk = active_fds;
 	while (walk != NULL) {
 		reap = true;
-		for (i = 0; i < MAX_IRQ_TYPE ; i++) {
+		for (i = 0; i < MAX_IRQ_TYPE; i++) {
 			if (walk->irq_array[i] != NULL) {
 				reap = false;
 				break;
@@ -268,7 +251,6 @@ static struct irq_entry *get_irq_entry_by_fd(int fd)
 	return NULL;
 }
 
-
 /*
  * Walk the IRQ list and dispose of an entry for a specific
  * device, fd and number. Note - if sharing an IRQ for read
@@ -277,26 +259,16 @@ static struct irq_entry *get_irq_entry_by_fd(int fd)
  */
 
 #define IGNORE_IRQ 1
-#define IGNORE_DEV (1<<1)
+#define IGNORE_DEV (1 << 1)
 
-static void do_free_by_irq_and_dev(
-	struct irq_entry *irq_entry,
-	unsigned int irq,
-	void *dev,
-	int flags
-)
+static void do_free_by_irq_and_dev(struct irq_entry *irq_entry, unsigned int irq, void *dev, int flags)
 {
 	int i;
 	struct irq_fd *to_free;
 
-	for (i = 0; i < MAX_IRQ_TYPE ; i++) {
+	for (i = 0; i < MAX_IRQ_TYPE; i++) {
 		if (irq_entry->irq_array[i] != NULL) {
-			if (
-			((flags & IGNORE_IRQ) ||
-				(irq_entry->irq_array[i]->irq == irq)) &&
-			((flags & IGNORE_DEV) ||
-				(irq_entry->irq_array[i]->id == dev))
-			) {
+			if (((flags & IGNORE_IRQ) || (irq_entry->irq_array[i]->irq == irq)) && ((flags & IGNORE_DEV) || (irq_entry->irq_array[i]->id == dev))) {
 				/* Turn off any IO on this fd - allows us to
 				 * avoid locking the IRQ loop
 				 */
@@ -321,12 +293,7 @@ void free_irq_by_fd(int fd)
 	spin_lock_irqsave(&irq_lock, flags);
 	to_free = get_irq_entry_by_fd(fd);
 	if (to_free != NULL) {
-		do_free_by_irq_and_dev(
-			to_free,
-			-1,
-			NULL,
-			IGNORE_IRQ | IGNORE_DEV
-		);
+		do_free_by_irq_and_dev(to_free, -1, NULL, IGNORE_IRQ | IGNORE_DEV);
 	}
 	garbage_collect_irq_entries();
 	spin_unlock_irqrestore(&irq_lock, flags);
@@ -341,18 +308,12 @@ static void free_irq_by_irq_and_dev(unsigned int irq, void *dev)
 	spin_lock_irqsave(&irq_lock, flags);
 	to_free = active_fds;
 	while (to_free != NULL) {
-		do_free_by_irq_and_dev(
-			to_free,
-			irq,
-			dev,
-			0
-		);
+		do_free_by_irq_and_dev(to_free, irq, dev, 0);
 		to_free = to_free->next;
 	}
 	garbage_collect_irq_entries();
 	spin_unlock_irqrestore(&irq_lock, flags);
 }
-
 
 void deactivate_fd(int fd, int irqnum)
 {
@@ -363,12 +324,7 @@ void deactivate_fd(int fd, int irqnum)
 	spin_lock_irqsave(&irq_lock, flags);
 	to_free = get_irq_entry_by_fd(fd);
 	if (to_free != NULL) {
-		do_free_by_irq_and_dev(
-			to_free,
-			irqnum,
-			NULL,
-			IGNORE_DEV
-		);
+		do_free_by_irq_and_dev(to_free, irqnum, NULL, IGNORE_DEV);
 	}
 	garbage_collect_irq_entries();
 	spin_unlock_irqrestore(&irq_lock, flags);
@@ -393,12 +349,7 @@ int deactivate_all_fds(void)
 	os_set_ioignore();
 	to_free = active_fds;
 	while (to_free != NULL) {
-		do_free_by_irq_and_dev(
-			to_free,
-			-1,
-			NULL,
-			IGNORE_IRQ | IGNORE_DEV
-		);
+		do_free_by_irq_and_dev(to_free, -1, NULL, IGNORE_IRQ | IGNORE_DEV);
 		to_free = to_free->next;
 	}
 	/* don't garbage collect - we can no longer call kfree() here */
@@ -428,10 +379,7 @@ void um_free_irq(unsigned int irq, void *dev)
 }
 EXPORT_SYMBOL(um_free_irq);
 
-int um_request_irq(unsigned int irq, int fd, int type,
-		   irq_handler_t handler,
-		   unsigned long irqflags, const char * devname,
-		   void *dev_id)
+int um_request_irq(unsigned int irq, int fd, int type, irq_handler_t handler, unsigned long irqflags, const char *devname, void *dev_id)
 {
 	int err;
 
@@ -478,7 +426,6 @@ void __init init_IRQ(void)
 	int i;
 
 	irq_set_chip_and_handler(TIMER_IRQ, &SIGVTALRM_irq_type, handle_edge_irq);
-
 
 	for (i = 1; i <= LAST_IRQ; i++)
 		irq_set_chip_and_handler(i, &normal_irq_type, handle_edge_irq);
@@ -596,4 +543,3 @@ unsigned long from_irq_stack(int nested)
 	mask = xchg(&pending_mask, 0);
 	return mask & ~1;
 }
-

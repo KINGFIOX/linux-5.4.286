@@ -14,9 +14,9 @@
 /*
  * Possible interrupt causes:
  */
-#define INTERRUPT_CAUSE_SOFTWARE	IRQ_S_SOFT
-#define INTERRUPT_CAUSE_TIMER		IRQ_S_TIMER
-#define INTERRUPT_CAUSE_EXTERNAL	IRQ_S_EXT
+#define INTERRUPT_CAUSE_SOFTWARE IRQ_S_SOFT
+#define INTERRUPT_CAUSE_TIMER IRQ_S_TIMER
+#define INTERRUPT_CAUSE_EXTERNAL IRQ_S_EXT
 
 int arch_show_interrupts(struct seq_file *p, int prec)
 {
@@ -24,6 +24,7 @@ int arch_show_interrupts(struct seq_file *p, int prec)
 	return 0;
 }
 
+// irq_entry : __attribute__((__section__(".irqentry.text")))
 asmlinkage __visible void __irq_entry do_IRQ(struct pt_regs *regs)
 {
 	struct pt_regs *old_regs = set_irq_regs(regs);
