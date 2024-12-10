@@ -2,7 +2,6 @@
 #ifndef _LINUX_KERNEL_H
 #define _LINUX_KERNEL_H
 
-
 #include <stdarg.h>
 #include <linux/limits.h>
 #include <linux/linkage.h>
@@ -19,7 +18,7 @@
 #include <uapi/linux/kernel.h>
 #include <asm/div64.h>
 
-#define STACK_MAGIC	0xdeadbeef
+#define STACK_MAGIC 0xdeadbeef
 
 /**
  * REPEAT_BYTE - repeat the value @x multiple times as an unsigned long value
@@ -27,18 +26,18 @@
  *
  * NOTE: @x is not checked for > 0xff; larger values produce odd results.
  */
-#define REPEAT_BYTE(x)	((~0ul / 0xff) * (x))
+#define REPEAT_BYTE(x) ((~0ul / 0xff) * (x))
 
 /* @a is a power of 2 value */
-#define ALIGN(x, a)		__ALIGN_KERNEL((x), (a))
-#define ALIGN_DOWN(x, a)	__ALIGN_KERNEL((x) - ((a) - 1), (a))
-#define __ALIGN_MASK(x, mask)	__ALIGN_KERNEL_MASK((x), (mask))
-#define PTR_ALIGN(p, a)		((typeof(p))ALIGN((unsigned long)(p), (a)))
-#define IS_ALIGNED(x, a)		(((x) & ((typeof(x))(a) - 1)) == 0)
+#define ALIGN(x, a) __ALIGN_KERNEL((x), (a))
+#define ALIGN_DOWN(x, a) __ALIGN_KERNEL((x) - ((a)-1), (a))
+#define __ALIGN_MASK(x, mask) __ALIGN_KERNEL_MASK((x), (mask))
+#define PTR_ALIGN(p, a) ((typeof(p))ALIGN((unsigned long)(p), (a)))
+#define IS_ALIGNED(x, a) (((x) & ((typeof(x))(a)-1)) == 0)
 
 /* generic data direction definitions */
-#define READ			0
-#define WRITE			1
+#define READ 0
+#define WRITE 1
 
 /**
  * ARRAY_SIZE - get the number of elements in array @arr
@@ -46,12 +45,11 @@
  */
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
 
-#define u64_to_user_ptr(x) (		\
-{					\
-	typecheck(u64, (x));		\
-	(void __user *)(uintptr_t)(x);	\
-}					\
-)
+#define u64_to_user_ptr(x)                                                                                                                                     \
+	({                                                                                                                                                     \
+		typecheck(u64, (x));                                                                                                                           \
+		(void __user *)(uintptr_t)(x);                                                                                                                 \
+	})
 
 /*
  * This looks more complex than it should be. But we need to
@@ -68,7 +66,7 @@
  * Rounds @x up to next multiple of @y (which must be a power of 2).
  * To perform arbitrary rounding up, use roundup() below.
  */
-#define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
+#define round_up(x, y) ((((x)-1) | __round_mask(x, y)) + 1)
 /**
  * round_down - round down to next specified power of 2
  * @x: the value to round
@@ -86,22 +84,25 @@
  * Return: the size of @f in the struct definition without having a
  * declared instance of @t.
  */
-#define FIELD_SIZEOF(t, f) (sizeof(((t*)0)->f))
+#define FIELD_SIZEOF(t, f) (sizeof(((t *)0)->f))
 
-#define typeof_member(T, m)	typeof(((T*)0)->m)
+#define typeof_member(T, m) typeof(((T *)0)->m)
 
 #define DIV_ROUND_UP __KERNEL_DIV_ROUND_UP
 
-#define DIV_ROUND_DOWN_ULL(ll, d) \
-	({ unsigned long long _tmp = (ll); do_div(_tmp, d); _tmp; })
+#define DIV_ROUND_DOWN_ULL(ll, d)                                                                                                                              \
+	({                                                                                                                                                     \
+		unsigned long long _tmp = (ll);                                                                                                                \
+		do_div(_tmp, d);                                                                                                                               \
+		_tmp;                                                                                                                                          \
+	})
 
-#define DIV_ROUND_UP_ULL(ll, d) \
-	DIV_ROUND_DOWN_ULL((unsigned long long)(ll) + (d) - 1, (d))
+#define DIV_ROUND_UP_ULL(ll, d) DIV_ROUND_DOWN_ULL((unsigned long long)(ll) + (d)-1, (d))
 
 #if BITS_PER_LONG == 32
-# define DIV_ROUND_UP_SECTOR_T(ll,d) DIV_ROUND_UP_ULL(ll, d)
+#define DIV_ROUND_UP_SECTOR_T(ll, d) DIV_ROUND_UP_ULL(ll, d)
 #else
-# define DIV_ROUND_UP_SECTOR_T(ll,d) DIV_ROUND_UP(ll,d)
+#define DIV_ROUND_UP_SECTOR_T(ll, d) DIV_ROUND_UP(ll, d)
 #endif
 
 /**
@@ -112,12 +113,11 @@
  * Rounds @x up to next multiple of @y. If @y will always be a power
  * of 2, consider using the faster round_up().
  */
-#define roundup(x, y) (					\
-{							\
-	typeof(y) __y = y;				\
-	(((x) + (__y - 1)) / __y) * __y;		\
-}							\
-)
+#define roundup(x, y)                                                                                                                                          \
+	({                                                                                                                                                     \
+		typeof(y) __y = y;                                                                                                                             \
+		(((x) + (__y - 1)) / __y) * __y;                                                                                                               \
+	})
 /**
  * rounddown - round down to next specified multiple
  * @x: the value to round
@@ -126,12 +126,11 @@
  * Rounds @x down to next multiple of @y. If @y will always be a power
  * of 2, consider using the faster round_down().
  */
-#define rounddown(x, y) (				\
-{							\
-	typeof(x) __x = (x);				\
-	__x - (__x % (y));				\
-}							\
-)
+#define rounddown(x, y)                                                                                                                                        \
+	({                                                                                                                                                     \
+		typeof(x) __x = (x);                                                                                                                           \
+		__x - (__x % (y));                                                                                                                             \
+	})
 
 /*
  * Divide positive or negative dividend by positive or negative divisor
@@ -139,45 +138,43 @@
  * divisors if the dividend variable type is unsigned and for negative
  * dividends if the divisor variable type is unsigned.
  */
-#define DIV_ROUND_CLOSEST(x, divisor)(			\
-{							\
-	typeof(x) __x = x;				\
-	typeof(divisor) __d = divisor;			\
-	(((typeof(x))-1) > 0 ||				\
-	 ((typeof(divisor))-1) > 0 ||			\
-	 (((__x) > 0) == ((__d) > 0))) ?		\
-		(((__x) + ((__d) / 2)) / (__d)) :	\
-		(((__x) - ((__d) / 2)) / (__d));	\
-}							\
-)
+#define DIV_ROUND_CLOSEST(x, divisor)                                                                                                                          \
+	({                                                                                                                                                     \
+		typeof(x) __x = x;                                                                                                                             \
+		typeof(divisor) __d = divisor;                                                                                                                 \
+		(((typeof(x))-1) > 0 || ((typeof(divisor))-1) > 0 || (((__x) > 0) == ((__d) > 0))) ? (((__x) + ((__d) / 2)) / (__d)) :                         \
+												     (((__x) - ((__d) / 2)) / (__d));                          \
+	})
 /*
  * Same as above but for u64 dividends. divisor must be a 32-bit
  * number.
  */
-#define DIV_ROUND_CLOSEST_ULL(x, divisor)(		\
-{							\
-	typeof(divisor) __d = divisor;			\
-	unsigned long long _tmp = (x) + (__d) / 2;	\
-	do_div(_tmp, __d);				\
-	_tmp;						\
-}							\
-)
+#define DIV_ROUND_CLOSEST_ULL(x, divisor)                                                                                                                      \
+	({                                                                                                                                                     \
+		typeof(divisor) __d = divisor;                                                                                                                 \
+		unsigned long long _tmp = (x) + (__d) / 2;                                                                                                     \
+		do_div(_tmp, __d);                                                                                                                             \
+		_tmp;                                                                                                                                          \
+	})
 
 /*
  * Multiplies an integer by a fraction, while avoiding unnecessary
  * overflow or loss of precision.
  */
-#define mult_frac(x, numer, denom)(			\
-{							\
-	typeof(x) quot = (x) / (denom);			\
-	typeof(x) rem  = (x) % (denom);			\
-	(quot * (numer)) + ((rem * (numer)) / (denom));	\
-}							\
-)
+#define mult_frac(x, numer, denom)                                                                                                                             \
+	({                                                                                                                                                     \
+		typeof(x) quot = (x) / (denom);                                                                                                                \
+		typeof(x) rem = (x) % (denom);                                                                                                                 \
+		(quot * (numer)) + ((rem * (numer)) / (denom));                                                                                                \
+	})
 
-
-#define _RET_IP_		(unsigned long)__builtin_return_address(0)
-#define _THIS_IP_  ({ __label__ __here; __here: (unsigned long)&&__here; })
+#define _RET_IP_ (unsigned long)__builtin_return_address(0)
+#define _THIS_IP_                                                                                                                                              \
+	({                                                                                                                                                     \
+		__label__ __here;                                                                                                                              \
+	__here:                                                                                                                                                \
+		(unsigned long)&&__here;                                                                                                                       \
+	})
 
 #define sector_div(a, b) do_div(a, b)
 
@@ -203,9 +200,11 @@ struct user;
 
 #ifdef CONFIG_PREEMPT_VOLUNTARY
 extern int _cond_resched(void);
-# define might_resched() _cond_resched()
+#define might_resched() _cond_resched()
 #else
-# define might_resched() do { } while (0)
+#define might_resched()                                                                                                                                        \
+	do {                                                                                                                                                   \
+	} while (0)
 #endif
 
 #ifdef CONFIG_DEBUG_ATOMIC_SLEEP
@@ -225,16 +224,21 @@ extern void __cant_sleep(const char *file, int line, int preempt_offset);
  * be bitten later when the calling function happens to sleep when it is not
  * supposed to.
  */
-# define might_sleep() \
-	do { __might_sleep(__FILE__, __LINE__, 0); might_resched(); } while (0)
+#define might_sleep()                                                                                                                                          \
+	do {                                                                                                                                                   \
+		__might_sleep(__FILE__, __LINE__, 0);                                                                                                          \
+		might_resched();                                                                                                                               \
+	} while (0)
 /**
  * cant_sleep - annotation for functions that cannot sleep
  *
  * this macro will print a stack trace if it is executed with preemption enabled
  */
-# define cant_sleep() \
-	do { __cant_sleep(__FILE__, __LINE__, 0); } while (0)
-# define sched_annotate_sleep()	(current->task_state_change = 0)
+#define cant_sleep()                                                                                                                                           \
+	do {                                                                                                                                                   \
+		__cant_sleep(__FILE__, __LINE__, 0);                                                                                                           \
+	} while (0)
+#define sched_annotate_sleep() (current->task_state_change = 0)
 /**
  * non_block_start - annotate the start of section where sleeping is prohibited
  *
@@ -245,26 +249,43 @@ extern void __cant_sleep(const char *file, int line, int preempt_offset);
  * that memory allocation. Other blocking calls like wait_event() pose similar
  * issues.
  */
-# define non_block_start() (current->non_block_count++)
+#define non_block_start() (current->non_block_count++)
 /**
  * non_block_end - annotate the end of section where sleeping is prohibited
  *
  * Closes a section opened by non_block_start().
  */
-# define non_block_end() WARN_ON(current->non_block_count-- == 0)
+#define non_block_end() WARN_ON(current->non_block_count-- == 0)
 #else
-  static inline void ___might_sleep(const char *file, int line,
-				   int preempt_offset) { }
-  static inline void __might_sleep(const char *file, int line,
-				   int preempt_offset) { }
-# define might_sleep() do { might_resched(); } while (0)
-# define cant_sleep() do { } while (0)
-# define sched_annotate_sleep() do { } while (0)
-# define non_block_start() do { } while (0)
-# define non_block_end() do { } while (0)
+static inline void ___might_sleep(const char *file, int line, int preempt_offset)
+{
+}
+static inline void __might_sleep(const char *file, int line, int preempt_offset)
+{
+}
+#define might_sleep()                                                                                                                                          \
+	do {                                                                                                                                                   \
+		might_resched(); /* */                                                                                                                         \
+	} while (0)
+#define cant_sleep()                                                                                                                                           \
+	do {                                                                                                                                                   \
+	} while (0)
+#define sched_annotate_sleep()                                                                                                                                 \
+	do {                                                                                                                                                   \
+	} while (0)
+#define non_block_start()                                                                                                                                      \
+	do {                                                                                                                                                   \
+	} while (0)
+#define non_block_end()                                                                                                                                        \
+	do {                                                                                                                                                   \
+	} while (0)
 #endif
 
-#define might_sleep_if(cond) do { if (cond) might_sleep(); } while (0)
+#define might_sleep_if(cond)                                                                                                                                   \
+	do {                                                                                                                                                   \
+		if (cond)                                                                                                                                      \
+			might_sleep();                                                                                                                         \
+	} while (0)
 
 /**
  * abs - return absolute value of an argument
@@ -274,20 +295,26 @@ extern void __cant_sleep(const char *file, int line, int preempt_offset);
  *
  * Return: an absolute value of x.
  */
-#define abs(x)	__abs_choose_expr(x, long long,				\
-		__abs_choose_expr(x, long,				\
-		__abs_choose_expr(x, int,				\
-		__abs_choose_expr(x, short,				\
-		__abs_choose_expr(x, char,				\
-		__builtin_choose_expr(					\
-			__builtin_types_compatible_p(typeof(x), char),	\
-			(char)({ signed char __x = (x); __x<0?-__x:__x; }), \
-			((void)0)))))))
+#define abs(x)                                                                                                                                                 \
+	__abs_choose_expr(                                                                                                                                     \
+		x, long long,                                                                                                                                  \
+		__abs_choose_expr(                                                                                                                             \
+			x, long,                                                                                                                               \
+			__abs_choose_expr(x, int,                                                                                                              \
+					  __abs_choose_expr(x, short,                                                                                          \
+							    __abs_choose_expr(x, char,                                                                         \
+									      __builtin_choose_expr(__builtin_types_compatible_p(typeof(x), char), (char)({    \
+													    signed char __x = (x);                             \
+													    __x < 0 ? -__x : __x;                              \
+												    }),                                                        \
+												    ((void)0)))))))
 
-#define __abs_choose_expr(x, type, other) __builtin_choose_expr(	\
-	__builtin_types_compatible_p(typeof(x),   signed type) ||	\
-	__builtin_types_compatible_p(typeof(x), unsigned type),		\
-	({ signed type __x = (x); __x < 0 ? -__x : __x; }), other)
+#define __abs_choose_expr(x, type, other)                                                                                                                      \
+	__builtin_choose_expr(__builtin_types_compatible_p(typeof(x), signed type) || __builtin_types_compatible_p(typeof(x), unsigned type), ({               \
+				      signed type __x = (x);                                                                                                   \
+				      __x < 0 ? -__x : __x;                                                                                                    \
+			      }),                                                                                                                              \
+			      other)
 
 /**
  * reciprocal_scale - "scale" a value into range [0, ep_ro)
@@ -305,21 +332,21 @@ extern void __cant_sleep(const char *file, int line, int preempt_offset);
  */
 static inline u32 reciprocal_scale(u32 val, u32 ep_ro)
 {
-	return (u32)(((u64) val * ep_ro) >> 32);
+	return (u32)(((u64)val * ep_ro) >> 32);
 }
 
-#if defined(CONFIG_MMU) && \
-	(defined(CONFIG_PROVE_LOCKING) || defined(CONFIG_DEBUG_ATOMIC_SLEEP))
+#if defined(CONFIG_MMU) && (defined(CONFIG_PROVE_LOCKING) || defined(CONFIG_DEBUG_ATOMIC_SLEEP))
 #define might_fault() __might_fault(__FILE__, __LINE__)
 void __might_fault(const char *file, int line);
 #else
-static inline void might_fault(void) { }
+static inline void might_fault(void)
+{
+}
 #endif
 
 extern struct atomic_notifier_head panic_notifier_list;
 extern long (*panic_blink)(int state);
-__printf(1, 2)
-void panic(const char *fmt, ...) __noreturn __cold;
+__printf(1, 2) void panic(const char *fmt, ...) __noreturn __cold;
 void nmi_panic(struct pt_regs *regs, const char *msg);
 void check_panic_on_warn(const char *origin);
 extern void oops_enter(void);
@@ -333,7 +360,8 @@ void complete_and_exit(struct completion *, long) __noreturn;
 void refcount_error_report(struct pt_regs *regs, const char *err);
 #else
 static inline void refcount_error_report(struct pt_regs *regs, const char *err)
-{ }
+{
+}
 #endif
 
 /* Internal, do not use. */
@@ -365,8 +393,7 @@ static inline int __must_check kstrtoul(const char *s, unsigned int base, unsign
 	 * We want to shortcut function call, but
 	 * __builtin_types_compatible_p(unsigned long, unsigned long long) = 0.
 	 */
-	if (sizeof(unsigned long) == sizeof(unsigned long long) &&
-	    __alignof__(unsigned long) == __alignof__(unsigned long long))
+	if (sizeof(unsigned long) == sizeof(unsigned long long) && __alignof__(unsigned long) == __alignof__(unsigned long long))
 		return kstrtoull(s, base, (unsigned long long *)res);
 	else
 		return _kstrtoul(s, base, res);
@@ -394,8 +421,7 @@ static inline int __must_check kstrtol(const char *s, unsigned int base, long *r
 	 * We want to shortcut function call, but
 	 * __builtin_types_compatible_p(long, long long) = 0.
 	 */
-	if (sizeof(long) == sizeof(long long) &&
-	    __alignof__(long) == __alignof__(long long))
+	if (sizeof(long) == sizeof(long long) && __alignof__(long) == __alignof__(long long))
 		return kstrtoll(s, base, (long long *)res);
 	else
 		return _kstrtol(s, base, res);
@@ -464,37 +490,27 @@ static inline int __must_check kstrtos32_from_user(const char __user *s, size_t 
 
 /* Obsolete, do not use.  Use kstrto<foo> instead */
 
-extern unsigned long simple_strtoul(const char *,char **,unsigned int);
-extern long simple_strtol(const char *,char **,unsigned int);
-extern unsigned long long simple_strtoull(const char *,char **,unsigned int);
-extern long long simple_strtoll(const char *,char **,unsigned int);
+extern unsigned long simple_strtoul(const char *, char **, unsigned int);
+extern long simple_strtol(const char *, char **, unsigned int);
+extern unsigned long long simple_strtoull(const char *, char **, unsigned int);
+extern long long simple_strtoll(const char *, char **, unsigned int);
 
-extern int num_to_str(char *buf, int size,
-		      unsigned long long num, unsigned int width);
+extern int num_to_str(char *buf, int size, unsigned long long num, unsigned int width);
 
 /* lib/printf utilities */
 
-extern __printf(2, 3) int sprintf(char *buf, const char * fmt, ...);
+extern __printf(2, 3) int sprintf(char *buf, const char *fmt, ...);
 extern __printf(2, 0) int vsprintf(char *buf, const char *, va_list);
-extern __printf(3, 4)
-int snprintf(char *buf, size_t size, const char *fmt, ...);
-extern __printf(3, 0)
-int vsnprintf(char *buf, size_t size, const char *fmt, va_list args);
-extern __printf(3, 4)
-int scnprintf(char *buf, size_t size, const char *fmt, ...);
-extern __printf(3, 0)
-int vscnprintf(char *buf, size_t size, const char *fmt, va_list args);
-extern __printf(2, 3) __malloc
-char *kasprintf(gfp_t gfp, const char *fmt, ...);
-extern __printf(2, 0) __malloc
-char *kvasprintf(gfp_t gfp, const char *fmt, va_list args);
-extern __printf(2, 0)
-const char *kvasprintf_const(gfp_t gfp, const char *fmt, va_list args);
+extern __printf(3, 4) int snprintf(char *buf, size_t size, const char *fmt, ...);
+extern __printf(3, 0) int vsnprintf(char *buf, size_t size, const char *fmt, va_list args);
+extern __printf(3, 4) int scnprintf(char *buf, size_t size, const char *fmt, ...);
+extern __printf(3, 0) int vscnprintf(char *buf, size_t size, const char *fmt, va_list args);
+extern __printf(2, 3) __malloc char *kasprintf(gfp_t gfp, const char *fmt, ...);
+extern __printf(2, 0) __malloc char *kvasprintf(gfp_t gfp, const char *fmt, va_list args);
+extern __printf(2, 0) const char *kvasprintf_const(gfp_t gfp, const char *fmt, va_list args);
 
-extern __scanf(2, 3)
-int sscanf(const char *, const char *, ...);
-extern __scanf(2, 0)
-int vsscanf(const char *, const char *, va_list);
+extern __scanf(2, 3) int sscanf(const char *, const char *, ...);
+extern __scanf(2, 0) int vsscanf(const char *, const char *, va_list);
 
 extern int get_option(char **str, int *pint);
 extern char *get_options(const char *str, int nints, int *ints);
@@ -522,7 +538,7 @@ static inline u32 int_sqrt64(u64 x)
 #endif
 
 extern void bust_spinlocks(int yes);
-extern int oops_in_progress;		/* If set, an oops, panic(), BUG() or die() is in progress */
+extern int oops_in_progress; /* If set, an oops, panic(), BUG() or die() is in progress */
 extern int panic_timeout;
 extern unsigned long panic_print;
 extern int panic_on_oops;
@@ -540,7 +556,7 @@ extern bool crash_kexec_post_notifiers;
  * PANIC_CPU_INVALID means no CPU has entered panic() or crash_kexec().
  */
 extern atomic_t panic_cpu;
-#define PANIC_CPU_INVALID	-1
+#define PANIC_CPU_INVALID -1
 
 /*
  * Only to be used by arch init code. If the user over-wrote the default
@@ -552,10 +568,7 @@ static inline void set_arch_panic_timeout(int timeout, int arch_default_timeout)
 		panic_timeout = timeout;
 }
 extern const char *print_tainted(void);
-enum lockdep_ok {
-	LOCKDEP_STILL_OK,
-	LOCKDEP_NOW_UNRELIABLE
-};
+enum lockdep_ok { LOCKDEP_STILL_OK, LOCKDEP_NOW_UNRELIABLE };
 extern void add_taint(unsigned flag, enum lockdep_ok);
 extern int test_taint(unsigned flag);
 extern unsigned long get_taint(void);
@@ -578,37 +591,37 @@ extern enum system_states {
 } system_state;
 
 /* This cannot be an enum because some may be used in assembly source. */
-#define TAINT_PROPRIETARY_MODULE	0
-#define TAINT_FORCED_MODULE		1
-#define TAINT_CPU_OUT_OF_SPEC		2
-#define TAINT_FORCED_RMMOD		3
-#define TAINT_MACHINE_CHECK		4
-#define TAINT_BAD_PAGE			5
-#define TAINT_USER			6
-#define TAINT_DIE			7
-#define TAINT_OVERRIDDEN_ACPI_TABLE	8
-#define TAINT_WARN			9
-#define TAINT_CRAP			10
-#define TAINT_FIRMWARE_WORKAROUND	11
-#define TAINT_OOT_MODULE		12
-#define TAINT_UNSIGNED_MODULE		13
-#define TAINT_SOFTLOCKUP		14
-#define TAINT_LIVEPATCH			15
-#define TAINT_AUX			16
-#define TAINT_RANDSTRUCT		17
-#define TAINT_FLAGS_COUNT		18
+#define TAINT_PROPRIETARY_MODULE 0
+#define TAINT_FORCED_MODULE 1
+#define TAINT_CPU_OUT_OF_SPEC 2
+#define TAINT_FORCED_RMMOD 3
+#define TAINT_MACHINE_CHECK 4
+#define TAINT_BAD_PAGE 5
+#define TAINT_USER 6
+#define TAINT_DIE 7
+#define TAINT_OVERRIDDEN_ACPI_TABLE 8
+#define TAINT_WARN 9
+#define TAINT_CRAP 10
+#define TAINT_FIRMWARE_WORKAROUND 11
+#define TAINT_OOT_MODULE 12
+#define TAINT_UNSIGNED_MODULE 13
+#define TAINT_SOFTLOCKUP 14
+#define TAINT_LIVEPATCH 15
+#define TAINT_AUX 16
+#define TAINT_RANDSTRUCT 17
+#define TAINT_FLAGS_COUNT 18
 
 struct taint_flag {
-	char c_true;	/* character printed when tainted */
-	char c_false;	/* character printed when not tainted */
-	bool module;	/* also show as a per-module taint flag */
+	char c_true; /* character printed when tainted */
+	char c_false; /* character printed when not tainted */
+	bool module; /* also show as a per-module taint flag */
 };
 
 extern const struct taint_flag taint_flags[TAINT_FLAGS_COUNT];
 
 extern const char hex_asc[];
-#define hex_asc_lo(x)	hex_asc[((x) & 0x0f)]
-#define hex_asc_hi(x)	hex_asc[((x) & 0xf0) >> 4]
+#define hex_asc_lo(x) hex_asc[((x)&0x0f)]
+#define hex_asc_hi(x) hex_asc[((x)&0xf0) >> 4]
 
 static inline char *hex_byte_pack(char *buf, u8 byte)
 {
@@ -618,8 +631,8 @@ static inline char *hex_byte_pack(char *buf, u8 byte)
 }
 
 extern const char hex_asc_upper[];
-#define hex_asc_upper_lo(x)	hex_asc_upper[((x) & 0x0f)]
-#define hex_asc_upper_hi(x)	hex_asc_upper[((x) & 0xf0) >> 4]
+#define hex_asc_upper_lo(x) hex_asc_upper[((x)&0x0f)]
+#define hex_asc_upper_hi(x) hex_asc_upper[((x)&0xf0) >> 4]
 
 static inline char *hex_byte_pack_upper(char *buf, u8 byte)
 {
@@ -670,15 +683,14 @@ void tracing_snapshot_alloc(void);
 extern void tracing_start(void);
 extern void tracing_stop(void);
 
-static inline __printf(1, 2)
-void ____trace_printk_check_format(const char *fmt, ...)
+static inline __printf(1, 2) void ____trace_printk_check_format(const char *fmt, ...)
 {
 }
-#define __trace_printk_check_format(fmt, args...)			\
-do {									\
-	if (0)								\
-		____trace_printk_check_format(fmt, ##args);		\
-} while (0)
+#define __trace_printk_check_format(fmt, args...)                                                                                                              \
+	do {                                                                                                                                                   \
+		if (0)                                                                                                                                         \
+			____trace_printk_check_format(fmt, ##args);                                                                                            \
+	} while (0)
 
 /**
  * trace_printk - printf formatting in the ftrace buffer
@@ -710,34 +722,30 @@ do {									\
  * let gcc optimize the rest.
  */
 
-#define trace_printk(fmt, ...)				\
-do {							\
-	char _______STR[] = __stringify((__VA_ARGS__));	\
-	if (sizeof(_______STR) > 3)			\
-		do_trace_printk(fmt, ##__VA_ARGS__);	\
-	else						\
-		trace_puts(fmt);			\
-} while (0)
+#define trace_printk(fmt, ...)                                                                                                                                 \
+	do {                                                                                                                                                   \
+		char _______STR[] = __stringify((__VA_ARGS__));                                                                                                \
+		if (sizeof(_______STR) > 3)                                                                                                                    \
+			do_trace_printk(fmt, ##__VA_ARGS__);                                                                                                   \
+		else                                                                                                                                           \
+			trace_puts(fmt);                                                                                                                       \
+	} while (0)
 
-#define do_trace_printk(fmt, args...)					\
-do {									\
-	static const char *trace_printk_fmt __used			\
-		__attribute__((section("__trace_printk_fmt"))) =	\
-		__builtin_constant_p(fmt) ? fmt : NULL;			\
-									\
-	__trace_printk_check_format(fmt, ##args);			\
-									\
-	if (__builtin_constant_p(fmt))					\
-		__trace_bprintk(_THIS_IP_, trace_printk_fmt, ##args);	\
-	else								\
-		__trace_printk(_THIS_IP_, fmt, ##args);			\
-} while (0)
+#define do_trace_printk(fmt, args...)                                                                                                                          \
+	do {                                                                                                                                                   \
+		static const char *trace_printk_fmt __used __attribute__((section("__trace_printk_fmt"))) = __builtin_constant_p(fmt) ? fmt : NULL;            \
+                                                                                                                                                               \
+		__trace_printk_check_format(fmt, ##args);                                                                                                      \
+                                                                                                                                                               \
+		if (__builtin_constant_p(fmt))                                                                                                                 \
+			__trace_bprintk(_THIS_IP_, trace_printk_fmt, ##args);                                                                                  \
+		else                                                                                                                                           \
+			__trace_printk(_THIS_IP_, fmt, ##args);                                                                                                \
+	} while (0)
 
-extern __printf(2, 3)
-int __trace_bprintk(unsigned long ip, const char *fmt, ...);
+extern __printf(2, 3) int __trace_bprintk(unsigned long ip, const char *fmt, ...);
 
-extern __printf(2, 3)
-int __trace_printk(unsigned long ip, const char *fmt, ...);
+extern __printf(2, 3) int __trace_printk(unsigned long ip, const char *fmt, ...);
 
 /**
  * trace_puts - write a string into the ftrace buffer
@@ -764,16 +772,15 @@ int __trace_printk(unsigned long ip, const char *fmt, ...);
  *  (1 when __trace_bputs is used, strlen(str) when __trace_puts is used)
  */
 
-#define trace_puts(str) ({						\
-	static const char *trace_printk_fmt __used			\
-		__attribute__((section("__trace_printk_fmt"))) =	\
-		__builtin_constant_p(str) ? str : NULL;			\
-									\
-	if (__builtin_constant_p(str))					\
-		__trace_bputs(_THIS_IP_, trace_printk_fmt);		\
-	else								\
-		__trace_puts(_THIS_IP_, str, strlen(str));		\
-})
+#define trace_puts(str)                                                                                                                                        \
+	({                                                                                                                                                     \
+		static const char *trace_printk_fmt __used __attribute__((section("__trace_printk_fmt"))) = __builtin_constant_p(str) ? str : NULL;            \
+                                                                                                                                                               \
+		if (__builtin_constant_p(str))                                                                                                                 \
+			__trace_bputs(_THIS_IP_, trace_printk_fmt);                                                                                            \
+		else                                                                                                                                           \
+			__trace_puts(_THIS_IP_, str, strlen(str));                                                                                             \
+	})
 extern int __trace_bputs(unsigned long ip, const char *str);
 extern int __trace_puts(unsigned long ip, const char *str, int size);
 
@@ -784,47 +791,60 @@ extern void trace_dump_stack(int skip);
  * if we try to allocate the static variable to fmt if it is not a
  * constant. Even with the outer if statement.
  */
-#define ftrace_vprintk(fmt, vargs)					\
-do {									\
-	if (__builtin_constant_p(fmt)) {				\
-		static const char *trace_printk_fmt __used		\
-		  __attribute__((section("__trace_printk_fmt"))) =	\
-			__builtin_constant_p(fmt) ? fmt : NULL;		\
-									\
-		__ftrace_vbprintk(_THIS_IP_, trace_printk_fmt, vargs);	\
-	} else								\
-		__ftrace_vprintk(_THIS_IP_, fmt, vargs);		\
-} while (0)
+#define ftrace_vprintk(fmt, vargs)                                                                                                                             \
+	do {                                                                                                                                                   \
+		if (__builtin_constant_p(fmt)) {                                                                                                               \
+			static const char *trace_printk_fmt __used __attribute__((section("__trace_printk_fmt"))) = __builtin_constant_p(fmt) ? fmt : NULL;    \
+                                                                                                                                                               \
+			__ftrace_vbprintk(_THIS_IP_, trace_printk_fmt, vargs);                                                                                 \
+		} else                                                                                                                                         \
+			__ftrace_vprintk(_THIS_IP_, fmt, vargs);                                                                                               \
+	} while (0)
 
-extern __printf(2, 0) int
-__ftrace_vbprintk(unsigned long ip, const char *fmt, va_list ap);
+extern __printf(2, 0) int __ftrace_vbprintk(unsigned long ip, const char *fmt, va_list ap);
 
-extern __printf(2, 0) int
-__ftrace_vprintk(unsigned long ip, const char *fmt, va_list ap);
+extern __printf(2, 0) int __ftrace_vprintk(unsigned long ip, const char *fmt, va_list ap);
 
 extern void ftrace_dump(enum ftrace_dump_mode oops_dump_mode);
 #else
-static inline void tracing_start(void) { }
-static inline void tracing_stop(void) { }
-static inline void trace_dump_stack(int skip) { }
+static inline void tracing_start(void)
+{
+}
+static inline void tracing_stop(void)
+{
+}
+static inline void trace_dump_stack(int skip)
+{
+}
 
-static inline void tracing_on(void) { }
-static inline void tracing_off(void) { }
-static inline int tracing_is_on(void) { return 0; }
-static inline void tracing_snapshot(void) { }
-static inline void tracing_snapshot_alloc(void) { }
-
-static inline __printf(1, 2)
-int trace_printk(const char *fmt, ...)
+static inline void tracing_on(void)
+{
+}
+static inline void tracing_off(void)
+{
+}
+static inline int tracing_is_on(void)
 {
 	return 0;
 }
-static __printf(1, 0) inline int
-ftrace_vprintk(const char *fmt, va_list ap)
+static inline void tracing_snapshot(void)
+{
+}
+static inline void tracing_snapshot_alloc(void)
+{
+}
+
+static inline __printf(1, 2) int trace_printk(const char *fmt, ...)
 {
 	return 0;
 }
-static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
+static __printf(1, 0) inline int ftrace_vprintk(const char *fmt, va_list ap)
+{
+	return 0;
+}
+static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode)
+{
+}
 #endif /* CONFIG_TRACING */
 
 /*
@@ -839,48 +859,43 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
  *   constant expressions (to avoid tripping VLA warnings in stack
  *   allocation usage).
  */
-#define __typecheck(x, y) \
-		(!!(sizeof((typeof(x) *)1 == (typeof(y) *)1)))
+#define __typecheck(x, y) (!!(sizeof((typeof(x) *)1 == (typeof(y) *)1)))
 
 /*
  * This returns a constant expression while determining if an argument is
  * a constant expression, most importantly without evaluating the argument.
  * Glory to Martin Uecker <Martin.Uecker@med.uni-goettingen.de>
  */
-#define __is_constexpr(x) \
-	(sizeof(int) == sizeof(*(8 ? ((void *)((long)(x) * 0l)) : (int *)8)))
+#define __is_constexpr(x) (sizeof(int) == sizeof(*(8 ? ((void *)((long)(x)*0l)) : (int *)8)))
 
-#define __no_side_effects(x, y) \
-		(__is_constexpr(x) && __is_constexpr(y))
+#define __no_side_effects(x, y) (__is_constexpr(x) && __is_constexpr(y))
 
-#define __safe_cmp(x, y) \
-		(__typecheck(x, y) && __no_side_effects(x, y))
+#define __safe_cmp(x, y) (__typecheck(x, y) && __no_side_effects(x, y))
 
-#define __cmp(x, y, op)	((x) op (y) ? (x) : (y))
+#define __cmp(x, y, op) ((x)op(y) ? (x) : (y))
 
-#define __cmp_once(x, y, unique_x, unique_y, op) ({	\
-		typeof(x) unique_x = (x);		\
-		typeof(y) unique_y = (y);		\
-		__cmp(unique_x, unique_y, op); })
+#define __cmp_once(x, y, unique_x, unique_y, op)                                                                                                               \
+	({                                                                                                                                                     \
+		typeof(x) unique_x = (x);                                                                                                                      \
+		typeof(y) unique_y = (y);                                                                                                                      \
+		__cmp(unique_x, unique_y, op);                                                                                                                 \
+	})
 
-#define __careful_cmp(x, y, op) \
-	__builtin_choose_expr(__safe_cmp(x, y), \
-		__cmp(x, y, op), \
-		__cmp_once(x, y, __UNIQUE_ID(__x), __UNIQUE_ID(__y), op))
+#define __careful_cmp(x, y, op) __builtin_choose_expr(__safe_cmp(x, y), __cmp(x, y, op), __cmp_once(x, y, __UNIQUE_ID(__x), __UNIQUE_ID(__y), op))
 
 /**
  * min - return minimum of two values of the same or compatible types
  * @x: first value
  * @y: second value
  */
-#define min(x, y)	__careful_cmp(x, y, <)
+#define min(x, y) __careful_cmp(x, y, <)
 
 /**
  * max - return maximum of two values of the same or compatible types
  * @x: first value
  * @y: second value
  */
-#define max(x, y)	__careful_cmp(x, y, >)
+#define max(x, y) __careful_cmp(x, y, >)
 
 /**
  * min3 - return minimum of three values
@@ -903,10 +918,12 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
  * @x: value1
  * @y: value2
  */
-#define min_not_zero(x, y) ({			\
-	typeof(x) __x = (x);			\
-	typeof(y) __y = (y);			\
-	__x == 0 ? __y : ((__y == 0) ? __x : min(__x, __y)); })
+#define min_not_zero(x, y)                                                                                                                                     \
+	({                                                                                                                                                     \
+		typeof(x) __x = (x);                                                                                                                           \
+		typeof(y) __y = (y);                                                                                                                           \
+		__x == 0 ? __y : ((__y == 0) ? __x : min(__x, __y));                                                                                           \
+	})
 
 /**
  * clamp - return a value clamped to a given range with strict typechecking
@@ -932,7 +949,7 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
  * @x: first value
  * @y: second value
  */
-#define min_t(type, x, y)	__careful_cmp((type)(x), (type)(y), <)
+#define min_t(type, x, y) __careful_cmp((type)(x), (type)(y), <)
 
 /**
  * max_t - return maximum of two values, using the specified type
@@ -940,7 +957,7 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
  * @x: first value
  * @y: second value
  */
-#define max_t(type, x, y)	__careful_cmp((type)(x), (type)(y), >)
+#define max_t(type, x, y) __careful_cmp((type)(x), (type)(y), >)
 
 /**
  * clamp_t - return a value clamped to a given range using a given type
@@ -967,20 +984,23 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
  */
 #define clamp_val(val, lo, hi) clamp_t(typeof(val), val, lo, hi)
 
-
 /**
  * swap - swap values of @a and @b
  * @a: first value
  * @b: second value
  */
-#define swap(a, b) \
-	do { typeof(a) __tmp = (a); (a) = (b); (b) = __tmp; } while (0)
+#define swap(a, b)                                                                                                                                             \
+	do {                                                                                                                                                   \
+		typeof(a) __tmp = (a);                                                                                                                         \
+		(a) = (b);                                                                                                                                     \
+		(b) = __tmp;                                                                                                                                   \
+	} while (0)
 
 /* This counts to 12. Any more, it will return 13th argument. */
 #define __COUNT_ARGS(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _n, X...) _n
 #define COUNT_ARGS(X...) __COUNT_ARGS(, ##X, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 
-#define __CONCAT(a, b) a ## b
+#define __CONCAT(a, b) a##b
 #define CONCATENATE(a, b) __CONCAT(a, b)
 
 /**
@@ -990,12 +1010,12 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
  * @member:	the name of the member within the struct.
  *
  */
-#define container_of(ptr, type, member) ({				\
-	void *__mptr = (void *)(ptr);					\
-	BUILD_BUG_ON_MSG(!__same_type(*(ptr), ((type *)0)->member) &&	\
-			 !__same_type(*(ptr), void),			\
-			 "pointer type mismatch in container_of()");	\
-	((type *)(__mptr - offsetof(type, member))); })
+#define container_of(ptr, type, member)                                                                                                                        \
+	({                                                                                                                                                     \
+		void *__mptr = (void *)(ptr);                                                                                                                  \
+		BUILD_BUG_ON_MSG(!__same_type(*(ptr), ((type *)0)->member) && !__same_type(*(ptr), void), "pointer type mismatch in container_of()");          \
+		((type *)(__mptr - offsetof(type, member)));                                                                                                   \
+	})
 
 /**
  * container_of_safe - cast a member of a structure out to the containing structure
@@ -1005,29 +1025,23 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
  *
  * If IS_ERR_OR_NULL(ptr), ptr is returned unchanged.
  */
-#define container_of_safe(ptr, type, member) ({				\
-	void *__mptr = (void *)(ptr);					\
-	BUILD_BUG_ON_MSG(!__same_type(*(ptr), ((type *)0)->member) &&	\
-			 !__same_type(*(ptr), void),			\
-			 "pointer type mismatch in container_of()");	\
-	IS_ERR_OR_NULL(__mptr) ? ERR_CAST(__mptr) :			\
-		((type *)(__mptr - offsetof(type, member))); })
+#define container_of_safe(ptr, type, member)                                                                                                                   \
+	({                                                                                                                                                     \
+		void *__mptr = (void *)(ptr);                                                                                                                  \
+		BUILD_BUG_ON_MSG(!__same_type(*(ptr), ((type *)0)->member) && !__same_type(*(ptr), void), "pointer type mismatch in container_of()");          \
+		IS_ERR_OR_NULL(__mptr) ? ERR_CAST(__mptr) : ((type *)(__mptr - offsetof(type, member)));                                                       \
+	})
 
 /* Rebuild everything on CONFIG_FTRACE_MCOUNT_RECORD */
 #ifdef CONFIG_FTRACE_MCOUNT_RECORD
-# define REBUILD_DUE_TO_FTRACE_MCOUNT_RECORD
+#define REBUILD_DUE_TO_FTRACE_MCOUNT_RECORD
 #endif
 
 /* Permissions on a sysfs file: you didn't miss the 0 prefix did you? */
-#define VERIFY_OCTAL_PERMISSIONS(perms)						\
-	(BUILD_BUG_ON_ZERO((perms) < 0) +					\
-	 BUILD_BUG_ON_ZERO((perms) > 0777) +					\
-	 /* USER_READABLE >= GROUP_READABLE >= OTHER_READABLE */		\
-	 BUILD_BUG_ON_ZERO((((perms) >> 6) & 4) < (((perms) >> 3) & 4)) +	\
-	 BUILD_BUG_ON_ZERO((((perms) >> 3) & 4) < ((perms) & 4)) +		\
-	 /* USER_WRITABLE >= GROUP_WRITABLE */					\
-	 BUILD_BUG_ON_ZERO((((perms) >> 6) & 2) < (((perms) >> 3) & 2)) +	\
-	 /* OTHER_WRITABLE?  Generally considered a bad idea. */		\
-	 BUILD_BUG_ON_ZERO((perms) & 2) +					\
-	 (perms))
+#define VERIFY_OCTAL_PERMISSIONS(perms)                                                                                                                        \
+	(BUILD_BUG_ON_ZERO((perms) < 0) + BUILD_BUG_ON_ZERO((perms) > 0777) + /* USER_READABLE >= GROUP_READABLE >= OTHER_READABLE */                          \
+	 BUILD_BUG_ON_ZERO((((perms) >> 6) & 4) < (((perms) >> 3) & 4)) +                                                                                      \
+	 BUILD_BUG_ON_ZERO((((perms) >> 3) & 4) < ((perms)&4)) + /* USER_WRITABLE >= GROUP_WRITABLE */                                                         \
+	 BUILD_BUG_ON_ZERO((((perms) >> 6) & 2) < (((perms) >> 3) & 2)) + /* OTHER_WRITABLE?  Generally considered a bad idea. */                              \
+	 BUILD_BUG_ON_ZERO((perms)&2) + (perms))
 #endif
