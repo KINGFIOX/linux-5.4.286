@@ -33,19 +33,19 @@
 #include <linux/sched/debug.h>
 #include <linux/sched/task.h>
 
-
 #if BITS_PER_LONG == 64
-# define LDSEM_ACTIVE_MASK	0xffffffffL
+#define LDSEM_ACTIVE_MASK 0xffffffffL
 #else
-# define LDSEM_ACTIVE_MASK	0x0000ffffL
+#define LDSEM_ACTIVE_MASK 0x0000ffffL
 #endif
 
-#define LDSEM_UNLOCKED		0L
-#define LDSEM_ACTIVE_BIAS	1L
-#define LDSEM_WAIT_BIAS		(-LDSEM_ACTIVE_MASK-1)
-#define LDSEM_READ_BIAS		LDSEM_ACTIVE_BIAS
-#define LDSEM_WRITE_BIAS	(LDSEM_WAIT_BIAS + LDSEM_ACTIVE_BIAS)
+#define LDSEM_UNLOCKED 0L
+#define LDSEM_WAIT_BIAS (-LDSEM_ACTIVE_MASK - 1)
+#define LDSEM_ACTIVE_BIAS 1L
+#define LDSEM_READ_BIAS LDSEM_ACTIVE_BIAS // add
+#define LDSEM_WRITE_BIAS (LDSEM_WAIT_BIAS + LDSEM_ACTIVE_BIAS)
 
+// 等待队列
 struct ldsem_waiter {
 	struct list_head list;
 	struct task_struct *task;
@@ -54,8 +54,7 @@ struct ldsem_waiter {
 /*
  * Initialize an ldsem:
  */
-void __init_ldsem(struct ld_semaphore *sem, const char *name,
-		  struct lock_class_key *key)
+void __init_ldsem(struct ld_semaphore *sem, const char *name, struct lock_class_key *key)
 {
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
 	/*
@@ -91,7 +90,7 @@ static void __ldsem_wake_readers(struct ld_semaphore *sem)
 			return;
 	} while (1);
 
-	list_for_each_entry_safe(waiter, next, &sem->read_wait, list) {
+	list_for_each_entry_safe (waiter, next, &sem->read_wait, list) {
 		tsk = waiter->task;
 		smp_store_release(&waiter->task, NULL);
 		wake_up_process(tsk);
@@ -152,8 +151,7 @@ static void ldsem_wake(struct ld_semaphore *sem)
 /*
  * wait for the read lock to be granted
  */
-static struct ld_semaphore __sched *
-down_read_failed(struct ld_semaphore *sem, long count, long timeout)
+static struct ld_semaphore __sched *down_read_failed(struct ld_semaphore *sem, long count, long timeout)
 {
 	struct ldsem_waiter waiter;
 	long adjust = -LDSEM_ACTIVE_BIAS + LDSEM_WAIT_BIAS;
@@ -226,8 +224,7 @@ down_read_failed(struct ld_semaphore *sem, long count, long timeout)
 /*
  * wait for the write lock to be granted
  */
-static struct ld_semaphore __sched *
-down_write_failed(struct ld_semaphore *sem, long count, long timeout)
+static struct ld_semaphore __sched *down_write_failed(struct ld_semaphore *sem, long count, long timeout)
 {
 	struct ldsem_waiter waiter;
 	long adjust = -LDSEM_ACTIVE_BIAS;
@@ -290,18 +287,15 @@ down_write_failed(struct ld_semaphore *sem, long count, long timeout)
 	return sem;
 }
 
-
-
-static int __ldsem_down_read_nested(struct ld_semaphore *sem,
-					   int subclass, long timeout)
+static int __ldsem_down_read_nested(struct ld_semaphore *sem, int subclass, long timeout)
 {
 	long count;
 
-	rwsem_acquire_read(&sem->dep_map, subclass, 0, _RET_IP_);
+	rwsem_acquire_read(&sem->dep_map, subclass, 0, _RET_IP_); // do nothing
 
-	count = atomic_long_add_return(LDSEM_READ_BIAS, &sem->count);
+	count = atomic_long_add_return(LDSEM_READ_BIAS, &sem->count); // up(sem), count <- original count
 	if (count <= 0) {
-		lock_contended(&sem->dep_map, _RET_IP_);
+		lock_contended(&sem->dep_map, _RET_IP_); // do nothing
 		if (!down_read_failed(sem, count, timeout)) {
 			rwsem_release(&sem->dep_map, 1, _RET_IP_);
 			return 0;
@@ -311,8 +305,7 @@ static int __ldsem_down_read_nested(struct ld_semaphore *sem,
 	return 1;
 }
 
-static int __ldsem_down_write_nested(struct ld_semaphore *sem,
-					    int subclass, long timeout)
+static int __ldsem_down_write_nested(struct ld_semaphore *sem, int subclass, long timeout)
 {
 	long count;
 
@@ -330,13 +323,12 @@ static int __ldsem_down_write_nested(struct ld_semaphore *sem,
 	return 1;
 }
 
-
 /*
  * lock for reading -- returns 1 if successful, 0 if timed out
  */
 int __sched ldsem_down_read(struct ld_semaphore *sem, long timeout)
 {
-	might_sleep();
+	might_sleep(); // do nothing
 	return __ldsem_down_read_nested(sem, 0, timeout);
 }
 
@@ -411,7 +403,6 @@ void ldsem_up_write(struct ld_semaphore *sem)
 		ldsem_wake(sem);
 }
 
-
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
 
 int ldsem_down_read_nested(struct ld_semaphore *sem, int subclass, long timeout)
@@ -420,8 +411,7 @@ int ldsem_down_read_nested(struct ld_semaphore *sem, int subclass, long timeout)
 	return __ldsem_down_read_nested(sem, subclass, timeout);
 }
 
-int ldsem_down_write_nested(struct ld_semaphore *sem, int subclass,
-			    long timeout)
+int ldsem_down_write_nested(struct ld_semaphore *sem, int subclass, long timeout)
 {
 	might_sleep();
 	return __ldsem_down_write_nested(sem, subclass, timeout);

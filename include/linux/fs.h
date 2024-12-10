@@ -926,7 +926,7 @@ struct file {
 	} f_u;
 	struct path f_path;
 	struct inode *f_inode; /* cached value */
-	const struct file_operations *f_op;
+	const struct file_operations *f_op; // table of handler
 
 	/*
 	 * Protects f_ep_links, f_flags.

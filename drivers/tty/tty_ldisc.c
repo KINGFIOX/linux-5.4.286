@@ -23,7 +23,7 @@
 #undef LDISC_DEBUG_HANGUP
 
 #ifdef LDISC_DEBUG_HANGUP
-#define tty_ldisc_debug(tty, f, args...)	tty_debug(tty, f, ##args)
+#define tty_ldisc_debug(tty, f, args...) tty_debug(tty, f, ##args)
 #else
 #define tty_ldisc_debug(tty, f, args...)
 #endif
@@ -33,7 +33,6 @@ enum {
 	LDISC_SEM_NORMAL,
 	LDISC_SEM_OTHER,
 };
-
 
 /*
  *	This guards the refcounted line discipline lists. The lock
@@ -157,9 +156,9 @@ static void put_ldops(struct tty_ldisc_ops *ldops)
  */
 
 #if defined(CONFIG_LDISC_AUTOLOAD)
-	#define INITIAL_AUTOLOAD_STATE	1
+#define INITIAL_AUTOLOAD_STATE 1
 #else
-	#define INITIAL_AUTOLOAD_STATE	0
+#define INITIAL_AUTOLOAD_STATE 0
 #endif
 static int tty_ldisc_autoload = INITIAL_AUTOLOAD_STATE;
 
@@ -239,10 +238,10 @@ static int tty_ldiscs_seq_show(struct seq_file *m, void *v)
 }
 
 const struct seq_operations tty_ldiscs_seq_ops = {
-	.start	= tty_ldiscs_seq_start,
-	.next	= tty_ldiscs_seq_next,
-	.stop	= tty_ldiscs_seq_stop,
-	.show	= tty_ldiscs_seq_show,
+	.start = tty_ldiscs_seq_start,
+	.next = tty_ldiscs_seq_next,
+	.stop = tty_ldiscs_seq_stop,
+	.show = tty_ldiscs_seq_show,
 };
 
 /**
@@ -269,7 +268,7 @@ struct tty_ldisc *tty_ldisc_ref_wait(struct tty_struct *tty)
 {
 	struct tty_ldisc *ld;
 
-	ldsem_down_read(&tty->ldisc_sem, MAX_SCHEDULE_TIMEOUT);
+	ldsem_down_read(&tty->ldisc_sem, MAX_SCHEDULE_TIMEOUT); // tty 上锁
 	ld = tty->ldisc;
 	if (!ld)
 		ldsem_up_read(&tty->ldisc_sem);
@@ -313,18 +312,14 @@ void tty_ldisc_deref(struct tty_ldisc *ld)
 }
 EXPORT_SYMBOL_GPL(tty_ldisc_deref);
 
-
-static inline int
-__tty_ldisc_lock(struct tty_struct *tty, unsigned long timeout)
+static inline int __tty_ldisc_lock(struct tty_struct *tty, unsigned long timeout)
 {
 	return ldsem_down_write(&tty->ldisc_sem, timeout);
 }
 
-static inline int
-__tty_ldisc_lock_nested(struct tty_struct *tty, unsigned long timeout)
+static inline int __tty_ldisc_lock_nested(struct tty_struct *tty, unsigned long timeout)
 {
-	return ldsem_down_write_nested(&tty->ldisc_sem,
-				       LDISC_SEM_OTHER, timeout);
+	return ldsem_down_write_nested(&tty->ldisc_sem, LDISC_SEM_OTHER, timeout);
 }
 
 static inline void __tty_ldisc_unlock(struct tty_struct *tty)
@@ -356,9 +351,7 @@ void tty_ldisc_unlock(struct tty_struct *tty)
 	__tty_ldisc_unlock(tty);
 }
 
-static int
-tty_ldisc_lock_pair_timeout(struct tty_struct *tty, struct tty_struct *tty2,
-			    unsigned long timeout)
+static int tty_ldisc_lock_pair_timeout(struct tty_struct *tty, struct tty_struct *tty2, unsigned long timeout)
 {
 	int ret;
 
@@ -397,8 +390,7 @@ static void tty_ldisc_lock_pair(struct tty_struct *tty, struct tty_struct *tty2)
 	tty_ldisc_lock_pair_timeout(tty, tty2, MAX_SCHEDULE_TIMEOUT);
 }
 
-static void tty_ldisc_unlock_pair(struct tty_struct *tty,
-				  struct tty_struct *tty2)
+static void tty_ldisc_unlock_pair(struct tty_struct *tty, struct tty_struct *tty2)
 {
 	__tty_ldisc_unlock(tty);
 	if (tty2)
@@ -465,7 +457,7 @@ static int tty_ldisc_open(struct tty_struct *tty, struct tty_ldisc *ld)
 	WARN_ON(test_and_set_bit(TTY_LDISC_OPEN, &tty->flags));
 	if (ld->ops->open) {
 		int ret;
-                /* BTM here locks versus a hangup event */
+		/* BTM here locks versus a hangup event */
 		ret = ld->ops->open(tty);
 		if (ret)
 			clear_bit(TTY_LDISC_OPEN, &tty->flags);
@@ -538,8 +530,7 @@ static void tty_ldisc_restore(struct tty_struct *tty, struct tty_ldisc *old)
 		/* The traditional behaviour is to fall back to N_TTY, we
 		   want to avoid falling back to N_NULL unless we have no
 		   choice to avoid the risk of breaking anything */
-		if (tty_ldisc_failto(tty, N_TTY) < 0 &&
-		    tty_ldisc_failto(tty, N_NULL) < 0)
+		if (tty_ldisc_failto(tty, N_TTY) < 0 && tty_ldisc_failto(tty, N_NULL) < 0)
 			panic("Couldn't open N_NULL ldisc for %s.", name);
 	}
 }
@@ -619,7 +610,7 @@ out:
 	   already running */
 	tty_buffer_restart_work(tty->port);
 err:
-	tty_ldisc_put(new_ldisc);	/* drop the extra reference */
+	tty_ldisc_put(new_ldisc); /* drop the extra reference */
 	tty_unlock(tty);
 	return retval;
 }
@@ -660,7 +651,6 @@ static void tty_reset_termios(struct tty_struct *tty)
 	tty->termios.c_ospeed = tty_termios_baud_rate(&tty->termios);
 	up_write(&tty->termios_rwsem);
 }
-
 
 /**
  *	tty_ldisc_reinit	-	reinitialise the tty ldisc
@@ -730,8 +720,7 @@ void tty_ldisc_hangup(struct tty_struct *tty, bool reinit)
 		if (ld->ops->flush_buffer)
 			ld->ops->flush_buffer(tty);
 		tty_driver_flush_buffer(tty);
-		if ((test_bit(TTY_DO_WRITE_WAKEUP, &tty->flags)) &&
-		    ld->ops->write_wakeup)
+		if ((test_bit(TTY_DO_WRITE_WAKEUP, &tty->flags)) && ld->ops->write_wakeup)
 			ld->ops->write_wakeup(tty);
 		if (ld->ops->hangup)
 			ld->ops->hangup(tty);
@@ -754,8 +743,7 @@ void tty_ldisc_hangup(struct tty_struct *tty, bool reinit)
 
 	if (tty->ldisc) {
 		if (reinit) {
-			if (tty_ldisc_reinit(tty, tty->termios.c_line) < 0 &&
-			    tty_ldisc_reinit(tty, N_TTY) < 0)
+			if (tty_ldisc_reinit(tty, tty->termios.c_line) < 0 && tty_ldisc_reinit(tty, N_TTY) < 0)
 				WARN_ON(tty_ldisc_reinit(tty, N_NULL) < 0);
 		} else
 			tty_ldisc_kill(tty);
@@ -855,36 +843,30 @@ void tty_ldisc_deinit(struct tty_struct *tty)
 	tty->ldisc = NULL;
 }
 
-static struct ctl_table tty_table[] = {
-	{
-		.procname	= "ldisc_autoload",
-		.data		= &tty_ldisc_autoload,
-		.maxlen		= sizeof(tty_ldisc_autoload),
-		.mode		= 0644,
-		.proc_handler	= proc_dointvec,
-		.extra1		= SYSCTL_ZERO,
-		.extra2		= SYSCTL_ONE,
-	},
-	{ }
-};
+static struct ctl_table tty_table[] = { {
+						.procname = "ldisc_autoload",
+						.data = &tty_ldisc_autoload,
+						.maxlen = sizeof(tty_ldisc_autoload),
+						.mode = 0644,
+						.proc_handler = proc_dointvec,
+						.extra1 = SYSCTL_ZERO,
+						.extra2 = SYSCTL_ONE,
+					},
+					{} };
 
-static struct ctl_table tty_dir_table[] = {
-	{
-		.procname	= "tty",
-		.mode		= 0555,
-		.child		= tty_table,
-	},
-	{ }
-};
+static struct ctl_table tty_dir_table[] = { {
+						    .procname = "tty",
+						    .mode = 0555,
+						    .child = tty_table,
+					    },
+					    {} };
 
-static struct ctl_table tty_root_table[] = {
-	{
-		.procname	= "dev",
-		.mode		= 0555,
-		.child		= tty_dir_table,
-	},
-	{ }
-};
+static struct ctl_table tty_root_table[] = { {
+						     .procname = "dev",
+						     .mode = 0555,
+						     .child = tty_dir_table,
+					     },
+					     {} };
 
 void tty_sysctl_init(void)
 {

@@ -137,7 +137,7 @@ ATOMIC_OPS(sub, add, +, -i)
 #ifndef CONFIG_GENERIC_ATOMIC64
 #define atomic64_add_return_relaxed atomic64_add_return_relaxed
 #define atomic64_sub_return_relaxed atomic64_sub_return_relaxed
-#define atomic64_add_return atomic64_add_return
+#define atomic64_add_return atomic64_add_return // 但是不知道这个在哪里定义的
 #define atomic64_sub_return atomic64_sub_return
 
 #define atomic64_fetch_add_relaxed atomic64_fetch_add_relaxed

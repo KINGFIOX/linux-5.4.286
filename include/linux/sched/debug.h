@@ -36,13 +36,12 @@ extern void sched_show_task(struct task_struct *p);
 
 #ifdef CONFIG_SCHED_DEBUG
 struct seq_file;
-extern void proc_sched_show_task(struct task_struct *p,
-				 struct pid_namespace *ns, struct seq_file *m);
+extern void proc_sched_show_task(struct task_struct *p, struct pid_namespace *ns, struct seq_file *m);
 extern void proc_sched_set_task(struct task_struct *p);
 #endif
 
 /* Attach to any functions which should be ignored in wchan output. */
-#define __sched		__attribute__((__section__(".sched.text")))
+#define __sched __attribute__((__section__(".sched.text")))
 
 /* Linker adds these: start and end of __sched functions */
 extern char __sched_text_start[], __sched_text_end[];
