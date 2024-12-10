@@ -105,23 +105,19 @@ static inline size_t iov_length(const struct iovec *iov, unsigned long nr_segs)
 
 static inline struct iovec iov_iter_iovec(const struct iov_iter *iter)
 {
-	return (struct iovec) {
+	return (struct iovec){
 		.iov_base = iter->iov->iov_base + iter->iov_offset,
-		.iov_len = min(iter->count,
-			       iter->iov->iov_len - iter->iov_offset),
+		.iov_len = min(iter->count, iter->iov->iov_len - iter->iov_offset),
 	};
 }
 
-size_t iov_iter_copy_from_user_atomic(struct page *page,
-		struct iov_iter *i, unsigned long offset, size_t bytes);
+size_t iov_iter_copy_from_user_atomic(struct page *page, struct iov_iter *i, unsigned long offset, size_t bytes);
 void iov_iter_advance(struct iov_iter *i, size_t bytes);
 void iov_iter_revert(struct iov_iter *i, size_t bytes);
 int iov_iter_fault_in_readable(struct iov_iter *i, size_t bytes);
 size_t iov_iter_single_seg_count(const struct iov_iter *i);
-size_t copy_page_to_iter(struct page *page, size_t offset, size_t bytes,
-			 struct iov_iter *i);
-size_t copy_page_from_iter(struct page *page, size_t offset, size_t bytes,
-			 struct iov_iter *i);
+size_t copy_page_to_iter(struct page *page, size_t offset, size_t bytes, struct iov_iter *i);
+size_t copy_page_from_iter(struct page *page, size_t offset, size_t bytes, struct iov_iter *i);
 
 size_t _copy_to_iter(const void *addr, size_t bytes, struct iov_iter *i);
 size_t _copy_from_iter(void *addr, size_t bytes, struct iov_iter *i);
@@ -129,8 +125,7 @@ bool _copy_from_iter_full(void *addr, size_t bytes, struct iov_iter *i);
 size_t _copy_from_iter_nocache(void *addr, size_t bytes, struct iov_iter *i);
 bool _copy_from_iter_full_nocache(void *addr, size_t bytes, struct iov_iter *i);
 
-static __always_inline __must_check
-size_t copy_to_iter(const void *addr, size_t bytes, struct iov_iter *i)
+static __always_inline __must_check size_t copy_to_iter(const void *addr, size_t bytes, struct iov_iter *i)
 {
 	if (unlikely(!check_copy_size(addr, bytes, true)))
 		return 0;
@@ -138,8 +133,7 @@ size_t copy_to_iter(const void *addr, size_t bytes, struct iov_iter *i)
 		return _copy_to_iter(addr, bytes, i);
 }
 
-static __always_inline __must_check
-size_t copy_from_iter(void *addr, size_t bytes, struct iov_iter *i)
+static __always_inline __must_check size_t copy_from_iter(void *addr, size_t bytes, struct iov_iter *i)
 {
 	if (unlikely(!check_copy_size(addr, bytes, false)))
 		return 0;
@@ -147,8 +141,7 @@ size_t copy_from_iter(void *addr, size_t bytes, struct iov_iter *i)
 		return _copy_from_iter(addr, bytes, i);
 }
 
-static __always_inline __must_check
-bool copy_from_iter_full(void *addr, size_t bytes, struct iov_iter *i)
+static __always_inline __must_check bool copy_from_iter_full(void *addr, size_t bytes, struct iov_iter *i)
 {
 	if (unlikely(!check_copy_size(addr, bytes, false)))
 		return false;
@@ -156,8 +149,7 @@ bool copy_from_iter_full(void *addr, size_t bytes, struct iov_iter *i)
 		return _copy_from_iter_full(addr, bytes, i);
 }
 
-static __always_inline __must_check
-size_t copy_from_iter_nocache(void *addr, size_t bytes, struct iov_iter *i)
+static __always_inline __must_check size_t copy_from_iter_nocache(void *addr, size_t bytes, struct iov_iter *i)
 {
 	if (unlikely(!check_copy_size(addr, bytes, false)))
 		return 0;
@@ -165,8 +157,7 @@ size_t copy_from_iter_nocache(void *addr, size_t bytes, struct iov_iter *i)
 		return _copy_from_iter_nocache(addr, bytes, i);
 }
 
-static __always_inline __must_check
-bool copy_from_iter_full_nocache(void *addr, size_t bytes, struct iov_iter *i)
+static __always_inline __must_check bool copy_from_iter_full_nocache(void *addr, size_t bytes, struct iov_iter *i)
 {
 	if (unlikely(!check_copy_size(addr, bytes, false)))
 		return false;
@@ -192,8 +183,7 @@ size_t _copy_to_iter_mcsafe(const void *addr, size_t bytes, struct iov_iter *i);
 #define _copy_to_iter_mcsafe _copy_to_iter
 #endif
 
-static __always_inline __must_check
-size_t copy_from_iter_flushcache(void *addr, size_t bytes, struct iov_iter *i)
+static __always_inline __must_check size_t copy_from_iter_flushcache(void *addr, size_t bytes, struct iov_iter *i)
 {
 	if (unlikely(!check_copy_size(addr, bytes, false)))
 		return 0;
@@ -201,8 +191,7 @@ size_t copy_from_iter_flushcache(void *addr, size_t bytes, struct iov_iter *i)
 		return _copy_from_iter_flushcache(addr, bytes, i);
 }
 
-static __always_inline __must_check
-size_t copy_to_iter_mcsafe(void *addr, size_t bytes, struct iov_iter *i)
+static __always_inline __must_check size_t copy_to_iter_mcsafe(void *addr, size_t bytes, struct iov_iter *i)
 {
 	if (unlikely(!check_copy_size(addr, bytes, true)))
 		return 0;
@@ -213,19 +202,13 @@ size_t copy_to_iter_mcsafe(void *addr, size_t bytes, struct iov_iter *i)
 size_t iov_iter_zero(size_t bytes, struct iov_iter *);
 unsigned long iov_iter_alignment(const struct iov_iter *i);
 unsigned long iov_iter_gap_alignment(const struct iov_iter *i);
-void iov_iter_init(struct iov_iter *i, unsigned int direction, const struct iovec *iov,
-			unsigned long nr_segs, size_t count);
-void iov_iter_kvec(struct iov_iter *i, unsigned int direction, const struct kvec *kvec,
-			unsigned long nr_segs, size_t count);
-void iov_iter_bvec(struct iov_iter *i, unsigned int direction, const struct bio_vec *bvec,
-			unsigned long nr_segs, size_t count);
-void iov_iter_pipe(struct iov_iter *i, unsigned int direction, struct pipe_inode_info *pipe,
-			size_t count);
+void iov_iter_init(struct iov_iter *i, unsigned int direction, const struct iovec *iov, unsigned long nr_segs, size_t count);
+void iov_iter_kvec(struct iov_iter *i, unsigned int direction, const struct kvec *kvec, unsigned long nr_segs, size_t count);
+void iov_iter_bvec(struct iov_iter *i, unsigned int direction, const struct bio_vec *bvec, unsigned long nr_segs, size_t count);
+void iov_iter_pipe(struct iov_iter *i, unsigned int direction, struct pipe_inode_info *pipe, size_t count);
 void iov_iter_discard(struct iov_iter *i, unsigned int direction, size_t count);
-ssize_t iov_iter_get_pages(struct iov_iter *i, struct page **pages,
-			size_t maxsize, unsigned maxpages, size_t *start);
-ssize_t iov_iter_get_pages_alloc(struct iov_iter *i, struct page ***pages,
-			size_t maxsize, size_t *start);
+ssize_t iov_iter_get_pages(struct iov_iter *i, struct page **pages, size_t maxsize, unsigned maxpages, size_t *start);
+ssize_t iov_iter_get_pages_alloc(struct iov_iter *i, struct page ***pages, size_t maxsize, size_t *start);
 int iov_iter_npages(const struct iov_iter *i, int maxpages);
 
 const void *dup_iter(struct iov_iter *new, struct iov_iter *old, gfp_t flags);
@@ -270,25 +253,17 @@ struct csum_state {
 size_t csum_and_copy_to_iter(const void *addr, size_t bytes, void *csstate, struct iov_iter *i);
 size_t csum_and_copy_from_iter(void *addr, size_t bytes, __wsum *csum, struct iov_iter *i);
 bool csum_and_copy_from_iter_full(void *addr, size_t bytes, __wsum *csum, struct iov_iter *i);
-size_t hash_and_copy_to_iter(const void *addr, size_t bytes, void *hashp,
-		struct iov_iter *i);
+size_t hash_and_copy_to_iter(const void *addr, size_t bytes, void *hashp, struct iov_iter *i);
 
-ssize_t import_iovec(int type, const struct iovec __user * uvector,
-		 unsigned nr_segs, unsigned fast_segs,
-		 struct iovec **iov, struct iov_iter *i);
+ssize_t import_iovec(int type, const struct iovec __user *uvector, unsigned nr_segs, unsigned fast_segs, struct iovec **iov, struct iov_iter *i);
 
 #ifdef CONFIG_COMPAT
 struct compat_iovec;
-ssize_t compat_import_iovec(int type, const struct compat_iovec __user * uvector,
-		 unsigned nr_segs, unsigned fast_segs,
-		 struct iovec **iov, struct iov_iter *i);
+ssize_t compat_import_iovec(int type, const struct compat_iovec __user *uvector, unsigned nr_segs, unsigned fast_segs, struct iovec **iov, struct iov_iter *i);
 #endif
 
-int import_single_range(int type, void __user *buf, size_t len,
-		 struct iovec *iov, struct iov_iter *i);
+int import_single_range(int type, void __user *buf, size_t len, struct iovec *iov, struct iov_iter *i);
 
-int iov_iter_for_each_range(struct iov_iter *i, size_t bytes,
-			    int (*f)(struct kvec *vec, void *context),
-			    void *context);
+int iov_iter_for_each_range(struct iov_iter *i, size_t bytes, int (*f)(struct kvec *vec, void *context), void *context);
 
 #endif

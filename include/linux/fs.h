@@ -317,6 +317,7 @@ enum rw_hint {
 /* kiocb is a read or write operation submitted by fs/aio.c. */
 #define IOCB_AIO_RW (1 << 23)
 
+// kernel io, control block, 主要是用于管理 异步IO(AIO)
 struct kiocb {
 	struct file *ki_filp;
 
