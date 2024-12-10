@@ -29,7 +29,7 @@ static __always_inline struct task_struct *get_current(void)
 	return tp;
 }
 
-#define current get_current()
+#define current (get_current())
 
 #endif /* __ASSEMBLY__ */
 

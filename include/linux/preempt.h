@@ -29,31 +29,31 @@
  *             NMI_MASK:	0x00100000
  * PREEMPT_NEED_RESCHED:	0x80000000
  */
-#define PREEMPT_BITS	8
-#define SOFTIRQ_BITS	8
-#define HARDIRQ_BITS	4
-#define NMI_BITS	1
+#define PREEMPT_BITS 8
+#define SOFTIRQ_BITS 8
+#define HARDIRQ_BITS 4
+#define NMI_BITS 1
 
-#define PREEMPT_SHIFT	0
-#define SOFTIRQ_SHIFT	(PREEMPT_SHIFT + PREEMPT_BITS)
-#define HARDIRQ_SHIFT	(SOFTIRQ_SHIFT + SOFTIRQ_BITS)
-#define NMI_SHIFT	(HARDIRQ_SHIFT + HARDIRQ_BITS)
+#define PREEMPT_SHIFT 0
+#define SOFTIRQ_SHIFT (PREEMPT_SHIFT + PREEMPT_BITS)
+#define HARDIRQ_SHIFT (SOFTIRQ_SHIFT + SOFTIRQ_BITS)
+#define NMI_SHIFT (HARDIRQ_SHIFT + HARDIRQ_BITS)
 
-#define __IRQ_MASK(x)	((1UL << (x))-1)
+#define __IRQ_MASK(x) ((1UL << (x)) - 1)
 
-#define PREEMPT_MASK	(__IRQ_MASK(PREEMPT_BITS) << PREEMPT_SHIFT)
-#define SOFTIRQ_MASK	(__IRQ_MASK(SOFTIRQ_BITS) << SOFTIRQ_SHIFT)
-#define HARDIRQ_MASK	(__IRQ_MASK(HARDIRQ_BITS) << HARDIRQ_SHIFT)
-#define NMI_MASK	(__IRQ_MASK(NMI_BITS)     << NMI_SHIFT)
+#define PREEMPT_MASK (__IRQ_MASK(PREEMPT_BITS) << PREEMPT_SHIFT)
+#define SOFTIRQ_MASK (__IRQ_MASK(SOFTIRQ_BITS) << SOFTIRQ_SHIFT)
+#define HARDIRQ_MASK (__IRQ_MASK(HARDIRQ_BITS) << HARDIRQ_SHIFT)
+#define NMI_MASK (__IRQ_MASK(NMI_BITS) << NMI_SHIFT)
 
-#define PREEMPT_OFFSET	(1UL << PREEMPT_SHIFT)
-#define SOFTIRQ_OFFSET	(1UL << SOFTIRQ_SHIFT)
-#define HARDIRQ_OFFSET	(1UL << HARDIRQ_SHIFT)
-#define NMI_OFFSET	(1UL << NMI_SHIFT)
+#define PREEMPT_OFFSET (1UL << PREEMPT_SHIFT)
+#define SOFTIRQ_OFFSET (1UL << SOFTIRQ_SHIFT)
+#define HARDIRQ_OFFSET (1UL << HARDIRQ_SHIFT)
+#define NMI_OFFSET (1UL << NMI_SHIFT)
 
-#define SOFTIRQ_DISABLE_OFFSET	(2 * SOFTIRQ_OFFSET)
+#define SOFTIRQ_DISABLE_OFFSET (2 * SOFTIRQ_OFFSET)
 
-#define PREEMPT_DISABLED	(PREEMPT_DISABLE_OFFSET + PREEMPT_ENABLED)
+#define PREEMPT_DISABLED (PREEMPT_DISABLE_OFFSET + PREEMPT_ENABLED)
 
 /*
  * Disable preemption until the scheduler is running -- use an unconditional
@@ -61,7 +61,7 @@
  *
  * Reset by start_kernel()->sched_init()->init_idle()->init_idle_preempt_count().
  */
-#define INIT_PREEMPT_COUNT	PREEMPT_OFFSET
+#define INIT_PREEMPT_COUNT PREEMPT_OFFSET
 
 /*
  * Initial preempt_count value; reflects the preempt_count schedule invariant
@@ -72,15 +72,14 @@
  * Note: PREEMPT_DISABLE_OFFSET is 0 for !PREEMPT_COUNT kernels.
  * Note: See finish_task_switch().
  */
-#define FORK_PREEMPT_COUNT	(2*PREEMPT_DISABLE_OFFSET + PREEMPT_ENABLED)
+#define FORK_PREEMPT_COUNT (2 * PREEMPT_DISABLE_OFFSET + PREEMPT_ENABLED)
 
 /* preempt_count() and related functions, depends on PREEMPT_NEED_RESCHED */
 #include <asm/preempt.h>
 
-#define hardirq_count()	(preempt_count() & HARDIRQ_MASK)
-#define softirq_count()	(preempt_count() & SOFTIRQ_MASK)
-#define irq_count()	(preempt_count() & (HARDIRQ_MASK | SOFTIRQ_MASK \
-				 | NMI_MASK))
+#define hardirq_count() (preempt_count() & HARDIRQ_MASK)
+#define softirq_count() (preempt_count() & SOFTIRQ_MASK)
+#define irq_count() (preempt_count() & (HARDIRQ_MASK | SOFTIRQ_MASK | NMI_MASK))
 
 /*
  * Are we doing bottom half or hardware interrupt processing?
@@ -95,27 +94,26 @@
  * Note: due to the BH disabled confusion: in_softirq(),in_interrupt() really
  *       should not be used in new code.
  */
-#define in_irq()		(hardirq_count())
-#define in_softirq()		(softirq_count())
-#define in_interrupt()		(irq_count())
-#define in_serving_softirq()	(softirq_count() & SOFTIRQ_OFFSET)
-#define in_nmi()		(preempt_count() & NMI_MASK)
-#define in_task()		(!(preempt_count() & \
-				   (NMI_MASK | HARDIRQ_MASK | SOFTIRQ_OFFSET)))
+#define in_irq() (hardirq_count())
+#define in_softirq() (softirq_count())
+#define in_interrupt() (irq_count())
+#define in_serving_softirq() (softirq_count() & SOFTIRQ_OFFSET)
+#define in_nmi() (preempt_count() & NMI_MASK)
+#define in_task() (!(preempt_count() & (NMI_MASK | HARDIRQ_MASK | SOFTIRQ_OFFSET)))
 
 /*
  * The preempt_count offset after preempt_disable();
  */
 #if defined(CONFIG_PREEMPT_COUNT)
-# define PREEMPT_DISABLE_OFFSET	PREEMPT_OFFSET
+#define PREEMPT_DISABLE_OFFSET PREEMPT_OFFSET
 #else
-# define PREEMPT_DISABLE_OFFSET	0
+#define PREEMPT_DISABLE_OFFSET 0
 #endif
 
 /*
  * The preempt_count offset after spin_lock()
  */
-#define PREEMPT_LOCK_OFFSET	PREEMPT_DISABLE_OFFSET
+#define PREEMPT_LOCK_OFFSET PREEMPT_DISABLE_OFFSET
 
 /*
  * The preempt_count offset needed for things like:
@@ -139,7 +137,7 @@
  * used in the general case to determine whether sleeping is possible.
  * Do not use in_atomic() in driver code.
  */
-#define in_atomic()	(preempt_count() != 0)
+#define in_atomic() (preempt_count() != 0)
 
 /*
  * Check whether we were atomic before we did preempt_disable():
@@ -150,11 +148,14 @@
 #if defined(CONFIG_DEBUG_PREEMPT) || defined(CONFIG_TRACE_PREEMPT_TOGGLE)
 extern void preempt_count_add(int val);
 extern void preempt_count_sub(int val);
-#define preempt_count_dec_and_test() \
-	({ preempt_count_sub(1); should_resched(0); })
+#define preempt_count_dec_and_test()                                                                                                                           \
+	({                                                                                                                                                     \
+		preempt_count_sub(1);                                                                                                                          \
+		should_resched(0);                                                                                                                             \
+	})
 #else
-#define preempt_count_add(val)	__preempt_count_add(val)
-#define preempt_count_sub(val)	__preempt_count_sub(val)
+#define preempt_count_add(val) __preempt_count_add(val)
+#define preempt_count_sub(val) __preempt_count_sub(val)
 #define preempt_count_dec_and_test() __preempt_count_dec_and_test()
 #endif
 
@@ -166,70 +167,72 @@ extern void preempt_count_sub(int val);
 
 #ifdef CONFIG_PREEMPT_COUNT
 
-#define preempt_disable() \
-do { \
-	preempt_count_inc(); \
-	barrier(); \
-} while (0)
+#define preempt_disable()                                                                                                                                      \
+	do {                                                                                                                                                   \
+		preempt_count_inc();                                                                                                                           \
+		barrier();                                                                                                                                     \
+	} while (0)
 
-#define sched_preempt_enable_no_resched() \
-do { \
-	barrier(); \
-	preempt_count_dec(); \
-} while (0)
+#define sched_preempt_enable_no_resched()                                                                                                                      \
+	do {                                                                                                                                                   \
+		barrier();                                                                                                                                     \
+		preempt_count_dec();                                                                                                                           \
+	} while (0)
 
 #define preempt_enable_no_resched() sched_preempt_enable_no_resched()
 
-#define preemptible()	(preempt_count() == 0 && !irqs_disabled())
+#define preemptible() (preempt_count() == 0 && !irqs_disabled())
 
 #ifdef CONFIG_PREEMPTION
-#define preempt_enable() \
-do { \
-	barrier(); \
-	if (unlikely(preempt_count_dec_and_test())) \
-		__preempt_schedule(); \
-} while (0)
+#define preempt_enable()                                                                                                                                       \
+	do {                                                                                                                                                   \
+		barrier();                                                                                                                                     \
+		if (unlikely(preempt_count_dec_and_test()))                                                                                                    \
+			__preempt_schedule();                                                                                                                  \
+	} while (0)
 
-#define preempt_enable_notrace() \
-do { \
-	barrier(); \
-	if (unlikely(__preempt_count_dec_and_test())) \
-		__preempt_schedule_notrace(); \
-} while (0)
+#define preempt_enable_notrace()                                                                                                                               \
+	do {                                                                                                                                                   \
+		barrier();                                                                                                                                     \
+		if (unlikely(__preempt_count_dec_and_test()))                                                                                                  \
+			__preempt_schedule_notrace();                                                                                                          \
+	} while (0)
 
-#define preempt_check_resched() \
-do { \
-	if (should_resched(0)) \
-		__preempt_schedule(); \
-} while (0)
+#define preempt_check_resched()                                                                                                                                \
+	do {                                                                                                                                                   \
+		if (should_resched(0))                                                                                                                         \
+			__preempt_schedule();                                                                                                                  \
+	} while (0)
 
 #else /* !CONFIG_PREEMPTION */
-#define preempt_enable() \
-do { \
-	barrier(); \
-	preempt_count_dec(); \
-} while (0)
+#define preempt_enable()                                                                                                                                       \
+	do {                                                                                                                                                   \
+		barrier();                                                                                                                                     \
+		preempt_count_dec();                                                                                                                           \
+	} while (0)
 
-#define preempt_enable_notrace() \
-do { \
-	barrier(); \
-	__preempt_count_dec(); \
-} while (0)
+#define preempt_enable_notrace()                                                                                                                               \
+	do {                                                                                                                                                   \
+		barrier();                                                                                                                                     \
+		__preempt_count_dec();                                                                                                                         \
+	} while (0)
 
-#define preempt_check_resched() do { } while (0)
+#define preempt_check_resched()                                                                                                                                \
+	do {                                                                                                                                                   \
+	} while (0)
 #endif /* CONFIG_PREEMPTION */
 
-#define preempt_disable_notrace() \
-do { \
-	__preempt_count_inc(); \
-	barrier(); \
-} while (0)
+#define preempt_disable_notrace()                                                                                                                              \
+	do {                                                                                                                                                   \
+		__preempt_count_inc();                                                                                                                         \
+		barrier();                                                                                                                                     \
+	} while (0)
 
-#define preempt_enable_no_resched_notrace() \
-do { \
-	barrier(); \
-	__preempt_count_dec(); \
-} while (0)
+#define preempt_enable_no_resched_notrace()                                                                                                                    \
+	do {                                                                                                                                                   \
+		barrier();                                                                                                                                     \
+		__preempt_count_dec();                                                                                                                         \
+	} while (0)
 
 #else /* !CONFIG_PREEMPT_COUNT */
 
@@ -239,16 +242,18 @@ do { \
  * that can cause faults and scheduling migrate into our preempt-protected
  * region.
  */
-#define preempt_disable()			barrier()
-#define sched_preempt_enable_no_resched()	barrier()
-#define preempt_enable_no_resched()		barrier()
-#define preempt_enable()			barrier()
-#define preempt_check_resched()			do { } while (0)
+#define preempt_disable() barrier()
+#define sched_preempt_enable_no_resched() barrier()
+#define preempt_enable_no_resched() barrier()
+#define preempt_enable() barrier()
+#define preempt_check_resched()                                                                                                                                \
+	do {                                                                                                                                                   \
+	} while (0)
 
-#define preempt_disable_notrace()		barrier()
-#define preempt_enable_no_resched_notrace()	barrier()
-#define preempt_enable_notrace()		barrier()
-#define preemptible()				0
+#define preempt_disable_notrace() barrier()
+#define preempt_enable_no_resched_notrace() barrier()
+#define preempt_enable_notrace() barrier()
+#define preemptible() 0
 
 #endif /* CONFIG_PREEMPT_COUNT */
 
@@ -262,15 +267,15 @@ do { \
 #undef preempt_check_resched
 #endif
 
-#define preempt_set_need_resched() \
-do { \
-	set_preempt_need_resched(); \
-} while (0)
-#define preempt_fold_need_resched() \
-do { \
-	if (tif_need_resched()) \
-		set_preempt_need_resched(); \
-} while (0)
+#define preempt_set_need_resched()                                                                                                                             \
+	do {                                                                                                                                                   \
+		set_preempt_need_resched();                                                                                                                    \
+	} while (0)
+#define preempt_fold_need_resched()                                                                                                                            \
+	do {                                                                                                                                                   \
+		if (tif_need_resched())                                                                                                                        \
+			set_preempt_need_resched();                                                                                                            \
+	} while (0)
 
 #ifdef CONFIG_PREEMPT_NOTIFIERS
 
@@ -292,8 +297,7 @@ struct preempt_notifier;
  */
 struct preempt_ops {
 	void (*sched_in)(struct preempt_notifier *notifier, int cpu);
-	void (*sched_out)(struct preempt_notifier *notifier,
-			  struct task_struct *next);
+	void (*sched_out)(struct preempt_notifier *notifier, struct task_struct *next);
 };
 
 /**
@@ -313,8 +317,7 @@ void preempt_notifier_dec(void);
 void preempt_notifier_register(struct preempt_notifier *notifier);
 void preempt_notifier_unregister(struct preempt_notifier *notifier);
 
-static inline void preempt_notifier_init(struct preempt_notifier *notifier,
-				     struct preempt_ops *ops)
+static inline void preempt_notifier_init(struct preempt_notifier *notifier, struct preempt_ops *ops)
 {
 	INIT_HLIST_NODE(&notifier->link);
 	notifier->ops = ops;

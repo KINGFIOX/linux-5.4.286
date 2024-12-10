@@ -34,7 +34,7 @@ const struct file_operations generic_ro_fops = {
 
 EXPORT_SYMBOL(generic_ro_fops);
 
-static inline bool unsigned_offsets(struct file *file)
+static inline bool unsigned_offsets(struct file *file) // 无符号偏移量实际上是扩大了一倍
 {
 	return file->f_mode & FMODE_UNSIGNED_OFFSET;
 }
@@ -358,10 +358,9 @@ out_putf:
 
 int rw_verify_area(int /*0 -> read, 1 -> write*/ read_write, struct file *file, const loff_t *ppos, size_t count)
 {
-	struct inode *inode;
 	int retval = -EINVAL;
 
-	inode = file_inode(file);
+	struct inode *inode = file_inode(file);
 	if (unlikely((ssize_t)count < 0))
 		return retval;
 
@@ -373,16 +372,16 @@ int rw_verify_area(int /*0 -> read, 1 -> write*/ read_write, struct file *file, 
 		loff_t pos = *ppos;
 
 		if (unlikely(pos < 0)) {
-			if (!unsigned_offsets(file))
-				return retval;
+			if (!unsigned_offsets(file)) // 如果不能用无符号解释 pos. pos 不应该小于 0
+				return retval; // -EINVAL
 			if (count >= -pos) /* both values are in 0..LLONG_MAX */
 				return -EOVERFLOW;
-		} else if (unlikely((loff_t)(pos + count) < 0)) {
+		} else if (unlikely((loff_t)(pos + count) < 0)) { // 检验 pos + count 是否合法
 			if (!unsigned_offsets(file))
 				return retval;
 		}
 
-		if (unlikely(inode->i_flctx && mandatory_lock(inode))) {
+		if (unlikely(inode->i_flctx && mandatory_lock(inode))) { // 文件锁, 并且支持强制锁
 			retval = locks_mandatory_area(inode, file, pos, pos + count - 1, read_write == READ ? F_RDLCK : F_WRLCK);
 			if (retval < 0)
 				return retval;
@@ -533,9 +532,9 @@ ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_
 {
 	ssize_t ret;
 
-	if (!(file->f_mode & FMODE_WRITE))
+	if (!(file->f_mode & FMODE_WRITE)) // 文件描述符是以可写方式打开
 		return -EBADF;
-	if (!(file->f_mode & FMODE_CAN_WRITE))
+	if (!(file->f_mode & FMODE_CAN_WRITE)) // 文件在当前状态下是允许写入的. 文件是否被锁定, 检查文件系统是否只读
 		return -EINVAL;
 	if (unlikely(!access_ok(buf, count)))
 		return -EFAULT;
@@ -543,7 +542,7 @@ ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_
 	ret = rw_verify_area(WRITE, file, pos, count);
 	if (!ret) {
 		if (count > MAX_RW_COUNT)
-			count = MAX_RW_COUNT;
+			count = MAX_RW_COUNT; // truncate
 		file_start_write(file);
 		ret = __vfs_write(file, buf, count, pos);
 		if (ret > 0) {

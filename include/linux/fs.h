@@ -696,7 +696,7 @@ struct inode {
 		const struct file_operations *i_fop; /* former ->i_op->default_file_ops */
 		void (*free_inode)(struct inode *);
 	};
-	struct file_lock_context *i_flctx;
+	struct file_lock_context *i_flctx; // 文件锁.
 	struct address_space i_data;
 	struct list_head i_devices;
 	union {
@@ -2296,7 +2296,7 @@ static inline int __mandatory_lock(struct inode *ino)
 
 static inline int mandatory_lock(struct inode *ino)
 {
-	return IS_MANDLOCK(ino) && __mandatory_lock(ino);
+	return IS_MANDLOCK(ino) /*文件系统是否支持强制锁*/ && __mandatory_lock(ino);
 }
 
 static inline int locks_verify_locked(struct file *file)
@@ -2786,9 +2786,9 @@ static inline bool execute_ok(struct inode *inode)
 
 static inline void file_start_write(struct file *file)
 {
-	if (!S_ISREG(file_inode(file)->i_mode))
+	if (!S_ISREG(file_inode(file)->i_mode)) // not a regular file
 		return;
-	__sb_start_write(file_inode(file)->i_sb, SB_FREEZE_WRITE, true);
+	__sb_start_write(file_inode(file)->i_sb, SB_FREEZE_WRITE /*freeze write*/, true); // write needs to sync
 }
 
 static inline bool file_start_write_trylock(struct file *file)

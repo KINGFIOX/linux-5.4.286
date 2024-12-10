@@ -2566,6 +2566,11 @@ EXPORT_SYMBOL_GPL(kfree_call_rcu);
 static int rcu_blocking_is_gp(void)
 {
 	int ret;
+	// 流程:
+	// 1. 是否开启抢占, 如果开启, 检查 RCU scheduler 的状态
+	//  -> 如果 RCU scheduler 处于: 非活动状态, 则表示一个 grace period 已经完成
+	// 2. 如果未开启抢占, 则检查当前在线的 CPU 数量
+	//  -> 如果在线的 CPU 数量 <= 1, 则表示一个 grace period 已经完成
 
 	if (IS_ENABLED(CONFIG_PREEMPTION)) // 检查是否启用了抢占
 		return rcu_scheduler_active == RCU_SCHEDULER_INACTIVE;

@@ -13,19 +13,16 @@
 #include <linux/compiler.h>
 #include <linux/types.h>
 
-
-struct iovec
-{
-	void __user *iov_base;	/* BSD uses caddr_t (1003.1g requires void *) */
+struct iovec {
+	void __user *iov_base; /* BSD uses caddr_t (1003.1g requires void *) */
 	__kernel_size_t iov_len; /* Must be size_t (1003.1g) */
 };
 
 /*
  *	UIO_MAXIOV shall be at least 16 1003.1g (5.4.1.1)
  */
- 
-#define UIO_FASTIOV	8
-#define UIO_MAXIOV	1024
 
+#define UIO_FASTIOV 8
+#define UIO_MAXIOV 1024
 
 #endif /* _UAPI__LINUX_UIO_H */
