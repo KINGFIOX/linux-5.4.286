@@ -20,9 +20,7 @@
 
 #include "ksize.h"
 
-extern unsigned long switch_to_osf_pal(unsigned long nr,
-	struct pcb_struct * pcb_va, struct pcb_struct * pcb_pa,
-	unsigned long *vptb);
+extern unsigned long switch_to_osf_pal(unsigned long nr, struct pcb_struct *pcb_va, struct pcb_struct *pcb_pa, unsigned long *vptb);
 struct hwrpb_struct *hwrpb = INIT_HWRPB;
 static struct pcb_struct pcb_va[1];
 
@@ -32,18 +30,17 @@ static struct pcb_struct pcb_va[1];
  * This is easy using the virtual page table address.
  */
 
-static inline void *
-find_pa(unsigned long *vptb, void *ptr)
+static inline void *find_pa(unsigned long *vptb, void *ptr)
 {
-	unsigned long address = (unsigned long) ptr;
+	unsigned long address = (unsigned long)ptr;
 	unsigned long result;
 
 	result = vptb[address >> 13];
 	result >>= 32;
 	result <<= 13;
 	result |= address & 0x1fff;
-	return (void *) result;
-}	
+	return (void *)result;
+}
 
 /*
  * This function moves into OSF/1 pal-code, and has a temporary
@@ -56,15 +53,14 @@ find_pa(unsigned long *vptb, void *ptr)
  * itself (through three levels) at virtual address 0x200802000.
  */
 
-#define VPTB	((unsigned long *) 0x200000000)
-#define L1	((unsigned long *) 0x200802000)
+#define VPTB ((unsigned long *)0x200000000)
+#define L1 ((unsigned long *)0x200802000)
 
-void
-pal_init(void)
+void pal_init(void)
 {
 	unsigned long i, rev;
-	struct percpu_struct * percpu;
-	struct pcb_struct * pcb_pa;
+	struct percpu_struct *percpu;
+	struct pcb_struct *pcb_pa;
 
 	/* Create the dummy PCB.  */
 	pcb_va->ksp = 0;
@@ -93,8 +89,7 @@ pal_init(void)
 		__halt();
 	}
 
-	percpu = (struct percpu_struct *)
-		(INIT_HWRPB->processor_offset + (unsigned long) INIT_HWRPB);
+	percpu = (struct percpu_struct *)(INIT_HWRPB->processor_offset + (unsigned long)INIT_HWRPB);
 	rev = percpu->pal_revision = percpu->palcode_avail[2];
 
 	srm_printk("Ok (rev %lx)\n", rev);
@@ -122,7 +117,7 @@ static inline long load(long dev, unsigned long addr, unsigned long count)
 {
 	char bootfile[256];
 	extern char _end;
-	long result, boot_size = &_end - (char *) BOOT_ADDR;
+	long result, boot_size = &_end - (char *)BOOT_ADDR;
 
 	result = callback_getenv(ENV_BOOTED_FILE, bootfile, 255);
 	if (result < 0)
@@ -130,9 +125,8 @@ static inline long load(long dev, unsigned long addr, unsigned long count)
 	result &= 255;
 	bootfile[result] = '\0';
 	if (result)
-		srm_printk("Boot file specification (%s) not implemented\n",
-		       bootfile);
-	return callback_read(dev, count, (void *)addr, boot_size/512 + 1);
+		srm_printk("Boot file specification (%s) not implemented\n", bootfile);
+	return callback_read(dev, count, (void *)addr, boot_size / 512 + 1);
 }
 
 /*
@@ -140,13 +134,11 @@ static inline long load(long dev, unsigned long addr, unsigned long count)
  */
 static void runkernel(void)
 {
-	__asm__ __volatile__(
-		"bis %1,%1,$30\n\t"
-		"bis %0,%0,$26\n\t"
-		"ret ($26)"
-		: /* no outputs: it doesn't even return */
-		: "r" (START_ADDR),
-		  "r" (PAGE_SIZE + INIT_STACK));
+	__asm__ __volatile__("bis %1,%1,$30\n\t"
+			     "bis %0,%0,$26\n\t"
+			     "ret ($26)"
+			     : /* no outputs: it doesn't even return */
+			     : "r"(START_ADDR), "r"(PAGE_SIZE + INIT_STACK));
 }
 
 void start_kernel(void)
@@ -181,11 +173,11 @@ void start_kernel(void)
 		nbytes = 0;
 	}
 	envval[nbytes] = '\0';
-	strcpy((char*)ZERO_PGE, envval);
+	strcpy((char *)ZERO_PGE, envval);
 
 	srm_printk(" Ok\nNow booting the kernel\n");
 	runkernel();
-	for (i = 0 ; i < 0x100000000 ; i++)
+	for (i = 0; i < 0x100000000; i++)
 		/* nothing */;
 	__halt();
 }

@@ -93,11 +93,16 @@ extern unsigned long pfn_base;
 extern unsigned long max_low_pfn;
 extern unsigned long min_low_pfn;
 
+/// @in: virtual addr (kernel space)
+/// @out: physical addr
 #define __pa(x) ((unsigned long)(x)-va_pa_offset)
+
+/// @in: physical addr
+/// @out: virtual addr
 #define __va(x) ((void *)((unsigned long)(x) + va_pa_offset))
 
 #define phys_to_pfn(phys) (PFN_DOWN(phys))
-#define pfn_to_phys(pfn) (PFN_PHYS(pfn))
+#define pfn_to_phys(pfn) (PFN_PHYS(pfn)) // pfn -> physical addr
 
 #define virt_to_pfn(vaddr) (phys_to_pfn(__pa(vaddr)))
 #define pfn_to_virt(pfn) (__va(pfn_to_phys(pfn)))

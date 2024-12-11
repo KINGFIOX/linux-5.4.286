@@ -40,8 +40,7 @@ static inline void flush_icache_deferred(struct mm_struct *mm)
 #endif
 }
 
-void switch_mm(struct mm_struct *prev, struct mm_struct *next,
-	struct task_struct *task)
+void switch_mm(struct mm_struct *prev, struct mm_struct *next, struct task_struct *task)
 {
 	unsigned int cpu;
 

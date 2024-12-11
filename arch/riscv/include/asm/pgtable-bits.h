@@ -14,7 +14,7 @@
 
 #define _PAGE_ACCESSED_OFFSET 6
 
-#define _PAGE_PRESENT (1 << 0)
+#define _PAGE_PRESENT (1 << 0) /* valid, present */
 #define _PAGE_READ (1 << 1) /* Readable */
 #define _PAGE_WRITE (1 << 2) /* Writable */
 #define _PAGE_EXEC (1 << 3) /* Executable */
