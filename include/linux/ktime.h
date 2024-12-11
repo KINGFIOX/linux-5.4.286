@@ -25,7 +25,7 @@
 #include <linux/jiffies.h>
 
 /* Nanosecond scalar representation for kernel time values */
-typedef s64	ktime_t;
+typedef s64 ktime_t;
 
 /**
  * ktime_set - Set a ktime_t variable from a seconds/nanoseconds value
@@ -43,28 +43,28 @@ static inline ktime_t ktime_set(const s64 secs, const unsigned long nsecs)
 }
 
 /* Subtract two ktime_t variables. rem = lhs -rhs: */
-#define ktime_sub(lhs, rhs)	((lhs) - (rhs))
+#define ktime_sub(lhs, rhs) ((lhs) - (rhs))
 
 /* Add two ktime_t variables. res = lhs + rhs: */
-#define ktime_add(lhs, rhs)	((lhs) + (rhs))
+#define ktime_add(lhs, rhs) ((lhs) + (rhs))
 
 /*
  * Same as ktime_add(), but avoids undefined behaviour on overflow; however,
  * this means that you must check the result for overflow yourself.
  */
-#define ktime_add_unsafe(lhs, rhs)	((u64) (lhs) + (rhs))
+#define ktime_add_unsafe(lhs, rhs) ((u64)(lhs) + (rhs))
 
 /*
  * Add a ktime_t variable and a scalar nanosecond value.
  * res = kt + nsval:
  */
-#define ktime_add_ns(kt, nsval)		((kt) + (nsval))
+#define ktime_add_ns(kt, nsval) ((kt) + (nsval))
 
 /*
  * Subtract a scalar nanosecod from a ktime_t variable
  * res = kt - nsval:
  */
-#define ktime_sub_ns(kt, nsval)		((kt) - (nsval))
+#define ktime_sub_ns(kt, nsval) ((kt) - (nsval))
 
 /* convert a timespec to ktime_t format: */
 static inline ktime_t timespec_to_ktime(struct timespec ts)
@@ -85,13 +85,13 @@ static inline ktime_t timeval_to_ktime(struct timeval tv)
 }
 
 /* Map the ktime_t to timespec conversion to ns_to_timespec function */
-#define ktime_to_timespec(kt)		ns_to_timespec((kt))
+#define ktime_to_timespec(kt) ns_to_timespec((kt))
 
 /* Map the ktime_t to timespec conversion to ns_to_timespec function */
-#define ktime_to_timespec64(kt)		ns_to_timespec64((kt))
+#define ktime_to_timespec64(kt) ns_to_timespec64((kt))
 
 /* Map the ktime_t to timeval conversion to ns_to_timeval function */
-#define ktime_to_timeval(kt)		ns_to_timeval((kt))
+#define ktime_to_timeval(kt) ns_to_timeval((kt))
 
 /* Convert ktime_t to nanoseconds */
 static inline s64 ktime_to_ns(const ktime_t kt)
@@ -185,7 +185,7 @@ static inline s64 ktime_to_ms(const ktime_t kt)
 
 static inline s64 ktime_us_delta(const ktime_t later, const ktime_t earlier)
 {
-       return ktime_to_us(ktime_sub(later, earlier));
+	return ktime_to_us(ktime_sub(later, earlier));
 }
 
 static inline s64 ktime_ms_delta(const ktime_t later, const ktime_t earlier)
@@ -223,8 +223,7 @@ extern ktime_t ktime_add_safe(const ktime_t lhs, const ktime_t rhs);
  *
  * Return: %true if there was a successful conversion, %false if kt was 0.
  */
-static inline __must_check bool ktime_to_timespec_cond(const ktime_t kt,
-						       struct timespec *ts)
+static inline __must_check bool ktime_to_timespec_cond(const ktime_t kt, struct timespec *ts)
 {
 	if (kt) {
 		*ts = ktime_to_timespec(kt);
@@ -242,8 +241,7 @@ static inline __must_check bool ktime_to_timespec_cond(const ktime_t kt,
  *
  * Return: %true if there was a successful conversion, %false if kt was 0.
  */
-static inline __must_check bool ktime_to_timespec64_cond(const ktime_t kt,
-						       struct timespec64 *ts)
+static inline __must_check bool ktime_to_timespec64_cond(const ktime_t kt, struct timespec64 *ts)
 {
 	if (kt) {
 		*ts = ktime_to_timespec64(kt);
@@ -259,8 +257,8 @@ static inline __must_check bool ktime_to_timespec64_cond(const ktime_t kt,
  * idea of the (in)accuracy of timers. Timer values are rounded up to
  * this resolution values.
  */
-#define LOW_RES_NSEC		TICK_NSEC
-#define KTIME_LOW_RES		(LOW_RES_NSEC)
+#define LOW_RES_NSEC TICK_NSEC
+#define KTIME_LOW_RES (LOW_RES_NSEC)
 
 static inline ktime_t ns_to_ktime(u64 ns)
 {
@@ -272,7 +270,7 @@ static inline ktime_t ms_to_ktime(u64 ms)
 	return ms * NSEC_PER_MSEC;
 }
 
-# include <linux/timekeeping.h>
-# include <linux/timekeeping32.h>
+#include <linux/timekeeping.h>
+#include <linux/timekeeping32.h>
 
 #endif

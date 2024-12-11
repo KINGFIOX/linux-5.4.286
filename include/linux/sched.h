@@ -1982,6 +1982,8 @@ static inline void rseq_handle_notify_resume(struct ksignal *ksig, struct pt_reg
 static inline void rseq_signal_deliver(struct ksignal *ksig, struct pt_regs *regs)
 {
 }
+
+// restartable sequences(可重启序列, 内核的一个机制, 旨在提供高效的、低延迟的原子性操作)
 static inline void rseq_preempt(struct task_struct *t)
 {
 }

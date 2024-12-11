@@ -5,8 +5,7 @@
 /*
  * Expects runqueue lock to be held for atomicity of update
  */
-static inline void
-rq_sched_info_arrive(struct rq *rq, unsigned long long delta)
+static inline void rq_sched_info_arrive(struct rq *rq, unsigned long long delta)
 {
 	if (rq) {
 		rq->rq_sched_info.run_delay += delta;
@@ -17,42 +16,82 @@ rq_sched_info_arrive(struct rq *rq, unsigned long long delta)
 /*
  * Expects runqueue lock to be held for atomicity of update
  */
-static inline void
-rq_sched_info_depart(struct rq *rq, unsigned long long delta)
+static inline void rq_sched_info_depart(struct rq *rq, unsigned long long delta)
 {
 	if (rq)
 		rq->rq_cpu_time += delta;
 }
 
-static inline void
-rq_sched_info_dequeued(struct rq *rq, unsigned long long delta)
+static inline void rq_sched_info_dequeued(struct rq *rq, unsigned long long delta)
 {
 	if (rq)
 		rq->rq_sched_info.run_delay += delta;
 }
-#define   schedstat_enabled()		static_branch_unlikely(&sched_schedstats)
-#define __schedstat_inc(var)		do { var++; } while (0)
-#define   schedstat_inc(var)		do { if (schedstat_enabled()) { var++; } } while (0)
-#define __schedstat_add(var, amt)	do { var += (amt); } while (0)
-#define   schedstat_add(var, amt)	do { if (schedstat_enabled()) { var += (amt); } } while (0)
-#define __schedstat_set(var, val)	do { var = (val); } while (0)
-#define   schedstat_set(var, val)	do { if (schedstat_enabled()) { var = (val); } } while (0)
-#define   schedstat_val(var)		(var)
-#define   schedstat_val_or_zero(var)	((schedstat_enabled()) ? (var) : 0)
+#define schedstat_enabled() static_branch_unlikely(&sched_schedstats)
+#define __schedstat_inc(var)                                                                                                                                   \
+	do {                                                                                                                                                   \
+		var++;                                                                                                                                         \
+	} while (0)
+#define schedstat_inc(var)                                                                                                                                     \
+	do {                                                                                                                                                   \
+		if (schedstat_enabled()) {                                                                                                                     \
+			var++;                                                                                                                                 \
+		}                                                                                                                                              \
+	} while (0)
+#define __schedstat_add(var, amt)                                                                                                                              \
+	do {                                                                                                                                                   \
+		var += (amt);                                                                                                                                  \
+	} while (0)
+#define schedstat_add(var, amt)                                                                                                                                \
+	do {                                                                                                                                                   \
+		if (schedstat_enabled()) {                                                                                                                     \
+			var += (amt);                                                                                                                          \
+		}                                                                                                                                              \
+	} while (0)
+#define __schedstat_set(var, val)                                                                                                                              \
+	do {                                                                                                                                                   \
+		var = (val);                                                                                                                                   \
+	} while (0)
+#define schedstat_set(var, val)                                                                                                                                \
+	do {                                                                                                                                                   \
+		if (schedstat_enabled()) {                                                                                                                     \
+			var = (val);                                                                                                                           \
+		}                                                                                                                                              \
+	} while (0)
+#define schedstat_val(var) (var)
+#define schedstat_val_or_zero(var) ((schedstat_enabled()) ? (var) : 0)
 
 #else /* !CONFIG_SCHEDSTATS: */
-static inline void rq_sched_info_arrive  (struct rq *rq, unsigned long long delta) { }
-static inline void rq_sched_info_dequeued(struct rq *rq, unsigned long long delta) { }
-static inline void rq_sched_info_depart  (struct rq *rq, unsigned long long delta) { }
-# define   schedstat_enabled()		0
-# define __schedstat_inc(var)		do { } while (0)
-# define   schedstat_inc(var)		do { } while (0)
-# define __schedstat_add(var, amt)	do { } while (0)
-# define   schedstat_add(var, amt)	do { } while (0)
-# define __schedstat_set(var, val)	do { } while (0)
-# define   schedstat_set(var, val)	do { } while (0)
-# define   schedstat_val(var)		0
-# define   schedstat_val_or_zero(var)	0
+static inline void rq_sched_info_arrive(struct rq *rq, unsigned long long delta)
+{
+}
+static inline void rq_sched_info_dequeued(struct rq *rq, unsigned long long delta)
+{
+}
+static inline void rq_sched_info_depart(struct rq *rq, unsigned long long delta)
+{
+}
+#define schedstat_enabled() 0
+#define __schedstat_inc(var)                                                                                                                                   \
+	do {                                                                                                                                                   \
+	} while (0)
+#define schedstat_inc(var)                                                                                                                                     \
+	do {                                                                                                                                                   \
+	} while (0)
+#define __schedstat_add(var, amt)                                                                                                                              \
+	do {                                                                                                                                                   \
+	} while (0)
+#define schedstat_add(var, amt)                                                                                                                                \
+	do {                                                                                                                                                   \
+	} while (0)
+#define __schedstat_set(var, val)                                                                                                                              \
+	do {                                                                                                                                                   \
+	} while (0)
+#define schedstat_set(var, val)                                                                                                                                \
+	do {                                                                                                                                                   \
+	} while (0)
+#define schedstat_val(var) 0
+#define schedstat_val_or_zero(var) 0
 #endif /* CONFIG_SCHEDSTATS */
 
 #ifdef CONFIG_PSI
@@ -135,10 +174,18 @@ static inline void psi_task_tick(struct rq *rq)
 		psi_memstall_tick(rq->curr, cpu_of(rq));
 }
 #else /* CONFIG_PSI */
-static inline void psi_enqueue(struct task_struct *p, bool wakeup) {}
-static inline void psi_dequeue(struct task_struct *p, bool sleep) {}
-static inline void psi_ttwu_dequeue(struct task_struct *p) {}
-static inline void psi_task_tick(struct rq *rq) {}
+static inline void psi_enqueue(struct task_struct *p, bool wakeup)
+{
+}
+static inline void psi_dequeue(struct task_struct *p, bool sleep)
+{
+}
+static inline void psi_ttwu_dequeue(struct task_struct *p)
+{
+}
+static inline void psi_task_tick(struct rq *rq)
+{
+}
 #endif /* CONFIG_PSI */
 
 #ifdef CONFIG_SCHED_INFO
@@ -222,8 +269,7 @@ static inline void sched_info_depart(struct rq *rq, struct task_struct *t)
  * their time slice.  (This may also be called when switching to or from
  * the idle task.)  We are only called when prev != next.
  */
-static inline void
-__sched_info_switch(struct rq *rq, struct task_struct *prev, struct task_struct *next)
+static inline void __sched_info_switch(struct rq *rq, struct task_struct *prev, struct task_struct *next)
 {
 	/*
 	 * prev now departs the CPU.  It's not interesting to record
@@ -237,18 +283,29 @@ __sched_info_switch(struct rq *rq, struct task_struct *prev, struct task_struct 
 		sched_info_arrive(rq, next);
 }
 
-static inline void
-sched_info_switch(struct rq *rq, struct task_struct *prev, struct task_struct *next)
+static inline void sched_info_switch(struct rq *rq, struct task_struct *prev, struct task_struct *next)
 {
 	if (sched_info_on())
 		__sched_info_switch(rq, prev, next);
 }
 
 #else /* !CONFIG_SCHED_INFO: */
-# define sched_info_queued(rq, t)	do { } while (0)
-# define sched_info_reset_dequeued(t)	do { } while (0)
-# define sched_info_dequeued(rq, t)	do { } while (0)
-# define sched_info_depart(rq, t)	do { } while (0)
-# define sched_info_arrive(rq, next)	do { } while (0)
-# define sched_info_switch(rq, t, next)	do { } while (0)
+#define sched_info_queued(rq, t)                                                                                                                               \
+	do {                                                                                                                                                   \
+	} while (0)
+#define sched_info_reset_dequeued(t)                                                                                                                           \
+	do {                                                                                                                                                   \
+	} while (0)
+#define sched_info_dequeued(rq, t)                                                                                                                             \
+	do {                                                                                                                                                   \
+	} while (0)
+#define sched_info_depart(rq, t)                                                                                                                               \
+	do {                                                                                                                                                   \
+	} while (0)
+#define sched_info_arrive(rq, next)                                                                                                                            \
+	do {                                                                                                                                                   \
+	} while (0)
+#define sched_info_switch(rq, t, next)                                                                                                                         \
+	do {                                                                                                                                                   \
+	} while (0)
 #endif /* CONFIG_SCHED_INFO */

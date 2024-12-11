@@ -57,7 +57,7 @@ EXPORT_SYMBOL(_copy_to_user);
 int check_zeroed_user(const void __user *from, size_t size)
 {
 	unsigned long val;
-	uintptr_t align = (uintptr_t) from % sizeof(unsigned long);
+	uintptr_t align = (uintptr_t)from % sizeof(unsigned long);
 
 	if (unlikely(size == 0))
 		return 1;
@@ -68,7 +68,7 @@ int check_zeroed_user(const void __user *from, size_t size)
 	if (!user_access_begin(from, size))
 		return -EFAULT;
 
-	unsafe_get_user(val, (unsigned long __user *) from, err_fault);
+	unsafe_get_user(val, (unsigned long __user *)from, err_fault);
 	if (align)
 		val &= ~aligned_byte_mask(align);
 
@@ -79,7 +79,7 @@ int check_zeroed_user(const void __user *from, size_t size)
 		from += sizeof(unsigned long);
 		size -= sizeof(unsigned long);
 
-		unsafe_get_user(val, (unsigned long __user *) from, err_fault);
+		unsafe_get_user(val, (unsigned long __user *)from, err_fault);
 	}
 
 	if (size < sizeof(unsigned long))

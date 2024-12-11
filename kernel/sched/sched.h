@@ -836,13 +836,13 @@ DECLARE_STATIC_KEY_FALSE(sched_uclamp_used);
  */
 struct rq {
 	/* runqueue lock: */
-	raw_spinlock_t lock;
+	raw_spinlock_t lock; // lock of this struct rq
 
 	/*
 	 * nr_running and cpu_load should be in the same cacheline because
 	 * remote CPUs use both these fields when doing load calculation.
 	 */
-	unsigned int nr_running;
+	unsigned int nr_running; // the number of runnable tasks
 #ifdef CONFIG_NUMA_BALANCING
 	unsigned int nr_numa_running;
 	unsigned int nr_preferred_running;
@@ -854,12 +854,12 @@ struct rq {
 	unsigned long last_blocked_load_update_tick;
 	unsigned int has_blocked_load;
 #endif /* CONFIG_SMP */
-	unsigned int nohz_tick_stopped;
+	unsigned int nohz_tick_stopped; //
 	atomic_t nohz_flags;
 #endif /* CONFIG_NO_HZ_COMMON */
 
-	unsigned long nr_load_updates;
-	u64 nr_switches;
+	unsigned long nr_load_updates; // 负载更新次数
+	u64 nr_switches; // 上下文切换次数
 
 #ifdef CONFIG_UCLAMP_TASK
 	/* Utilization clamp values based on CPU's RUNNABLE tasks */
@@ -868,14 +868,14 @@ struct rq {
 #define UCLAMP_FLAG_IDLE 0x01
 #endif
 
+	// 调度类队列
 	struct cfs_rq cfs;
 	struct rt_rq rt;
 	struct dl_rq dl;
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
-	/* list of leaf cfs_rq on this CPU: */
-	struct list_head leaf_cfs_rq_list;
-	struct list_head *tmp_alone_branch;
+	struct list_head leaf_cfs_rq_list; /* list of leaf cfs_rq on this CPU: */
+	struct list_head *tmp_alone_branch; // 临时用于管理调度组的指针
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 
 	/*
@@ -884,25 +884,25 @@ struct rq {
 	 * one CPU and if it got migrated afterwards it may decrease
 	 * it on another CPU. Always updated under the runqueue lock:
 	 */
-	unsigned long nr_uninterruptible;
+	unsigned long nr_uninterruptible; // 不可中断的任务数量
 
 	struct task_struct *curr;
 	struct task_struct *idle;
 	struct task_struct *stop;
-	unsigned long next_balance;
+	unsigned long next_balance; //
 	struct mm_struct *prev_mm;
 
-	unsigned int clock_update_flags;
+	unsigned int clock_update_flags; // 时钟更新的标志位, 用于优化时间更新操作
 	u64 clock;
 	/* Ensure that all clocks are in the same cache line */
 	u64 clock_task ____cacheline_aligned;
-	u64 clock_pelt;
-	unsigned long lost_idle_time;
+	u64 clock_pelt; // per-entity load tracking (用于计算时间的算法)
+	unsigned long lost_idle_time; // statistics
 
-	atomic_t nr_iowait;
+	atomic_t nr_iowait; // IO 等待任务计数
 
 #ifdef CONFIG_MEMBARRIER
-	int membarrier_state;
+	int membarrier_state; // 当前内存屏障的状态 ? 不懂
 #endif
 
 #ifdef CONFIG_SMP
@@ -939,7 +939,7 @@ struct rq {
 
 	/* This is used to determine avg_idle's max value */
 	u64 max_idle_balance_cost;
-#endif
+#endif /* CONFIG_SMP */
 
 #ifdef CONFIG_IRQ_TIME_ACCOUNTING
 	u64 prev_irq_time;

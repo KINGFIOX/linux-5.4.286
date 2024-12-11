@@ -3113,6 +3113,7 @@ static inline void fire_sched_in_preempt_notifiers(struct task_struct *curr)
 {
 }
 
+// preempt 的观察者. (设计模式, 观察者模式)
 static inline void fire_sched_out_preempt_notifiers(struct task_struct *curr, struct task_struct *next)
 {
 }
@@ -3191,7 +3192,7 @@ static inline void finish_lock_switch(struct rq *rq)
 #endif
 
 /**
- * prepare_task_switch - prepare to switch tasks
+ * prepare_task_switch - prepare to switch tasks. 这都是一些统计信息
  * @rq: the runqueue preparing to switch
  * @prev: the current task that is being switched out
  * @next: the task we are going to switch to.
@@ -3205,13 +3206,13 @@ static inline void finish_lock_switch(struct rq *rq)
  */
 static inline void prepare_task_switch(struct rq *rq, struct task_struct *prev, struct task_struct *next)
 {
-	kcov_prepare_switch(prev);
-	sched_info_switch(rq, prev, next);
-	perf_event_task_sched_out(prev, next);
-	rseq_preempt(prev);
-	fire_sched_out_preempt_notifiers(prev, next);
-	prepare_task(next);
-	prepare_arch_switch(next);
+	kcov_prepare_switch(prev); // do nothing
+	sched_info_switch(rq, prev, next); // do nothing
+	perf_event_task_sched_out(prev, next); // do nothing
+	rseq_preempt(prev); // do nothing
+	fire_sched_out_preempt_notifiers(prev, next); // do nothing
+	prepare_task(next); // set next->on_cpu = 1
+	prepare_arch_switch(next);  // do nothing in riscv
 }
 
 /**
@@ -4076,7 +4077,7 @@ static void __sched notrace __schedule(bool preempt)
 	if (sched_feat(HRTICK))
 		hrtick_clear(rq);
 
-	local_irq_disable();
+	local_irq_disable(); // local 指的是: 关闭当前 CPU 的 IRQ
 	rcu_note_context_switch(preempt);
 
 	/*
