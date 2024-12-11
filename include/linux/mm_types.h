@@ -65,8 +65,7 @@ struct mem_cgroup;
 #endif
 
 struct page {
-	unsigned long flags; /* Atomic flags, some possibly
-					 * updated asynchronously */
+	unsigned long flags; /* Atomic flags, some possibly * updated asynchronously */
 	/*
 	 * Five words (20/40 bytes) are available in this union.
 	 * WARNING: bit 0 of the first word is used for PageTail(). That
@@ -74,15 +73,14 @@ struct page {
 	 * avoid collision and false-positive PageTail().
 	 */
 	union {
-		struct { /* Page cache and anonymous pages */
+		/* Page cache and anonymous pages */
+		struct {
 			/**
-			 * @lru: Pageout list, eg. active_list protected by
-			 * pgdat->lru_lock.  Sometimes used as a generic list
-			 * by the page owner.
+			 * @lru: Pageout list, eg. active_list protected by pgdat->lru_lock.
+			 * Sometimes used as a generic list by the page owner.
 			 */
 			struct list_head lru;
-			/* See page-flags.h for PAGE_MAPPING_FLAGS */
-			struct address_space *mapping;
+			struct address_space *mapping; /* See page-flags.h for PAGE_MAPPING_FLAGS */
 			pgoff_t index; /* Our offset within mapping. */
 			/**
 			 * @private: Mapping-private opaque data.
@@ -92,14 +90,16 @@ struct page {
 			 */
 			unsigned long private;
 		};
-		struct { /* page_pool used by netstack */
+		/* page_pool used by netstack */
+		struct {
 			/**
 			 * @dma_addr: might require a 64-bit value on
 			 * 32-bit architectures.
 			 */
 			unsigned long dma_addr[2];
 		};
-		struct { /* slab, slob and slub */
+		/* slab, slob and slub 都是内存分配器 */
+		struct {
 			union {
 				struct list_head slab_list;
 				struct { /* Partial pages */
@@ -126,7 +126,8 @@ struct page {
 				};
 			};
 		};
-		struct { /* Tail pages of compound page */
+		/* Tail pages of compound page */
+		struct {
 			unsigned long compound_head; /* Bit zero is set */
 
 			/* First tail page only */
@@ -134,13 +135,15 @@ struct page {
 			unsigned char compound_order;
 			atomic_t compound_mapcount;
 		};
-		struct { /* Second tail page of compound page */
+		/* Second tail page of compound page */
+		struct {
 			unsigned long _compound_pad_1; /* compound_head */
 			unsigned long _compound_pad_2;
 			/* For both global and memcg */
 			struct list_head deferred_list;
 		};
-		struct { /* Page table pages */
+		/* Page table pages */
+		struct {
 			unsigned long _pt_pad_1; /* compound_head */
 			pgtable_t pmd_huge_pte; /* protected by page->ptl */
 			unsigned long _pt_pad_2; /* mapping */
@@ -154,7 +157,8 @@ struct page {
 			spinlock_t ptl;
 #endif
 		};
-		struct { /* ZONE_DEVICE pages */
+		/* ZONE_DEVICE pages */
+		struct {
 			/** @pgmap: Points to the hosting device page map. */
 			struct dev_pagemap *pgmap;
 			void *zone_device_data;
@@ -211,8 +215,7 @@ struct page {
 	 * WANT_PAGE_VIRTUAL in asm/page.h
 	 */
 #if defined(WANT_PAGE_VIRTUAL)
-	void *virtual; /* Kernel virtual address (NULL if
-					   not kmapped, ie. highmem) */
+	void *virtual; /* Kernel virtual address (NULL if not kmapped, ie. highmem) */
 #endif /* WANT_PAGE_VIRTUAL */
 
 #ifdef LAST_CPUPID_NOT_IN_PAGE_FLAGS
@@ -295,11 +298,9 @@ struct vm_area_struct {
 	/* The first cache line has the info for VMA tree walking. */
 
 	unsigned long vm_start; /* Our start address within vm_mm. */
-	unsigned long vm_end; /* The first byte after our end address
-					   within vm_mm. */
+	unsigned long vm_end; /* The first byte after our end address within vm_mm. */
 
-	/* linked list of VM areas per task, sorted by address */
-	struct vm_area_struct *vm_next, *vm_prev;
+	struct vm_area_struct *vm_next, *vm_prev; /* linked list of VM areas per task, sorted by address */
 
 	struct rb_node vm_rb;
 
@@ -332,16 +333,13 @@ struct vm_area_struct {
 	 * can only be in the i_mmap tree.  An anonymous MAP_PRIVATE, stack
 	 * or brk vma (with NULL file) can only be in an anon_vma list.
 	 */
-	struct list_head anon_vma_chain; /* Serialized by mmap_sem &
-					  * page_table_lock */
+	struct list_head anon_vma_chain; /* Serialized by mmap_sem & * page_table_lock */
 	struct anon_vma *anon_vma; /* Serialized by page_table_lock */
 
-	/* Function pointers to deal with this struct. */
-	const struct vm_operations_struct *vm_ops;
+	const struct vm_operations_struct *vm_ops; /* Function pointers to deal with this struct. */
 
 	/* Information about our backing store: */
-	unsigned long vm_pgoff; /* Offset (within vm_file) in PAGE_SIZE
-					   units */
+	unsigned long vm_pgoff; /* Offset (within vm_file) in PAGE_SIZE units */
 	struct file *vm_file; /* File we map to (can be NULL). */
 	void *vm_private_data; /* was vm_pte (shared mem) */
 

@@ -282,7 +282,7 @@ static void __init create_pgd_mapping(pgd_t *pgdp, uintptr_t va, phys_addr_t pa,
 	uintptr_t pgd_index = pgd_index(va);
 
 	if (sz == PGDIR_SIZE) {
-		if (pgd_val(pgdp[pgd_index]) == 0)
+		if (pgd_val(pgdp[pgd_index]) == 0) // remap 并不会起作用
 			pgdp[pgd_index] = pfn_pgd(PFN_DOWN(pa), prot);
 		return;
 	}
@@ -394,14 +394,15 @@ static void __init setup_vm_final(void)
 	mmu_enabled = true;
 
 	/* Setup swapper PGD for fixmap */
+	// 这个时候实际上已经开启了分页了, 因为 setup_vm 里面也有 create_pgd_mapping
 	create_pgd_mapping(swapper_pg_dir, FIXADDR_START, __pa(fixmap_pgd_next), PGDIR_SIZE, PAGE_TABLE);
 
 	/* Map all memory banks */
-	for_each_memblock (memory, reg) {
+	for_each_memblock (memory, reg /*iterator*/) {
 		start = reg->base;
 		end = start + reg->size;
 
-		if (start >= end)
+		if (start >= end) // unlikely
 			break;
 		if (memblock_is_nomap(reg))
 			continue;

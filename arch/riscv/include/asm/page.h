@@ -98,7 +98,7 @@ extern unsigned long min_low_pfn;
 #define __pa(x) ((unsigned long)(x)-va_pa_offset)
 
 /// @in: physical addr
-/// @out: virtual addr
+/// @out: virtual addr (kernel space)
 #define __va(x) ((void *)((unsigned long)(x) + va_pa_offset))
 
 #define phys_to_pfn(phys) (PFN_DOWN(phys))

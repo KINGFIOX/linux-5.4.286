@@ -29,11 +29,12 @@
 
 /*
  * _PAGE_PROT_NONE is set on not-present pages (and ignored by the hardware) to
- * distinguish them from swapped out pages
+ * distinguish them from swapped out pages. _PAGE_PROT_NONE 用于标识当前不在物理内存中的页面.
+ * 也就是说: 有 FLAG_WRITE, 但是没有 FLAG_PRESENT 的页是 swapped out 的页
  */
 #define _PAGE_PROT_NONE _PAGE_READ
 
-#define _PAGE_PFN_SHIFT 10 //
+#define _PAGE_PFN_SHIFT 10
 
 /* Set of bits to preserve across pte_modify() */
 #define _PAGE_CHG_MASK (~(unsigned long)(_PAGE_PRESENT | _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC | _PAGE_USER | _PAGE_GLOBAL))

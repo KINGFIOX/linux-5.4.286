@@ -164,6 +164,8 @@ static inline struct page *pmd_page(pmd_t pmd)
 	return pfn_to_page(pmd_val(pmd) >> _PAGE_PFN_SHIFT);
 }
 
+/// @in: page middle directory. 这个应该是 pgd 的 pte
+/// @out: virtual addr
 static inline unsigned long pmd_page_vaddr(pmd_t pmd)
 {
 	return (unsigned long)pfn_to_virt(pmd_val(pmd) >> _PAGE_PFN_SHIFT);
@@ -196,6 +198,9 @@ static inline pte_t pfn_pte(unsigned long pfn, pgprot_t prot)
 
 #define pte_index(addr) (((addr) >> PAGE_SHIFT) & (PTRS_PER_PTE - 1))
 
+/// @in: page middle directory.(pointer) 这个应该是 pgd 的 pte
+/// @in: virtual addr in this page middle directory
+/// @out: page table entry(pointer)
 static inline pte_t *pte_offset_kernel(pmd_t *pmd, unsigned long addr)
 {
 	return (pte_t *)pmd_page_vaddr(*pmd) + pte_index(addr);
@@ -204,9 +209,9 @@ static inline pte_t *pte_offset_kernel(pmd_t *pmd, unsigned long addr)
 #define pte_offset_map(dir, addr) pte_offset_kernel((dir), (addr))
 #define pte_unmap(pte) ((void)(pte))
 
+// 可以通过: !_PAGE_PRESENT && _PAGE_PROT_NONE 来判断当前页是否是 swapped out 的页
 static inline int pte_present(pte_t pte)
 {
-	// 一个 pte 最基本的权限就是:
 	return (pte_val(pte) & (_PAGE_PRESENT | _PAGE_PROT_NONE));
 }
 
@@ -335,7 +340,7 @@ static inline void set_pte_at(struct mm_struct *mm, unsigned long addr, pte_t *p
 	if (pte_present(pteval) && pte_exec(pteval))
 		flush_icache_pte(pteval);
 
-	set_pte(ptep, pteval);
+	set_pte(ptep, pteval); // *ptep = pteval
 }
 
 static inline void pte_clear(struct mm_struct *mm, unsigned long addr, pte_t *ptep)
@@ -344,7 +349,7 @@ static inline void pte_clear(struct mm_struct *mm, unsigned long addr, pte_t *pt
 }
 
 #define __HAVE_ARCH_PTEP_SET_ACCESS_FLAGS
-static inline int ptep_set_access_flags(struct vm_area_struct *vma, unsigned long address, pte_t *ptep, pte_t entry, int dirty)
+static inline int ptep_set_access_flags(struct vm_area_struct *vma, unsigned long address, pte_t *ptep /*pte pointer*/, pte_t entry, int dirty)
 {
 	if (!pte_same(*ptep, entry))
 		set_pte_at(vma->vm_mm, address, ptep, entry);
@@ -356,7 +361,7 @@ static inline int ptep_set_access_flags(struct vm_area_struct *vma, unsigned lon
 }
 
 #define __HAVE_ARCH_PTEP_GET_AND_CLEAR
-static inline pte_t ptep_get_and_clear(struct mm_struct *mm, unsigned long address, pte_t *ptep)
+static inline pte_t ptep_get_and_clear(struct mm_struct *mm /*UNUSED*/, unsigned long address /*UNUSED*/, pte_t *ptep /*pte pointer*/)
 {
 	return __pte(atomic_long_xchg((atomic_long_t *)ptep, 0));
 }

@@ -415,6 +415,7 @@ int pagecache_write_end(struct file *, struct address_space *mapping, loff_t pos
 
 /**
  * struct address_space - Contents of a cacheable, mappable object.
+ * 文件系统 与 内存管理子系统 的桥梁.
  * @host: Owner, either the inode or the block_device.
  * @i_pages: Cached pages.
  * @gfp_mask: Memory allocation flags to use for allocating pages.
@@ -434,7 +435,7 @@ int pagecache_write_end(struct file *, struct address_space *mapping, loff_t pos
  */
 struct address_space {
 	struct inode *host;
-	struct xarray i_pages;
+	struct xarray i_pages; // extensible array, 当成是一般的 array 使用就行了
 	gfp_t gfp_mask;
 	atomic_t i_mmap_writable;
 #ifdef CONFIG_READ_ONLY_THP_FOR_FS

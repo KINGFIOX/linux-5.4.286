@@ -26,15 +26,11 @@ static inline void flush_cache_dup_mm(struct mm_struct *mm)
 {
 }
 
-static inline void flush_cache_range(struct vm_area_struct *vma,
-				     unsigned long start,
-				     unsigned long end)
+static inline void flush_cache_range(struct vm_area_struct *vma, unsigned long start, unsigned long end)
 {
 }
 
-static inline void flush_cache_page(struct vm_area_struct *vma,
-				    unsigned long vmaddr,
-				    unsigned long pfn)
+static inline void flush_cache_page(struct vm_area_struct *vma, unsigned long vmaddr, unsigned long pfn)
 {
 }
 
@@ -46,8 +42,7 @@ static inline void flush_dcache_mmap_unlock(struct address_space *mapping)
 {
 }
 
-static inline void flush_icache_page(struct vm_area_struct *vma,
-				     struct page *page)
+static inline void flush_icache_page(struct vm_area_struct *vma, struct page *page)
 {
 }
 
@@ -59,17 +54,16 @@ static inline void flush_cache_vunmap(unsigned long start, unsigned long end)
 {
 }
 
-#define copy_to_user_page(vma, page, vaddr, dst, src, len) \
-	do { \
-		memcpy(dst, src, len); \
-		flush_icache_user_range(vma, page, vaddr, len); \
+#define copy_to_user_page(vma, page, vaddr, dst, src, len)                                                                                                     \
+	do {                                                                                                                                                   \
+		memcpy(dst, src, len);                                                                                                                         \
+		flush_icache_user_range(vma, page, vaddr, len);                                                                                                \
 	} while (0)
-#define copy_from_user_page(vma, page, vaddr, dst, src, len) \
-	memcpy(dst, src, len)
+#define copy_from_user_page(vma, page, vaddr, dst, src, len) memcpy(dst, src, len)
 
 static inline void local_flush_icache_all(void)
 {
-	asm volatile ("fence.i" ::: "memory");
+	asm volatile("fence.i" ::: "memory");
 }
 
 #define PG_dcache_clean PG_arch_1
@@ -103,6 +97,6 @@ void flush_icache_mm(struct mm_struct *mm, bool local);
  * Bits in sys_riscv_flush_icache()'s flags argument.
  */
 #define SYS_RISCV_FLUSH_ICACHE_LOCAL 1UL
-#define SYS_RISCV_FLUSH_ICACHE_ALL   (SYS_RISCV_FLUSH_ICACHE_LOCAL)
+#define SYS_RISCV_FLUSH_ICACHE_ALL (SYS_RISCV_FLUSH_ICACHE_LOCAL)
 
 #endif /* _ASM_RISCV_CACHEFLUSH_H */
