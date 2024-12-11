@@ -56,10 +56,7 @@ static struct softirq_action softirq_vec[NR_SOFTIRQS] __cacheline_aligned_in_smp
 
 DEFINE_PER_CPU(struct task_struct *, ksoftirqd);
 
-const char * const softirq_to_name[NR_SOFTIRQS] = {
-	"HI", "TIMER", "NET_TX", "NET_RX", "BLOCK", "IRQ_POLL",
-	"TASKLET", "SCHED", "HRTIMER", "RCU"
-};
+const char *const softirq_to_name[NR_SOFTIRQS] = { "HI", "TIMER", "NET_TX", "NET_RX", "BLOCK", "IRQ_POLL", "TASKLET", "SCHED", "HRTIMER", "RCU" };
 
 /*
  * we cannot loop indefinitely here to avoid userspace starvation,
@@ -88,8 +85,7 @@ static bool ksoftirqd_running(unsigned long pending)
 
 	if (pending & SOFTIRQ_NOW_MASK)
 		return false;
-	return tsk && (tsk->state == TASK_RUNNING) &&
-		!__kthread_should_park(tsk);
+	return tsk && (tsk->state == TASK_RUNNING) && !__kthread_should_park(tsk);
 }
 
 /*
@@ -210,7 +206,7 @@ EXPORT_SYMBOL(__local_bh_enable_ip);
  * we want to handle softirqs as soon as possible, but they
  * should not be able to lock up the box.
  */
-#define MAX_SOFTIRQ_TIME  msecs_to_jiffies(2)
+#define MAX_SOFTIRQ_TIME msecs_to_jiffies(2)
 #define MAX_SOFTIRQ_RESTART 10
 
 #ifdef CONFIG_TRACE_IRQFLAGS
@@ -242,8 +238,13 @@ static inline void lockdep_softirq_end(bool in_hardirq)
 		trace_hardirq_enter();
 }
 #else
-static inline bool lockdep_softirq_start(void) { return false; }
-static inline void lockdep_softirq_end(bool in_hardirq) { }
+static inline bool lockdep_softirq_start(void)
+{
+	return false;
+}
+static inline void lockdep_softirq_end(bool in_hardirq)
+{
+}
 #endif
 
 asmlinkage __visible void __softirq_entry __do_softirq(void)
@@ -292,8 +293,7 @@ restart:
 		h->action(h);
 		trace_softirq_exit(vec_nr);
 		if (unlikely(prev_count != preempt_count())) {
-			pr_err("huh, entered softirq %u %s %p with preempt_count %08x, exited with %08x?\n",
-			       vec_nr, softirq_to_name[vec_nr], h->action,
+			pr_err("huh, entered softirq %u %s %p with preempt_count %08x, exited with %08x?\n", vec_nr, softirq_to_name[vec_nr], h->action,
 			       prev_count, preempt_count());
 			preempt_count_set(prev_count);
 		}
@@ -307,8 +307,7 @@ restart:
 
 	pending = local_softirq_pending();
 	if (pending) {
-		if (time_before(jiffies, end) && !need_resched() &&
-		    --max_restart)
+		if (time_before(jiffies, end) && !need_resched() && --max_restart)
 			goto restart;
 
 		wakeup_softirqd();
@@ -468,9 +467,7 @@ struct tasklet_head {
 static DEFINE_PER_CPU(struct tasklet_head, tasklet_vec);
 static DEFINE_PER_CPU(struct tasklet_head, tasklet_hi_vec);
 
-static void __tasklet_schedule_common(struct tasklet_struct *t,
-				      struct tasklet_head __percpu *headp,
-				      unsigned int softirq_nr)
+static void __tasklet_schedule_common(struct tasklet_struct *t, struct tasklet_head __percpu *headp, unsigned int softirq_nr)
 {
 	struct tasklet_head *head;
 	unsigned long flags;
@@ -486,21 +483,17 @@ static void __tasklet_schedule_common(struct tasklet_struct *t,
 
 void __tasklet_schedule(struct tasklet_struct *t)
 {
-	__tasklet_schedule_common(t, &tasklet_vec,
-				  TASKLET_SOFTIRQ);
+	__tasklet_schedule_common(t, &tasklet_vec, TASKLET_SOFTIRQ);
 }
 EXPORT_SYMBOL(__tasklet_schedule);
 
 void __tasklet_hi_schedule(struct tasklet_struct *t)
 {
-	__tasklet_schedule_common(t, &tasklet_hi_vec,
-				  HI_SOFTIRQ);
+	__tasklet_schedule_common(t, &tasklet_hi_vec, HI_SOFTIRQ);
 }
 EXPORT_SYMBOL(__tasklet_hi_schedule);
 
-static void tasklet_action_common(struct softirq_action *a,
-				  struct tasklet_head *tl_head,
-				  unsigned int softirq_nr)
+static void tasklet_action_common(struct softirq_action *a, struct tasklet_head *tl_head, unsigned int softirq_nr)
 {
 	struct tasklet_struct *list;
 
@@ -517,8 +510,7 @@ static void tasklet_action_common(struct softirq_action *a,
 
 		if (tasklet_trylock(t)) {
 			if (!atomic_read(&t->count)) {
-				if (!test_and_clear_bit(TASKLET_STATE_SCHED,
-							&t->state))
+				if (!test_and_clear_bit(TASKLET_STATE_SCHED, &t->state))
 					BUG();
 				t->func(t->data);
 				tasklet_unlock(t);
@@ -546,8 +538,7 @@ static __latent_entropy void tasklet_hi_action(struct softirq_action *a)
 	tasklet_action_common(a, this_cpu_ptr(&tasklet_hi_vec), HI_SOFTIRQ);
 }
 
-void tasklet_init(struct tasklet_struct *t,
-		  void (*func)(unsigned long), unsigned long data)
+void tasklet_init(struct tasklet_struct *t, void (*func)(unsigned long), unsigned long data)
 {
 	t->next = NULL;
 	t->state = 0;
@@ -576,11 +567,9 @@ void __init softirq_init(void)
 {
 	int cpu;
 
-	for_each_possible_cpu(cpu) {
-		per_cpu(tasklet_vec, cpu).tail =
-			&per_cpu(tasklet_vec, cpu).head;
-		per_cpu(tasklet_hi_vec, cpu).tail =
-			&per_cpu(tasklet_hi_vec, cpu).head;
+	for_each_possible_cpu (cpu) {
+		per_cpu(tasklet_vec, cpu).tail = &per_cpu(tasklet_vec, cpu).head;
+		per_cpu(tasklet_hi_vec, cpu).tail = &per_cpu(tasklet_hi_vec, cpu).head;
 	}
 
 	open_softirq(TASKLET_SOFTIRQ, tasklet_action);
@@ -667,20 +656,19 @@ static int takeover_tasklets(unsigned int cpu)
 	return 0;
 }
 #else
-#define takeover_tasklets	NULL
+#define takeover_tasklets NULL
 #endif /* CONFIG_HOTPLUG_CPU */
 
 static struct smp_hotplug_thread softirq_threads = {
-	.store			= &ksoftirqd,
-	.thread_should_run	= ksoftirqd_should_run,
-	.thread_fn		= run_ksoftirqd,
-	.thread_comm		= "ksoftirqd/%u",
+	.store = &ksoftirqd,
+	.thread_should_run = ksoftirqd_should_run,
+	.thread_fn = run_ksoftirqd,
+	.thread_comm = "ksoftirqd/%u",
 };
 
 static __init int spawn_ksoftirqd(void)
 {
-	cpuhp_setup_state_nocalls(CPUHP_SOFTIRQ_DEAD, "softirq:dead", NULL,
-				  takeover_tasklets);
+	cpuhp_setup_state_nocalls(CPUHP_SOFTIRQ_DEAD, "softirq:dead", NULL, takeover_tasklets);
 	BUG_ON(smpboot_register_percpu_thread(&softirq_threads));
 
 	return 0;

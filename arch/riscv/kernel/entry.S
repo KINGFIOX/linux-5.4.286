@@ -292,13 +292,13 @@ restore_all:
 	sret
 
 #if IS_ENABLED(CONFIG_PREEMPT)
-resume_kernel:
+resume_kernel: // called from ret_from_exception
 	REG_L s0, TASK_TI_PREEMPT_COUNT(tp)
 	bnez s0, restore_all
 	REG_L s0, TASK_TI_FLAGS(tp)
 	andi s0, s0, _TIF_NEED_RESCHED
-	beqz s0, restore_all
-	call preempt_schedule_irq
+	beqz s0, restore_all // if not set TIF_NEED_RESCHED, call restore_all
+	call preempt_schedule_irq // else call preempt_schedule_irq, which is defined in kernel/sched/core.c
 	j restore_all
 #endif
 

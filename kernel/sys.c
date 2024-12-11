@@ -74,55 +74,55 @@
 #include "uid16.h"
 
 #ifndef SET_UNALIGN_CTL
-# define SET_UNALIGN_CTL(a, b)	(-EINVAL)
+#define SET_UNALIGN_CTL(a, b) (-EINVAL)
 #endif
 #ifndef GET_UNALIGN_CTL
-# define GET_UNALIGN_CTL(a, b)	(-EINVAL)
+#define GET_UNALIGN_CTL(a, b) (-EINVAL)
 #endif
 #ifndef SET_FPEMU_CTL
-# define SET_FPEMU_CTL(a, b)	(-EINVAL)
+#define SET_FPEMU_CTL(a, b) (-EINVAL)
 #endif
 #ifndef GET_FPEMU_CTL
-# define GET_FPEMU_CTL(a, b)	(-EINVAL)
+#define GET_FPEMU_CTL(a, b) (-EINVAL)
 #endif
 #ifndef SET_FPEXC_CTL
-# define SET_FPEXC_CTL(a, b)	(-EINVAL)
+#define SET_FPEXC_CTL(a, b) (-EINVAL)
 #endif
 #ifndef GET_FPEXC_CTL
-# define GET_FPEXC_CTL(a, b)	(-EINVAL)
+#define GET_FPEXC_CTL(a, b) (-EINVAL)
 #endif
 #ifndef GET_ENDIAN
-# define GET_ENDIAN(a, b)	(-EINVAL)
+#define GET_ENDIAN(a, b) (-EINVAL)
 #endif
 #ifndef SET_ENDIAN
-# define SET_ENDIAN(a, b)	(-EINVAL)
+#define SET_ENDIAN(a, b) (-EINVAL)
 #endif
 #ifndef GET_TSC_CTL
-# define GET_TSC_CTL(a)		(-EINVAL)
+#define GET_TSC_CTL(a) (-EINVAL)
 #endif
 #ifndef SET_TSC_CTL
-# define SET_TSC_CTL(a)		(-EINVAL)
+#define SET_TSC_CTL(a) (-EINVAL)
 #endif
 #ifndef GET_FP_MODE
-# define GET_FP_MODE(a)		(-EINVAL)
+#define GET_FP_MODE(a) (-EINVAL)
 #endif
 #ifndef SET_FP_MODE
-# define SET_FP_MODE(a,b)	(-EINVAL)
+#define SET_FP_MODE(a, b) (-EINVAL)
 #endif
 #ifndef SVE_SET_VL
-# define SVE_SET_VL(a)		(-EINVAL)
+#define SVE_SET_VL(a) (-EINVAL)
 #endif
 #ifndef SVE_GET_VL
-# define SVE_GET_VL()		(-EINVAL)
+#define SVE_GET_VL() (-EINVAL)
 #endif
 #ifndef PAC_RESET_KEYS
-# define PAC_RESET_KEYS(a, b)	(-EINVAL)
+#define PAC_RESET_KEYS(a, b) (-EINVAL)
 #endif
 #ifndef SET_TAGGED_ADDR_CTRL
-# define SET_TAGGED_ADDR_CTRL(a)	(-EINVAL)
+#define SET_TAGGED_ADDR_CTRL(a) (-EINVAL)
 #endif
 #ifndef GET_TAGGED_ADDR_CTRL
-# define GET_TAGGED_ADDR_CTRL()		(-EINVAL)
+#define GET_TAGGED_ADDR_CTRL() (-EINVAL)
 #endif
 
 /*
@@ -157,8 +157,7 @@ static bool set_one_prio_perm(struct task_struct *p)
 {
 	const struct cred *cred = current_cred(), *pcred = __task_cred(p);
 
-	if (uid_eq(pcred->uid,  cred->euid) ||
-	    uid_eq(pcred->euid, cred->euid))
+	if (uid_eq(pcred->uid, cred->euid) || uid_eq(pcred->euid, cred->euid))
 		return true;
 	if (ns_capable(pcred->user_ns, CAP_SYS_NICE))
 		return true;
@@ -228,9 +227,11 @@ SYSCALL_DEFINE3(setpriority, int, which, int, who, int, niceval)
 			pgrp = find_vpid(who);
 		else
 			pgrp = task_pgrp(current);
-		do_each_pid_thread(pgrp, PIDTYPE_PGID, p) {
+		do_each_pid_thread(pgrp, PIDTYPE_PGID, p)
+		{
 			error = set_one_prio(p, niceval, error);
-		} while_each_pid_thread(pgrp, PIDTYPE_PGID, p);
+		}
+		while_each_pid_thread(pgrp, PIDTYPE_PGID, p);
 		break;
 	case PRIO_USER:
 		uid = make_kuid(cred->user_ns, who);
@@ -240,14 +241,16 @@ SYSCALL_DEFINE3(setpriority, int, which, int, who, int, niceval)
 		else if (!uid_eq(uid, cred->uid)) {
 			user = find_user(uid);
 			if (!user)
-				goto out_unlock;	/* No processes for this user */
+				goto out_unlock; /* No processes for this user */
 		}
-		do_each_thread(g, p) {
+		do_each_thread(g, p)
+		{
 			if (uid_eq(task_uid(p), uid) && task_pid_vnr(p))
 				error = set_one_prio(p, niceval, error);
-		} while_each_thread(g, p);
+		}
+		while_each_thread(g, p);
 		if (!uid_eq(uid, cred->uid))
-			free_uid(user);		/* For find_user() */
+			free_uid(user); /* For find_user() */
 		break;
 	}
 out_unlock:
@@ -294,11 +297,13 @@ SYSCALL_DEFINE2(getpriority, int, which, int, who)
 			pgrp = find_vpid(who);
 		else
 			pgrp = task_pgrp(current);
-		do_each_pid_thread(pgrp, PIDTYPE_PGID, p) {
+		do_each_pid_thread(pgrp, PIDTYPE_PGID, p)
+		{
 			niceval = nice_to_rlimit(task_nice(p));
 			if (niceval > retval)
 				retval = niceval;
-		} while_each_pid_thread(pgrp, PIDTYPE_PGID, p);
+		}
+		while_each_pid_thread(pgrp, PIDTYPE_PGID, p);
 		break;
 	case PRIO_USER:
 		uid = make_kuid(cred->user_ns, who);
@@ -308,17 +313,19 @@ SYSCALL_DEFINE2(getpriority, int, which, int, who)
 		else if (!uid_eq(uid, cred->uid)) {
 			user = find_user(uid);
 			if (!user)
-				goto out_unlock;	/* No processes for this user */
+				goto out_unlock; /* No processes for this user */
 		}
-		do_each_thread(g, p) {
+		do_each_thread(g, p)
+		{
 			if (uid_eq(task_uid(p), uid) && task_pid_vnr(p)) {
 				niceval = nice_to_rlimit(task_nice(p));
 				if (niceval > retval)
 					retval = niceval;
 			}
-		} while_each_thread(g, p);
+		}
+		while_each_thread(g, p);
 		if (!uid_eq(uid, cred->uid))
-			free_uid(user);		/* for find_user() */
+			free_uid(user); /* for find_user() */
 		break;
 	}
 out_unlock:
@@ -358,9 +365,9 @@ long __sys_setregid(gid_t rgid, gid_t egid)
 	krgid = make_kgid(ns, rgid);
 	kegid = make_kgid(ns, egid);
 
-	if ((rgid != (gid_t) -1) && !gid_valid(krgid))
+	if ((rgid != (gid_t)-1) && !gid_valid(krgid))
 		return -EINVAL;
-	if ((egid != (gid_t) -1) && !gid_valid(kegid))
+	if ((egid != (gid_t)-1) && !gid_valid(kegid))
 		return -EINVAL;
 
 	new = prepare_creds();
@@ -369,26 +376,20 @@ long __sys_setregid(gid_t rgid, gid_t egid)
 	old = current_cred();
 
 	retval = -EPERM;
-	if (rgid != (gid_t) -1) {
-		if (gid_eq(old->gid, krgid) ||
-		    gid_eq(old->egid, krgid) ||
-		    ns_capable(old->user_ns, CAP_SETGID))
+	if (rgid != (gid_t)-1) {
+		if (gid_eq(old->gid, krgid) || gid_eq(old->egid, krgid) || ns_capable(old->user_ns, CAP_SETGID))
 			new->gid = krgid;
 		else
 			goto error;
 	}
-	if (egid != (gid_t) -1) {
-		if (gid_eq(old->gid, kegid) ||
-		    gid_eq(old->egid, kegid) ||
-		    gid_eq(old->sgid, kegid) ||
-		    ns_capable(old->user_ns, CAP_SETGID))
+	if (egid != (gid_t)-1) {
+		if (gid_eq(old->gid, kegid) || gid_eq(old->egid, kegid) || gid_eq(old->sgid, kegid) || ns_capable(old->user_ns, CAP_SETGID))
 			new->egid = kegid;
 		else
 			goto error;
 	}
 
-	if (rgid != (gid_t) -1 ||
-	    (egid != (gid_t) -1 && !gid_eq(kegid, old->gid)))
+	if (rgid != (gid_t)-1 || (egid != (gid_t)-1 && !gid_eq(kegid, old->gid)))
 		new->sgid = new->egid;
 	new->fsgid = new->egid;
 
@@ -464,8 +465,7 @@ static int set_user(struct cred *new)
 	 * for programs doing set*uid()+execve() by harmlessly deferring the
 	 * failure to the execve() stage.
 	 */
-	if (atomic_read(&new_user->processes) >= rlimit(RLIMIT_NPROC) &&
-			new_user != INIT_USER)
+	if (atomic_read(&new_user->processes) >= rlimit(RLIMIT_NPROC) && new_user != INIT_USER)
 		current->flags |= PF_NPROC_EXCEEDED;
 	else
 		current->flags &= ~PF_NPROC_EXCEEDED;
@@ -501,9 +501,9 @@ long __sys_setreuid(uid_t ruid, uid_t euid)
 	kruid = make_kuid(ns, ruid);
 	keuid = make_kuid(ns, euid);
 
-	if ((ruid != (uid_t) -1) && !uid_valid(kruid))
+	if ((ruid != (uid_t)-1) && !uid_valid(kruid))
 		return -EINVAL;
-	if ((euid != (uid_t) -1) && !uid_valid(keuid))
+	if ((euid != (uid_t)-1) && !uid_valid(keuid))
 		return -EINVAL;
 
 	new = prepare_creds();
@@ -512,20 +512,15 @@ long __sys_setreuid(uid_t ruid, uid_t euid)
 	old = current_cred();
 
 	retval = -EPERM;
-	if (ruid != (uid_t) -1) {
+	if (ruid != (uid_t)-1) {
 		new->uid = kruid;
-		if (!uid_eq(old->uid, kruid) &&
-		    !uid_eq(old->euid, kruid) &&
-		    !ns_capable_setid(old->user_ns, CAP_SETUID))
+		if (!uid_eq(old->uid, kruid) && !uid_eq(old->euid, kruid) && !ns_capable_setid(old->user_ns, CAP_SETUID))
 			goto error;
 	}
 
-	if (euid != (uid_t) -1) {
+	if (euid != (uid_t)-1) {
 		new->euid = keuid;
-		if (!uid_eq(old->uid, keuid) &&
-		    !uid_eq(old->euid, keuid) &&
-		    !uid_eq(old->suid, keuid) &&
-		    !ns_capable_setid(old->user_ns, CAP_SETUID))
+		if (!uid_eq(old->uid, keuid) && !uid_eq(old->euid, keuid) && !uid_eq(old->suid, keuid) && !ns_capable_setid(old->user_ns, CAP_SETUID))
 			goto error;
 	}
 
@@ -534,8 +529,7 @@ long __sys_setreuid(uid_t ruid, uid_t euid)
 		if (retval < 0)
 			goto error;
 	}
-	if (ruid != (uid_t) -1 ||
-	    (euid != (uid_t) -1 && !uid_eq(keuid, old->uid)))
+	if (ruid != (uid_t)-1 || (euid != (uid_t)-1 && !uid_eq(keuid, old->uid)))
 		new->suid = new->euid;
 	new->fsuid = new->euid;
 
@@ -613,7 +607,6 @@ SYSCALL_DEFINE1(setuid, uid_t, uid)
 	return __sys_setuid(uid);
 }
 
-
 /*
  * This function implements a generic ability to update ruid, euid,
  * and suid.  This allows you to implement the 4.4 compatible seteuid().
@@ -630,13 +623,13 @@ long __sys_setresuid(uid_t ruid, uid_t euid, uid_t suid)
 	keuid = make_kuid(ns, euid);
 	ksuid = make_kuid(ns, suid);
 
-	if ((ruid != (uid_t) -1) && !uid_valid(kruid))
+	if ((ruid != (uid_t)-1) && !uid_valid(kruid))
 		return -EINVAL;
 
-	if ((euid != (uid_t) -1) && !uid_valid(keuid))
+	if ((euid != (uid_t)-1) && !uid_valid(keuid))
 		return -EINVAL;
 
-	if ((suid != (uid_t) -1) && !uid_valid(ksuid))
+	if ((suid != (uid_t)-1) && !uid_valid(ksuid))
 		return -EINVAL;
 
 	new = prepare_creds();
@@ -647,18 +640,15 @@ long __sys_setresuid(uid_t ruid, uid_t euid, uid_t suid)
 
 	retval = -EPERM;
 	if (!ns_capable_setid(old->user_ns, CAP_SETUID)) {
-		if (ruid != (uid_t) -1        && !uid_eq(kruid, old->uid) &&
-		    !uid_eq(kruid, old->euid) && !uid_eq(kruid, old->suid))
+		if (ruid != (uid_t)-1 && !uid_eq(kruid, old->uid) && !uid_eq(kruid, old->euid) && !uid_eq(kruid, old->suid))
 			goto error;
-		if (euid != (uid_t) -1        && !uid_eq(keuid, old->uid) &&
-		    !uid_eq(keuid, old->euid) && !uid_eq(keuid, old->suid))
+		if (euid != (uid_t)-1 && !uid_eq(keuid, old->uid) && !uid_eq(keuid, old->euid) && !uid_eq(keuid, old->suid))
 			goto error;
-		if (suid != (uid_t) -1        && !uid_eq(ksuid, old->uid) &&
-		    !uid_eq(ksuid, old->euid) && !uid_eq(ksuid, old->suid))
+		if (suid != (uid_t)-1 && !uid_eq(ksuid, old->uid) && !uid_eq(ksuid, old->euid) && !uid_eq(ksuid, old->suid))
 			goto error;
 	}
 
-	if (ruid != (uid_t) -1) {
+	if (ruid != (uid_t)-1) {
 		new->uid = kruid;
 		if (!uid_eq(kruid, old->uid)) {
 			retval = set_user(new);
@@ -666,9 +656,9 @@ long __sys_setresuid(uid_t ruid, uid_t euid, uid_t suid)
 				goto error;
 		}
 	}
-	if (euid != (uid_t) -1)
+	if (euid != (uid_t)-1)
 		new->euid = keuid;
-	if (suid != (uid_t) -1)
+	if (suid != (uid_t)-1)
 		new->suid = ksuid;
 	new->fsuid = new->euid;
 
@@ -722,11 +712,11 @@ long __sys_setresgid(gid_t rgid, gid_t egid, gid_t sgid)
 	kegid = make_kgid(ns, egid);
 	ksgid = make_kgid(ns, sgid);
 
-	if ((rgid != (gid_t) -1) && !gid_valid(krgid))
+	if ((rgid != (gid_t)-1) && !gid_valid(krgid))
 		return -EINVAL;
-	if ((egid != (gid_t) -1) && !gid_valid(kegid))
+	if ((egid != (gid_t)-1) && !gid_valid(kegid))
 		return -EINVAL;
-	if ((sgid != (gid_t) -1) && !gid_valid(ksgid))
+	if ((sgid != (gid_t)-1) && !gid_valid(ksgid))
 		return -EINVAL;
 
 	new = prepare_creds();
@@ -736,22 +726,19 @@ long __sys_setresgid(gid_t rgid, gid_t egid, gid_t sgid)
 
 	retval = -EPERM;
 	if (!ns_capable(old->user_ns, CAP_SETGID)) {
-		if (rgid != (gid_t) -1        && !gid_eq(krgid, old->gid) &&
-		    !gid_eq(krgid, old->egid) && !gid_eq(krgid, old->sgid))
+		if (rgid != (gid_t)-1 && !gid_eq(krgid, old->gid) && !gid_eq(krgid, old->egid) && !gid_eq(krgid, old->sgid))
 			goto error;
-		if (egid != (gid_t) -1        && !gid_eq(kegid, old->gid) &&
-		    !gid_eq(kegid, old->egid) && !gid_eq(kegid, old->sgid))
+		if (egid != (gid_t)-1 && !gid_eq(kegid, old->gid) && !gid_eq(kegid, old->egid) && !gid_eq(kegid, old->sgid))
 			goto error;
-		if (sgid != (gid_t) -1        && !gid_eq(ksgid, old->gid) &&
-		    !gid_eq(ksgid, old->egid) && !gid_eq(ksgid, old->sgid))
+		if (sgid != (gid_t)-1 && !gid_eq(ksgid, old->gid) && !gid_eq(ksgid, old->egid) && !gid_eq(ksgid, old->sgid))
 			goto error;
 	}
 
-	if (rgid != (gid_t) -1)
+	if (rgid != (gid_t)-1)
 		new->gid = krgid;
-	if (egid != (gid_t) -1)
+	if (egid != (gid_t)-1)
 		new->egid = kegid;
-	if (sgid != (gid_t) -1)
+	if (sgid != (gid_t)-1)
 		new->sgid = ksgid;
 	new->fsgid = new->egid;
 
@@ -787,7 +774,6 @@ SYSCALL_DEFINE3(getresgid, gid_t __user *, rgidp, gid_t __user *, egidp, gid_t _
 	return retval;
 }
 
-
 /*
  * "setfsuid()" sets the fsuid - the uid used for filesystem checks. This
  * is used for "access()" and for the NFS daemon (letting nfsd stay at
@@ -812,8 +798,7 @@ long __sys_setfsuid(uid_t uid)
 	if (!new)
 		return old_fsuid;
 
-	if (uid_eq(kuid, old->uid)  || uid_eq(kuid, old->euid)  ||
-	    uid_eq(kuid, old->suid) || uid_eq(kuid, old->fsuid) ||
+	if (uid_eq(kuid, old->uid) || uid_eq(kuid, old->euid) || uid_eq(kuid, old->suid) || uid_eq(kuid, old->fsuid) ||
 	    ns_capable_setid(old->user_ns, CAP_SETUID)) {
 		if (!uid_eq(kuid, old->fsuid)) {
 			new->fsuid = kuid;
@@ -856,9 +841,7 @@ long __sys_setfsgid(gid_t gid)
 	if (!new)
 		return old_fsgid;
 
-	if (gid_eq(kgid, old->gid)  || gid_eq(kgid, old->egid)  ||
-	    gid_eq(kgid, old->sgid) || gid_eq(kgid, old->fsgid) ||
-	    ns_capable(old->user_ns, CAP_SETGID)) {
+	if (gid_eq(kgid, old->gid) || gid_eq(kgid, old->egid) || gid_eq(kgid, old->sgid) || gid_eq(kgid, old->fsgid) || ns_capable(old->user_ns, CAP_SETGID)) {
 		if (!gid_eq(kgid, old->fsgid)) {
 			new->fsgid = kgid;
 			goto change_okay;
@@ -963,7 +946,7 @@ SYSCALL_DEFINE1(times, struct tms __user *, tbuf)
 			return -EFAULT;
 	}
 	force_successful_syscall_return();
-	return (long) jiffies_64_to_clock_t(get_jiffies_64());
+	return (long)jiffies_64_to_clock_t(get_jiffies_64());
 }
 
 #ifdef CONFIG_COMPAT
@@ -1196,12 +1179,10 @@ SYSCALL_DEFINE0(setsid)
 DECLARE_RWSEM(uts_sem);
 
 #ifdef COMPAT_UTS_MACHINE
-#define override_architecture(name) \
-	(personality(current->personality) == PER_LINUX32 && \
-	 copy_to_user(name->machine, COMPAT_UTS_MACHINE, \
-		      sizeof(COMPAT_UTS_MACHINE)))
+#define override_architecture(name)                                                                                                                            \
+	(personality(current->personality) == PER_LINUX32 && copy_to_user(name->machine, COMPAT_UTS_MACHINE, sizeof(COMPAT_UTS_MACHINE)))
 #else
-#define override_architecture(name)	0
+#define override_architecture(name) 0
 #endif
 
 /*
@@ -1396,8 +1377,7 @@ SYSCALL_DEFINE2(getrlimit, unsigned int, resource, struct rlimit __user *, rlim)
 
 #ifdef CONFIG_COMPAT
 
-COMPAT_SYSCALL_DEFINE2(setrlimit, unsigned int, resource,
-		       struct compat_rlimit __user *, rlim)
+COMPAT_SYSCALL_DEFINE2(setrlimit, unsigned int, resource, struct compat_rlimit __user *, rlim)
 {
 	struct rlimit r;
 	struct compat_rlimit r32;
@@ -1416,8 +1396,7 @@ COMPAT_SYSCALL_DEFINE2(setrlimit, unsigned int, resource,
 	return do_prlimit(current, resource, &r, NULL);
 }
 
-COMPAT_SYSCALL_DEFINE2(getrlimit, unsigned int, resource,
-		       struct compat_rlimit __user *, rlim)
+COMPAT_SYSCALL_DEFINE2(getrlimit, unsigned int, resource, struct compat_rlimit __user *, rlim)
 {
 	struct rlimit r;
 	int ret;
@@ -1447,8 +1426,7 @@ COMPAT_SYSCALL_DEFINE2(getrlimit, unsigned int, resource,
 /*
  *	Back compatibility for getrlimit. Needed for some apps.
  */
-SYSCALL_DEFINE2(old_getrlimit, unsigned int, resource,
-		struct rlimit __user *, rlim)
+SYSCALL_DEFINE2(old_getrlimit, unsigned int, resource, struct rlimit __user *, rlim)
 {
 	struct rlimit x;
 	if (resource >= RLIM_NLIMITS)
@@ -1466,8 +1444,7 @@ SYSCALL_DEFINE2(old_getrlimit, unsigned int, resource,
 }
 
 #ifdef CONFIG_COMPAT
-COMPAT_SYSCALL_DEFINE2(old_getrlimit, unsigned int, resource,
-		       struct compat_rlimit __user *, rlim)
+COMPAT_SYSCALL_DEFINE2(old_getrlimit, unsigned int, resource, struct compat_rlimit __user *, rlim)
 {
 	struct rlimit r;
 
@@ -1483,8 +1460,7 @@ COMPAT_SYSCALL_DEFINE2(old_getrlimit, unsigned int, resource,
 	if (r.rlim_max > 0x7FFFFFFF)
 		r.rlim_max = 0x7FFFFFFF;
 
-	if (put_user(r.rlim_cur, &rlim->rlim_cur) ||
-	    put_user(r.rlim_max, &rlim->rlim_max))
+	if (put_user(r.rlim_cur, &rlim->rlim_cur) || put_user(r.rlim_max, &rlim->rlim_max))
 		return -EFAULT;
 	return 0;
 }
@@ -1526,8 +1502,7 @@ static void rlim64_to_rlim(const struct rlimit64 *rlim64, struct rlimit *rlim)
 }
 
 /* make sure you are allowed to change @tsk limits before calling this */
-int do_prlimit(struct task_struct *tsk, unsigned int resource,
-		struct rlimit *new_rlim, struct rlimit *old_rlim)
+int do_prlimit(struct task_struct *tsk, unsigned int resource, struct rlimit *new_rlim, struct rlimit *old_rlim)
 {
 	struct rlimit *rlim;
 	int retval = 0;
@@ -1539,8 +1514,7 @@ int do_prlimit(struct task_struct *tsk, unsigned int resource,
 	if (new_rlim) {
 		if (new_rlim->rlim_cur > new_rlim->rlim_max)
 			return -EINVAL;
-		if (resource == RLIMIT_NOFILE &&
-				new_rlim->rlim_max > sysctl_nr_open)
+		if (resource == RLIMIT_NOFILE && new_rlim->rlim_max > sysctl_nr_open)
 			return -EPERM;
 	}
 
@@ -1556,8 +1530,7 @@ int do_prlimit(struct task_struct *tsk, unsigned int resource,
 	if (new_rlim) {
 		/* Keep the capable check against init_user_ns until
 		   cgroups can contain all limits */
-		if (new_rlim->rlim_max > rlim->rlim_max &&
-				!capable(CAP_SYS_RESOURCE))
+		if (new_rlim->rlim_max > rlim->rlim_max && !capable(CAP_SYS_RESOURCE))
 			retval = -EPERM;
 		if (!retval)
 			retval = security_task_setrlimit(tsk, resource, new_rlim);
@@ -1575,9 +1548,7 @@ int do_prlimit(struct task_struct *tsk, unsigned int resource,
 	 * infite. In case of RLIM_INFINITY the posix CPU timer code
 	 * ignores the rlimit.
 	 */
-	 if (!retval && new_rlim && resource == RLIMIT_CPU &&
-	     new_rlim->rlim_cur != RLIM_INFINITY &&
-	     IS_ENABLED(CONFIG_POSIX_TIMERS))
+	if (!retval && new_rlim && resource == RLIMIT_CPU && new_rlim->rlim_cur != RLIM_INFINITY && IS_ENABLED(CONFIG_POSIX_TIMERS))
 		update_rlimit_cpu(tsk, new_rlim->rlim_cur);
 out:
 	read_unlock(&tasklist_lock);
@@ -1585,8 +1556,7 @@ out:
 }
 
 /* rcu lock must be held */
-static int check_prlimit_permission(struct task_struct *task,
-				    unsigned int flags)
+static int check_prlimit_permission(struct task_struct *task, unsigned int flags)
 {
 	const struct cred *cred = current_cred(), *tcred;
 	bool id_match;
@@ -1595,21 +1565,15 @@ static int check_prlimit_permission(struct task_struct *task,
 		return 0;
 
 	tcred = __task_cred(task);
-	id_match = (uid_eq(cred->uid, tcred->euid) &&
-		    uid_eq(cred->uid, tcred->suid) &&
-		    uid_eq(cred->uid, tcred->uid)  &&
-		    gid_eq(cred->gid, tcred->egid) &&
-		    gid_eq(cred->gid, tcred->sgid) &&
-		    gid_eq(cred->gid, tcred->gid));
+	id_match = (uid_eq(cred->uid, tcred->euid) && uid_eq(cred->uid, tcred->suid) && uid_eq(cred->uid, tcred->uid) && gid_eq(cred->gid, tcred->egid) &&
+		    gid_eq(cred->gid, tcred->sgid) && gid_eq(cred->gid, tcred->gid));
 	if (!id_match && !ns_capable(tcred->user_ns, CAP_SYS_RESOURCE))
 		return -EPERM;
 
 	return security_task_prlimit(cred, tcred, flags);
 }
 
-SYSCALL_DEFINE4(prlimit64, pid_t, pid, unsigned int, resource,
-		const struct rlimit64 __user *, new_rlim,
-		struct rlimit64 __user *, old_rlim)
+SYSCALL_DEFINE4(prlimit64, pid_t, pid, unsigned int, resource, const struct rlimit64 __user *, new_rlim, struct rlimit64 __user *, old_rlim)
 {
 	struct rlimit64 old64, new64;
 	struct rlimit old, new;
@@ -1641,8 +1605,7 @@ SYSCALL_DEFINE4(prlimit64, pid_t, pid, unsigned int, resource,
 	get_task_struct(tsk);
 	rcu_read_unlock();
 
-	ret = do_prlimit(tsk, resource, new_rlim ? &new : NULL,
-			old_rlim ? &old : NULL);
+	ret = do_prlimit(tsk, resource, new_rlim ? &new : NULL, old_rlim ? &old : NULL);
 
 	if (!ret && old_rlim) {
 		rlim_to_rlim64(&old, &old64);
@@ -1758,7 +1721,7 @@ retry:
 			maxrss = sig->maxrss;
 
 		rcu_read_lock();
-		__for_each_thread(sig, t)
+		__for_each_thread (sig, t)
 			accumulate_thread_rusage(t, r);
 		rcu_read_unlock();
 
@@ -1798,8 +1761,7 @@ SYSCALL_DEFINE2(getrusage, int, who, struct rusage __user *, ru)
 {
 	struct rusage r;
 
-	if (who != RUSAGE_SELF && who != RUSAGE_CHILDREN &&
-	    who != RUSAGE_THREAD)
+	if (who != RUSAGE_SELF && who != RUSAGE_CHILDREN && who != RUSAGE_THREAD)
 		return -EINVAL;
 
 	getrusage(current, who, &r);
@@ -1811,8 +1773,7 @@ COMPAT_SYSCALL_DEFINE2(getrusage, int, who, struct compat_rusage __user *, ru)
 {
 	struct rusage r;
 
-	if (who != RUSAGE_SELF && who != RUSAGE_CHILDREN &&
-	    who != RUSAGE_THREAD)
+	if (who != RUSAGE_SELF && who != RUSAGE_CHILDREN && who != RUSAGE_THREAD)
 		return -EINVAL;
 
 	getrusage(current, who, &r);
@@ -1864,8 +1825,7 @@ static int prctl_set_mm_exe_file(struct mm_struct *mm, unsigned int fd)
 		for (vma = mm->mmap; vma; vma = vma->vm_next) {
 			if (!vma->vm_file)
 				continue;
-			if (path_equal(&vma->vm_file->f_path,
-				       &exe_file->f_path))
+			if (path_equal(&vma->vm_file->f_path, &exe_file->f_path))
 				goto exit_err;
 		}
 
@@ -1900,17 +1860,10 @@ static int validate_prctl_map_addr(struct prctl_mm_map *prctl_map)
 	int error = -EINVAL, i;
 
 	static const unsigned char offsets[] = {
-		offsetof(struct prctl_mm_map, start_code),
-		offsetof(struct prctl_mm_map, end_code),
-		offsetof(struct prctl_mm_map, start_data),
-		offsetof(struct prctl_mm_map, end_data),
-		offsetof(struct prctl_mm_map, start_brk),
-		offsetof(struct prctl_mm_map, brk),
-		offsetof(struct prctl_mm_map, start_stack),
-		offsetof(struct prctl_mm_map, arg_start),
-		offsetof(struct prctl_mm_map, arg_end),
-		offsetof(struct prctl_mm_map, env_start),
-		offsetof(struct prctl_mm_map, env_end),
+		offsetof(struct prctl_mm_map, start_code),  offsetof(struct prctl_mm_map, end_code),  offsetof(struct prctl_mm_map, start_data),
+		offsetof(struct prctl_mm_map, end_data),    offsetof(struct prctl_mm_map, start_brk), offsetof(struct prctl_mm_map, brk),
+		offsetof(struct prctl_mm_map, start_stack), offsetof(struct prctl_mm_map, arg_start), offsetof(struct prctl_mm_map, arg_end),
+		offsetof(struct prctl_mm_map, env_start),   offsetof(struct prctl_mm_map, env_end),
 	};
 
 	/*
@@ -1920,19 +1873,16 @@ static int validate_prctl_map_addr(struct prctl_mm_map *prctl_map)
 	for (i = 0; i < ARRAY_SIZE(offsets); i++) {
 		u64 val = *(u64 *)((char *)prctl_map + offsets[i]);
 
-		if ((unsigned long)val >= mmap_max_addr ||
-		    (unsigned long)val < mmap_min_addr)
+		if ((unsigned long)val >= mmap_max_addr || (unsigned long)val < mmap_min_addr)
 			goto out;
 	}
 
 	/*
 	 * Make sure the pairs are ordered.
 	 */
-#define __prctl_check_order(__m1, __op, __m2)				\
-	((unsigned long)prctl_map->__m1 __op				\
-	 (unsigned long)prctl_map->__m2) ? 0 : -EINVAL
-	error  = __prctl_check_order(start_code, <, end_code);
-	error |= __prctl_check_order(start_data,<=, end_data);
+#define __prctl_check_order(__m1, __op, __m2) ((unsigned long)prctl_map->__m1 __op(unsigned long) prctl_map->__m2) ? 0 : -EINVAL
+	error = __prctl_check_order(start_code, <, end_code);
+	error |= __prctl_check_order(start_data, <=, end_data);
 	error |= __prctl_check_order(start_brk, <=, brk);
 	error |= __prctl_check_order(arg_start, <=, arg_end);
 	error |= __prctl_check_order(env_start, <=, env_end);
@@ -1945,10 +1895,8 @@ static int validate_prctl_map_addr(struct prctl_mm_map *prctl_map)
 	/*
 	 * Neither we should allow to override limits if they set.
 	 */
-	if (check_data_rlimit(rlimit(RLIMIT_DATA), prctl_map->brk,
-			      prctl_map->start_brk, prctl_map->end_data,
-			      prctl_map->start_data))
-			goto out;
+	if (check_data_rlimit(rlimit(RLIMIT_DATA), prctl_map->brk, prctl_map->start_brk, prctl_map->end_data, prctl_map->start_data))
+		goto out;
 
 	error = 0;
 out:
@@ -1958,7 +1906,9 @@ out:
 #ifdef CONFIG_CHECKPOINT_RESTORE
 static int prctl_set_mm_map(int opt, const void __user *addr, unsigned long data_size)
 {
-	struct prctl_mm_map prctl_map = { .exe_fd = (u32)-1, };
+	struct prctl_mm_map prctl_map = {
+		.exe_fd = (u32)-1,
+	};
 	unsigned long user_auxv[AT_VECTOR_SIZE];
 	struct mm_struct *mm = current->mm;
 	int error;
@@ -1967,8 +1917,7 @@ static int prctl_set_mm_map(int opt, const void __user *addr, unsigned long data
 	BUILD_BUG_ON(sizeof(struct prctl_mm_map) > 256);
 
 	if (opt == PR_SET_MM_MAP_SIZE)
-		return put_user((unsigned int)sizeof(prctl_map),
-				(unsigned int __user *)addr);
+		return put_user((unsigned int)sizeof(prctl_map), (unsigned int __user *)addr);
 
 	if (data_size != sizeof(prctl_map))
 		return -EINVAL;
@@ -1984,14 +1933,11 @@ static int prctl_set_mm_map(int opt, const void __user *addr, unsigned long data
 		/*
 		 * Someone is trying to cheat the auxv vector.
 		 */
-		if (!prctl_map.auxv ||
-				prctl_map.auxv_size > sizeof(mm->saved_auxv))
+		if (!prctl_map.auxv || prctl_map.auxv_size > sizeof(mm->saved_auxv))
 			return -EINVAL;
 
 		memset(user_auxv, 0, sizeof(user_auxv));
-		if (copy_from_user(user_auxv,
-				   (const void __user *)prctl_map.auxv,
-				   prctl_map.auxv_size))
+		if (copy_from_user(user_auxv, (const void __user *)prctl_map.auxv, prctl_map.auxv_size))
 			return -EFAULT;
 
 		/* Last entry must be AT_NULL as specification requires */
@@ -2032,17 +1978,17 @@ static int prctl_set_mm_map(int opt, const void __user *addr, unsigned long data
 	 */
 
 	spin_lock(&mm->arg_lock);
-	mm->start_code	= prctl_map.start_code;
-	mm->end_code	= prctl_map.end_code;
-	mm->start_data	= prctl_map.start_data;
-	mm->end_data	= prctl_map.end_data;
-	mm->start_brk	= prctl_map.start_brk;
-	mm->brk		= prctl_map.brk;
-	mm->start_stack	= prctl_map.start_stack;
-	mm->arg_start	= prctl_map.arg_start;
-	mm->arg_end	= prctl_map.arg_end;
-	mm->env_start	= prctl_map.env_start;
-	mm->env_end	= prctl_map.env_end;
+	mm->start_code = prctl_map.start_code;
+	mm->end_code = prctl_map.end_code;
+	mm->start_data = prctl_map.start_data;
+	mm->end_data = prctl_map.end_data;
+	mm->start_brk = prctl_map.start_brk;
+	mm->brk = prctl_map.brk;
+	mm->start_stack = prctl_map.start_stack;
+	mm->arg_start = prctl_map.arg_start;
+	mm->arg_end = prctl_map.arg_end;
+	mm->env_start = prctl_map.env_start;
+	mm->env_end = prctl_map.env_end;
 	spin_unlock(&mm->arg_lock);
 
 	/*
@@ -2061,8 +2007,7 @@ static int prctl_set_mm_map(int opt, const void __user *addr, unsigned long data
 }
 #endif /* CONFIG_CHECKPOINT_RESTORE */
 
-static int prctl_set_auxv(struct mm_struct *mm, unsigned long addr,
-			  unsigned long len)
+static int prctl_set_auxv(struct mm_struct *mm, unsigned long addr, unsigned long len)
 {
 	/*
 	 * This doesn't move the auxiliary vector itself since it's pinned to
@@ -2091,8 +2036,7 @@ static int prctl_set_auxv(struct mm_struct *mm, unsigned long addr,
 	return 0;
 }
 
-static int prctl_set_mm(int opt, unsigned long addr,
-			unsigned long arg4, unsigned long arg5)
+static int prctl_set_mm(int opt, unsigned long addr, unsigned long arg4, unsigned long arg5)
 {
 	struct mm_struct *mm = current->mm;
 	struct prctl_mm_map prctl_map = {
@@ -2103,9 +2047,7 @@ static int prctl_set_mm(int opt, unsigned long addr,
 	struct vm_area_struct *vma;
 	int error;
 
-	if (arg5 || (arg4 && (opt != PR_SET_MM_AUXV &&
-			      opt != PR_SET_MM_MAP &&
-			      opt != PR_SET_MM_MAP_SIZE)))
+	if (arg5 || (arg4 && (opt != PR_SET_MM_AUXV && opt != PR_SET_MM_MAP && opt != PR_SET_MM_MAP_SIZE)))
 		return -EINVAL;
 
 #ifdef CONFIG_CHECKPOINT_RESTORE
@@ -2136,17 +2078,17 @@ static int prctl_set_mm(int opt, unsigned long addr,
 	vma = find_vma(mm, addr);
 
 	spin_lock(&mm->arg_lock);
-	prctl_map.start_code	= mm->start_code;
-	prctl_map.end_code	= mm->end_code;
-	prctl_map.start_data	= mm->start_data;
-	prctl_map.end_data	= mm->end_data;
-	prctl_map.start_brk	= mm->start_brk;
-	prctl_map.brk		= mm->brk;
-	prctl_map.start_stack	= mm->start_stack;
-	prctl_map.arg_start	= mm->arg_start;
-	prctl_map.arg_end	= mm->arg_end;
-	prctl_map.env_start	= mm->env_start;
-	prctl_map.env_end	= mm->env_end;
+	prctl_map.start_code = mm->start_code;
+	prctl_map.end_code = mm->end_code;
+	prctl_map.start_data = mm->start_data;
+	prctl_map.end_data = mm->end_data;
+	prctl_map.start_brk = mm->start_brk;
+	prctl_map.brk = mm->brk;
+	prctl_map.start_stack = mm->start_stack;
+	prctl_map.arg_start = mm->arg_start;
+	prctl_map.arg_end = mm->arg_end;
+	prctl_map.env_start = mm->env_start;
+	prctl_map.env_end = mm->env_end;
 
 	switch (opt) {
 	case PR_SET_MM_START_CODE:
@@ -2209,17 +2151,17 @@ static int prctl_set_mm(int opt, unsigned long addr,
 		}
 	}
 
-	mm->start_code	= prctl_map.start_code;
-	mm->end_code	= prctl_map.end_code;
-	mm->start_data	= prctl_map.start_data;
-	mm->end_data	= prctl_map.end_data;
-	mm->start_brk	= prctl_map.start_brk;
-	mm->brk		= prctl_map.brk;
-	mm->start_stack	= prctl_map.start_stack;
-	mm->arg_start	= prctl_map.arg_start;
-	mm->arg_end	= prctl_map.arg_end;
-	mm->env_start	= prctl_map.env_start;
-	mm->env_end	= prctl_map.env_end;
+	mm->start_code = prctl_map.start_code;
+	mm->end_code = prctl_map.end_code;
+	mm->start_data = prctl_map.start_data;
+	mm->end_data = prctl_map.end_data;
+	mm->start_brk = prctl_map.start_brk;
+	mm->brk = prctl_map.brk;
+	mm->start_stack = prctl_map.start_stack;
+	mm->arg_start = prctl_map.arg_start;
+	mm->arg_end = prctl_map.arg_end;
+	mm->env_start = prctl_map.env_start;
+	mm->env_end = prctl_map.env_end;
 
 	error = 0;
 out:
@@ -2250,8 +2192,7 @@ static int propagate_has_child_subreaper(struct task_struct *p, void *data)
 	 * If we've found child_reaper - skip descendants in
 	 * it's subtree as they will never get out pidns.
 	 */
-	if (p->signal->has_child_subreaper ||
-	    is_child_reaper(task_pid(p)))
+	if (p->signal->has_child_subreaper || is_child_reaper(task_pid(p)))
 		return 0;
 
 	p->signal->has_child_subreaper = 1;
@@ -2263,14 +2204,12 @@ int __weak arch_prctl_spec_ctrl_get(struct task_struct *t, unsigned long which)
 	return -EINVAL;
 }
 
-int __weak arch_prctl_spec_ctrl_set(struct task_struct *t, unsigned long which,
-				    unsigned long ctrl)
+int __weak arch_prctl_spec_ctrl_set(struct task_struct *t, unsigned long which, unsigned long ctrl)
 {
 	return -EINVAL;
 }
 
-SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
-		unsigned long, arg4, unsigned long, arg5)
+SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3, unsigned long, arg4, unsigned long, arg5)
 {
 	struct task_struct *me = current;
 	unsigned char comm[sizeof(me->comm)];
@@ -2330,8 +2269,7 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
 		break;
 	case PR_SET_NAME:
 		comm[sizeof(me->comm) - 1] = 0;
-		if (strncpy_from_user(comm, (char __user *)arg2,
-				      sizeof(me->comm) - 1) < 0)
+		if (strncpy_from_user(comm, (char __user *)arg2, sizeof(me->comm) - 1) < 0)
 			return -EFAULT;
 		set_task_comm(me, comm);
 		proc_comm_connector(me);
@@ -2373,8 +2311,7 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
 		break;
 	case PR_SET_TIMERSLACK:
 		if (arg2 <= 0)
-			current->timer_slack_ns =
-					current->default_timer_slack_ns;
+			current->timer_slack_ns = current->default_timer_slack_ns;
 		else
 			current->timer_slack_ns = arg2;
 		break;
@@ -2394,8 +2331,7 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
 			else if (arg3 == PR_MCE_KILL_LATE)
 				current->flags &= ~PF_MCE_EARLY;
 			else if (arg3 == PR_MCE_KILL_DEFAULT)
-				current->flags &=
-						~(PF_MCE_EARLY|PF_MCE_PROCESS);
+				current->flags &= ~(PF_MCE_EARLY | PF_MCE_PROCESS);
 			else
 				return -EINVAL;
 			break;
@@ -2407,8 +2343,7 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
 		if (arg2 | arg3 | arg4 | arg5)
 			return -EINVAL;
 		if (current->flags & PF_MCE_PROCESS)
-			error = (current->flags & PF_MCE_EARLY) ?
-				PR_MCE_KILL_EARLY : PR_MCE_KILL_LATE;
+			error = (current->flags & PF_MCE_EARLY) ? PR_MCE_KILL_EARLY : PR_MCE_KILL_LATE;
 		else
 			error = PR_MCE_KILL_DEFAULT;
 		break;
@@ -2426,8 +2361,7 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
 		walk_process_tree(me, propagate_has_child_subreaper, NULL);
 		break;
 	case PR_GET_CHILD_SUBREAPER:
-		error = put_user(me->signal->is_child_subreaper,
-				 (int __user *)arg2);
+		error = put_user(me->signal->is_child_subreaper, (int __user *)arg2);
 		break;
 	case PR_SET_NO_NEW_PRIVS:
 		if (arg2 != 1 || arg3 || arg4 || arg5)
@@ -2503,8 +2437,7 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
 	return error;
 }
 
-SYSCALL_DEFINE3(getcpu, unsigned __user *, cpup, unsigned __user *, nodep,
-		struct getcpu_cache __user *, unused)
+SYSCALL_DEFINE3(getcpu, unsigned __user *, cpup, unsigned __user *, nodep, struct getcpu_cache __user *, unused)
 {
 	int err = 0;
 	int cpu = raw_smp_processor_id();
@@ -2609,7 +2542,7 @@ struct compat_sysinfo {
 	u32 totalhigh;
 	u32 freehigh;
 	u32 mem_unit;
-	char _f[20-2*sizeof(u32)-sizeof(int)];
+	char _f[20 - 2 * sizeof(u32) - sizeof(int)];
 };
 
 COMPAT_SYSCALL_DEFINE1(sysinfo, struct compat_sysinfo __user *, info)
@@ -2639,21 +2572,11 @@ COMPAT_SYSCALL_DEFINE1(sysinfo, struct compat_sysinfo __user *, info)
 		s.freehigh >>= bitcount;
 	}
 
-	if (!access_ok(info, sizeof(struct compat_sysinfo)) ||
-	    __put_user(s.uptime, &info->uptime) ||
-	    __put_user(s.loads[0], &info->loads[0]) ||
-	    __put_user(s.loads[1], &info->loads[1]) ||
-	    __put_user(s.loads[2], &info->loads[2]) ||
-	    __put_user(s.totalram, &info->totalram) ||
-	    __put_user(s.freeram, &info->freeram) ||
-	    __put_user(s.sharedram, &info->sharedram) ||
-	    __put_user(s.bufferram, &info->bufferram) ||
-	    __put_user(s.totalswap, &info->totalswap) ||
-	    __put_user(s.freeswap, &info->freeswap) ||
-	    __put_user(s.procs, &info->procs) ||
-	    __put_user(s.totalhigh, &info->totalhigh) ||
-	    __put_user(s.freehigh, &info->freehigh) ||
-	    __put_user(s.mem_unit, &info->mem_unit))
+	if (!access_ok(info, sizeof(struct compat_sysinfo)) || __put_user(s.uptime, &info->uptime) || __put_user(s.loads[0], &info->loads[0]) ||
+	    __put_user(s.loads[1], &info->loads[1]) || __put_user(s.loads[2], &info->loads[2]) || __put_user(s.totalram, &info->totalram) ||
+	    __put_user(s.freeram, &info->freeram) || __put_user(s.sharedram, &info->sharedram) || __put_user(s.bufferram, &info->bufferram) ||
+	    __put_user(s.totalswap, &info->totalswap) || __put_user(s.freeswap, &info->freeswap) || __put_user(s.procs, &info->procs) ||
+	    __put_user(s.totalhigh, &info->totalhigh) || __put_user(s.freehigh, &info->freehigh) || __put_user(s.mem_unit, &info->mem_unit))
 		return -EFAULT;
 
 	return 0;

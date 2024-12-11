@@ -4008,9 +4008,9 @@ restart:
 /*
  * __schedule() is the main scheduler function.
  *
- * The main means of driving the scheduler and thus entering this function are:
+ * The main means of driving the scheduler and thus entering this function are: (调度的时机分为以下 3 种)
  *
- *   1. Explicit blocking: mutex, semaphore, waitqueue, etc.
+ *   1. Explicit blocking(显式阻塞): mutex, semaphore, waitqueue, etc.
  *
  *   2. TIF_NEED_RESCHED flag is checked on interrupt and userspace return
  *      paths. For example, see arch/x86/entry_64.S.
@@ -4018,12 +4018,24 @@ restart:
  *      To drive preemption between tasks, the scheduler sets the flag in timer
  *      interrupt handler scheduler_tick().
  *
- *   3. Wakeups don't really cause entry into schedule(). They add a
- *      task to the run-queue and that's it.
+ *      TIF_NEED_RESCHED 是 linux 内核种用于线程调度的一个标志.
+ *      会在 ret_from_exception -> resume_kernel 处检查 TIF_NEED_RESCHED,
+ *      if TIF_NEED_RESCHED is set, then call preempt_schedule_irq -> __schedule()
+ *      在 __schedule() 中, 会调用 clear_tsk_need_resched(prev) 来清除 TIF_NEED_RESCHED 并 schedule to next task
+ *      
+ *
+ *   3. Wakeups don't really cause entry into schedule().
+ *      They add a task to the run-queue and that's it.
  *
  *      Now, if the new task added to the run-queue preempts the current
  *      task, then the wakeup sets TIF_NEED_RESCHED and schedule() gets
  *      called on the nearest possible occasion:
+ *      内核是否可以被抢占, 指的是: 进程进入内核态, 除了在 scheduler 中,
+ *      其他依然是在进程的上下文中, 本质上还是对进程的抢占.
+ *
+ *      进入内核态有三种情况: 1. syscall 2. exception 3. interrupt
+ *      1/2 是主动的, 处理的方式相同: 在 preempt_enable() 的时候处理 (我不知道是怎么处理的, 因为默认情况下 CONFIG_PREEMPTION=n)
+ *      3 是被动的, 硬件中断处理器函数返回前会检查是否要抢占当前的进程.
  *
  *       - If the kernel is preemptible (CONFIG_PREEMPTION=y):
  *
@@ -4031,8 +4043,11 @@ restart:
  *           preempt_enable(). (this might be as soon as the wake_up()'s
  *           spin_unlock()!)
  *
- *         - in IRQ context, return from interrupt-handler to
- *           preemptible context
+ *         - in IRQ context, return from interrupt-handler to preemptible context.
+ *           意思就是: IRQ-context 中, 会关闭抢占, 在返回时, 会检查是否需要抢占.
+ *           从 interrupt-handler 返回后, 开启抢占
+ *
+ *       如果关闭了内核抢占, 那么有两种时机需要考虑抢占: 1. 调度的时候 2. kernel -> user 的时候
  *
  *       - If the kernel is not preemptible (CONFIG_PREEMPTION is not set)
  *         then at the next:
@@ -4042,7 +4057,7 @@ restart:
  *          - return from syscall or exception to user-space
  *          - return from interrupt-handler to user-space
  *
- * WARNING: must be called with preemption disabled!
+ * @WARNING: __schedule must be called with preemption disabled!
  */
 static void __sched notrace __schedule(bool preempt)
 {
@@ -4053,7 +4068,7 @@ static void __sched notrace __schedule(bool preempt)
 	int cpu;
 
 	cpu = smp_processor_id();
-	rq = cpu_rq(cpu);
+	rq = cpu_rq(cpu); // get the cpu's runqueue(就绪队列)
 	prev = rq->curr;
 
 	schedule_debug(prev, preempt);
@@ -7914,6 +7929,18 @@ const int sched_prio_to_weight[40] = {
 	/*  10 */ 110,	 87,	70,    56,    45,
 	/*  15 */ 36,	 29,	23,    18,    15,
 };
+
+//
+// inverse_weight = 2^32 / weight
+//
+
+//                   delta_exec * nice_0_weight
+// vruntime = ---------------------------
+//                           weight
+
+// delta_exec 表示真实运行时间.
+// nice_0_weight 表示 nice 值为 0 的权重值 (1024)
+// weight 表示进程的权重值
 
 /*
  * Inverse (2^32/x) values of the sched_prio_to_weight[] array, precalculated.
