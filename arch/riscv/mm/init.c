@@ -28,13 +28,16 @@ extern char _start[];
 
 static void __init zone_sizes_init(void)
 {
+	// 定义并初始化 max_zone_pfns 数组
 	unsigned long max_zone_pfns[MAX_NR_ZONES] = {
 		0,
 	};
 
 #ifdef CONFIG_ZONE_DMA32
+	// 仍受限于 4GB
 	max_zone_pfns[ZONE_DMA32] = PFN_DOWN(min(4UL * SZ_1G, (unsigned long)PFN_PHYS(max_low_pfn)));
 #endif
+	//
 	max_zone_pfns[ZONE_NORMAL] = max_low_pfn;
 
 	free_area_init_nodes(max_zone_pfns);
@@ -421,7 +424,7 @@ static void __init setup_vm_final(void)
 	clear_fixmap(FIX_PMD);
 
 	/* Move to swapper page table */
-	csr_write(CSR_SATP, PFN_DOWN(__pa(swapper_pg_dir)) | SATP_MODE);
+	csr_write(CSR_SATP, PFN_DOWN(__pa(swapper_pg_dir)) | SATP_MODE); // switch page table
 	local_flush_tlb_all();
 }
 
@@ -429,7 +432,7 @@ void __init paging_init(void)
 {
 	setup_vm_final();
 	memblocks_present();
-	sparse_init();
+	sparse_init(); // sparse 稀疏的
 	setup_zero_page();
 	zone_sizes_init();
 }

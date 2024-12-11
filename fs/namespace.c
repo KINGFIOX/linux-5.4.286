@@ -17,9 +17,9 @@
 #include <linux/security.h>
 #include <linux/cred.h>
 #include <linux/idr.h>
-#include <linux/init.h>		/* init_rootfs */
-#include <linux/fs_struct.h>	/* get_fs_root et.al. */
-#include <linux/fsnotify.h>	/* fsnotify_vfsmount_delete */
+#include <linux/init.h> /* init_rootfs */
+#include <linux/fs_struct.h> /* get_fs_root et.al. */
+#include <linux/fsnotify.h> /* fsnotify_vfsmount_delete */
 #include <linux/file.h>
 #include <linux/uaccess.h>
 #include <linux/proc_ns.h>
@@ -70,7 +70,7 @@ static struct hlist_head *mount_hashtable __read_mostly;
 static struct hlist_head *mountpoint_hashtable __read_mostly;
 static struct kmem_cache *mnt_cache __read_mostly;
 static DECLARE_RWSEM(namespace_sem);
-static HLIST_HEAD(unmounted);	/* protected by namespace_sem */
+static HLIST_HEAD(unmounted); /* protected by namespace_sem */
 static LIST_HEAD(ex_mountpoints); /* protected by namespace_sem */
 
 /* /sys/fs */
@@ -162,7 +162,7 @@ int mnt_get_count(struct mount *mnt)
 	int count = 0;
 	int cpu;
 
-	for_each_possible_cpu(cpu) {
+	for_each_possible_cpu (cpu) {
 		count += per_cpu_ptr(mnt->mnt_pcp, cpu)->mnt_count;
 	}
 
@@ -273,7 +273,7 @@ static unsigned int mnt_get_writers(struct mount *mnt)
 	unsigned int count = 0;
 	int cpu;
 
-	for_each_possible_cpu(cpu) {
+	for_each_possible_cpu (cpu) {
 		count += per_cpu_ptr(mnt->mnt_pcp, cpu)->mnt_writers;
 	}
 
@@ -519,7 +519,7 @@ int sb_prepare_remount_readonly(struct super_block *sb)
 		return -EBUSY;
 
 	lock_mount_hash();
-	list_for_each_entry(mnt, &sb->s_mounts, mnt_instance) {
+	list_for_each_entry (mnt, &sb->s_mounts, mnt_instance) {
 		if (!(mnt->mnt.mnt_flags & MNT_READONLY)) {
 			mnt->mnt.mnt_flags |= MNT_WRITE_HOLD;
 			smp_mb();
@@ -536,7 +536,7 @@ int sb_prepare_remount_readonly(struct super_block *sb)
 		sb->s_readonly_remount = 1;
 		smp_wmb();
 	}
-	list_for_each_entry(mnt, &sb->s_mounts, mnt_instance) {
+	list_for_each_entry (mnt, &sb->s_mounts, mnt_instance) {
 		if (mnt->mnt.mnt_flags & MNT_WRITE_HOLD)
 			mnt->mnt.mnt_flags &= ~MNT_WRITE_HOLD;
 	}
@@ -569,7 +569,7 @@ int __legitimize_mnt(struct vfsmount *bastard, unsigned seq)
 		return 0;
 	mnt = real_mount(bastard);
 	mnt_add_count(mnt, 1);
-	smp_mb();			// see mntput_no_expire()
+	smp_mb(); // see mntput_no_expire()
 	if (likely(!read_seqretry(&mount_lock, seq)))
 		return 0;
 	if (bastard->mnt_flags & MNT_SYNC_UMOUNT) {
@@ -610,7 +610,7 @@ struct mount *__lookup_mnt(struct vfsmount *mnt, struct dentry *dentry)
 	struct hlist_head *head = m_hash(mnt, dentry);
 	struct mount *p;
 
-	hlist_for_each_entry_rcu(p, head, mnt_hash)
+	hlist_for_each_entry_rcu (p, head, mnt_hash)
 		if (&p->mnt_parent->mnt == mnt && p->mnt_mountpoint == dentry)
 			return p;
 	return NULL;
@@ -673,7 +673,7 @@ bool __is_local_mountpoint(struct dentry *dentry)
 		goto out;
 
 	down_read(&namespace_sem);
-	list_for_each_entry(mnt, &ns->list, mnt_list) {
+	list_for_each_entry (mnt, &ns->list, mnt_list) {
 		is_covered = (mnt->mnt_mountpoint == dentry);
 		if (is_covered)
 			break;
@@ -688,7 +688,7 @@ static struct mountpoint *lookup_mountpoint(struct dentry *dentry)
 	struct hlist_head *chain = mp_hash(dentry);
 	struct mountpoint *mp;
 
-	hlist_for_each_entry(mp, chain, m_hash) {
+	hlist_for_each_entry (mp, chain, m_hash) {
 		if (mp->m_dentry == dentry) {
 			mp->m_count++;
 			return mp;
@@ -706,7 +706,7 @@ static struct mountpoint *get_mountpoint(struct dentry *dentry)
 		/* might be worth a WARN_ON() */
 		if (d_unlinked(dentry))
 			return ERR_PTR(-ENOENT);
-mountpoint:
+	mountpoint:
 		read_seqlock_excl(&mount_lock);
 		mp = lookup_mountpoint(dentry);
 		read_sequnlock_excl(&mount_lock);
@@ -718,7 +718,6 @@ mountpoint:
 		new = kmalloc(sizeof(struct mountpoint), GFP_KERNEL);
 	if (!new)
 		return ERR_PTR(-ENOMEM);
-
 
 	/* Exactly one processes may set d_mounted */
 	ret = d_set_mounted(dentry);
@@ -825,12 +824,10 @@ static void umount_mnt(struct mount *mnt)
 /*
  * vfsmount lock must be held for write
  */
-void mnt_set_mountpoint(struct mount *mnt,
-			struct mountpoint *mp,
-			struct mount *child_mnt)
+void mnt_set_mountpoint(struct mount *mnt, struct mountpoint *mp, struct mount *child_mnt)
 {
 	mp->m_count++;
-	mnt_add_count(mnt, 1);	/* essentially, that's mntget */
+	mnt_add_count(mnt, 1); /* essentially, that's mntget */
 	child_mnt->mnt_mountpoint = mp->m_dentry;
 	child_mnt->mnt_parent = mnt;
 	child_mnt->mnt_mp = mp;
@@ -839,17 +836,14 @@ void mnt_set_mountpoint(struct mount *mnt,
 
 static void __attach_mnt(struct mount *mnt, struct mount *parent)
 {
-	hlist_add_head_rcu(&mnt->mnt_hash,
-			   m_hash(&parent->mnt, mnt->mnt_mountpoint));
+	hlist_add_head_rcu(&mnt->mnt_hash, m_hash(&parent->mnt, mnt->mnt_mountpoint));
 	list_add_tail(&mnt->mnt_child, &parent->mnt_mounts);
 }
 
 /*
  * vfsmount lock must be held for write
  */
-static void attach_mnt(struct mount *mnt,
-			struct mount *parent,
-			struct mountpoint *mp)
+static void attach_mnt(struct mount *mnt, struct mount *parent, struct mountpoint *mp)
 {
 	mnt_set_mountpoint(parent, mp, mnt);
 	__attach_mnt(mnt, parent);
@@ -883,7 +877,7 @@ static void commit_tree(struct mount *mnt)
 	BUG_ON(parent == mnt);
 
 	list_add_tail(&head, &mnt->mnt_list);
-	list_for_each_entry(m, &head, mnt_list)
+	list_for_each_entry (m, &head, mnt_list)
 		m->mnt_ns = n;
 
 	list_splice(&head, n->list.prev);
@@ -945,10 +939,10 @@ struct vfsmount *vfs_create_mount(struct fs_context *fc)
 		mnt->mnt.mnt_flags = MNT_INTERNAL;
 
 	atomic_inc(&fc->root->d_sb->s_active);
-	mnt->mnt.mnt_sb		= fc->root->d_sb;
-	mnt->mnt.mnt_root	= dget(fc->root);
-	mnt->mnt_mountpoint	= mnt->mnt.mnt_root;
-	mnt->mnt_parent		= mnt;
+	mnt->mnt.mnt_sb = fc->root->d_sb;
+	mnt->mnt.mnt_root = dget(fc->root);
+	mnt->mnt_mountpoint = mnt->mnt.mnt_root;
+	mnt->mnt_parent = mnt;
 
 	lock_mount_hash();
 	list_add_tail(&mnt->mnt_instance, &mnt->mnt.mnt_sb->s_mounts);
@@ -968,9 +962,7 @@ struct vfsmount *fc_mount(struct fs_context *fc)
 }
 EXPORT_SYMBOL(fc_mount);
 
-struct vfsmount *vfs_kern_mount(struct file_system_type *type,
-				int flags, const char *name,
-				void *data)
+struct vfsmount *vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void *data)
 {
 	struct fs_context *fc;
 	struct vfsmount *mnt;
@@ -984,8 +976,7 @@ struct vfsmount *vfs_kern_mount(struct file_system_type *type,
 		return ERR_CAST(fc);
 
 	if (name)
-		ret = vfs_parse_fs_string(fc, "source",
-					  name, strlen(name));
+		ret = vfs_parse_fs_string(fc, "source", name, strlen(name));
 	if (!ret)
 		ret = parse_monolithic_mount_data(fc, data);
 	if (!ret)
@@ -998,9 +989,7 @@ struct vfsmount *vfs_kern_mount(struct file_system_type *type,
 }
 EXPORT_SYMBOL_GPL(vfs_kern_mount);
 
-struct vfsmount *
-vfs_submount(const struct dentry *mountpoint, struct file_system_type *type,
-	     const char *name, void *data)
+struct vfsmount *vfs_submount(const struct dentry *mountpoint, struct file_system_type *type, const char *name, void *data)
 {
 	/* Until it is worked out how to pass the user namespace
 	 * through from the parent mount to the submount don't support
@@ -1013,8 +1002,7 @@ vfs_submount(const struct dentry *mountpoint, struct file_system_type *type,
 }
 EXPORT_SYMBOL_GPL(vfs_submount);
 
-static struct mount *clone_mnt(struct mount *old, struct dentry *root,
-					int flag)
+static struct mount *clone_mnt(struct mount *old, struct dentry *root, int flag)
 {
 	struct super_block *sb = old->mnt.mnt_sb;
 	struct mount *mnt;
@@ -1036,7 +1024,7 @@ static struct mount *clone_mnt(struct mount *old, struct dentry *root,
 	}
 
 	mnt->mnt.mnt_flags = old->mnt.mnt_flags;
-	mnt->mnt.mnt_flags &= ~(MNT_WRITE_HOLD|MNT_MARKED|MNT_INTERNAL);
+	mnt->mnt.mnt_flags &= ~(MNT_WRITE_HOLD | MNT_MARKED | MNT_INTERNAL);
 
 	atomic_inc(&sb->s_active);
 	mnt->mnt.mnt_sb = sb;
@@ -1047,8 +1035,7 @@ static struct mount *clone_mnt(struct mount *old, struct dentry *root,
 	list_add_tail(&mnt->mnt_instance, &sb->s_mounts);
 	unlock_mount_hash();
 
-	if ((flag & CL_SLAVE) ||
-	    ((flag & CL_SHARED_TO_SLAVE) && IS_MNT_SHARED(old))) {
+	if ((flag & CL_SLAVE) || ((flag & CL_SHARED_TO_SLAVE) && IS_MNT_SHARED(old))) {
 		list_add(&mnt->mnt_slave, &old->mnt_slave_list);
 		mnt->mnt_master = old;
 		CLEAR_MNT_SHARED(mnt);
@@ -1073,7 +1060,7 @@ static struct mount *clone_mnt(struct mount *old, struct dentry *root,
 
 	return mnt;
 
- out_free:
+out_free:
 	mnt_free_id(mnt);
 	free_vfsmnt(mnt);
 	return ERR_PTR(err);
@@ -1093,7 +1080,7 @@ static void cleanup_mnt(struct mount *mnt)
 	WARN_ON(mnt_get_writers(mnt));
 	if (unlikely(mnt->mnt_pins.first))
 		mnt_pin_kill(mnt);
-	hlist_for_each_entry_safe(m, p, &mnt->mnt_stuck_children, mnt_umount) {
+	hlist_for_each_entry_safe (m, p, &mnt->mnt_stuck_children, mnt_umount) {
 		hlist_del(&m->mnt_umount);
 		mntput(&m->mnt);
 	}
@@ -1115,7 +1102,7 @@ static void delayed_mntput(struct work_struct *unused)
 	struct llist_node *node = llist_del_all(&delayed_mntput_list);
 	struct mount *m, *t;
 
-	llist_for_each_entry_safe(m, t, node, mnt_llist)
+	llist_for_each_entry_safe (m, t, node, mnt_llist)
 		cleanup_mnt(m);
 }
 static DECLARE_DELAYED_WORK(delayed_mntput_work, delayed_mntput);
@@ -1166,7 +1153,7 @@ static void mntput_no_expire(struct mount *mnt)
 
 	if (unlikely(!list_empty(&mnt->mnt_mounts))) {
 		struct mount *p, *tmp;
-		list_for_each_entry_safe(p, tmp, &mnt->mnt_mounts,  mnt_child) {
+		list_for_each_entry_safe (p, tmp, &mnt->mnt_mounts, mnt_child) {
 			__put_mountpoint(unhash_mnt(p), &list);
 			hlist_add_head(&p->mnt_umount, &mnt->mnt_stuck_children);
 		}
@@ -1292,12 +1279,12 @@ static int m_show(struct seq_file *m, void *v)
 }
 
 const struct seq_operations mounts_op = {
-	.start	= m_start,
-	.next	= m_next,
-	.stop	= m_stop,
-	.show	= m_show,
+	.start = m_start,
+	.next = m_next,
+	.stop = m_stop,
+	.show = m_show,
 };
-#endif  /* CONFIG_PROC_FS */
+#endif /* CONFIG_PROC_FS */
 
 /**
  * may_umount_tree - check if a mount tree is busy
@@ -1377,7 +1364,7 @@ static void namespace_unlock(void)
 
 	synchronize_rcu_expedited();
 
-	hlist_for_each_entry_safe(m, p, &head, mnt_umount) {
+	hlist_for_each_entry_safe (m, p, &head, mnt_umount) {
 		hlist_del(&m->mnt_umount);
 		mntput(&m->mnt);
 	}
@@ -1442,7 +1429,7 @@ static void umount_tree(struct mount *mnt, enum umount_tree_flags how)
 	}
 
 	/* Hide the mounts from mnt_mounts */
-	list_for_each_entry(p, &tmp_list, mnt_list) {
+	list_for_each_entry (p, &tmp_list, mnt_list) {
 		list_del_init(&p->mnt_child);
 	}
 
@@ -1491,8 +1478,7 @@ static int do_umount_root(struct super_block *sb)
 	if (!sb_rdonly(sb)) {
 		struct fs_context *fc;
 
-		fc = fs_context_for_reconfigure(sb->s_root, SB_RDONLY,
-						SB_RDONLY);
+		fc = fs_context_for_reconfigure(sb->s_root, SB_RDONLY, SB_RDONLY);
 		if (IS_ERR(fc)) {
 			ret = PTR_ERR(fc);
 		} else {
@@ -1522,8 +1508,7 @@ static int do_umount(struct mount *mnt, int flags)
 	 *  (2) the usage count == 1 [parent vfsmount] + 1 [sys_umount]
 	 */
 	if (flags & MNT_EXPIRE) {
-		if (&mnt->mnt == current->fs->root.mnt ||
-		    flags & (MNT_FORCE | MNT_DETACH))
+		if (&mnt->mnt == current->fs->root.mnt || flags & (MNT_FORCE | MNT_DETACH))
 			return -EINVAL;
 
 		/*
@@ -1592,7 +1577,7 @@ static int do_umount(struct mount *mnt, int flags)
 		retval = -EBUSY;
 		if (!propagate_mount_busy(mnt, 2)) {
 			if (!list_empty(&mnt->mnt_list))
-				umount_tree(mnt, UMOUNT_PROPAGATE|UMOUNT_SYNC);
+				umount_tree(mnt, UMOUNT_PROPAGATE | UMOUNT_SYNC);
 			retval = 0;
 		}
 	}
@@ -1629,8 +1614,8 @@ void __detach_mounts(struct dentry *dentry)
 		if (mnt->mnt.mnt_flags & MNT_UMOUNT) {
 			umount_mnt(mnt);
 			hlist_add_head(&mnt->mnt_umount, &unmounted);
-		}
-		else umount_tree(mnt, UMOUNT_CONNECTED);
+		} else
+			umount_tree(mnt, UMOUNT_CONNECTED);
 	}
 	put_mountpoint(mp);
 out_unlock:
@@ -1646,7 +1631,7 @@ static inline bool may_mount(void)
 	return ns_capable(current->nsproxy->mnt_ns->user_ns, CAP_SYS_ADMIN);
 }
 
-#ifdef	CONFIG_MANDATORY_FILE_LOCKING
+#ifdef CONFIG_MANDATORY_FILE_LOCKING
 static bool may_mandlock(void)
 {
 	pr_warn_once("======================================================\n"
@@ -1731,8 +1716,7 @@ SYSCALL_DEFINE1(oldumount, char __user *, name)
 static bool is_mnt_ns_file(struct dentry *dentry)
 {
 	/* Is this a proxy for a mount namespace? */
-	return dentry->d_op == &ns_dentry_operations &&
-	       dentry->d_fsdata == &mntns_operations;
+	return dentry->d_op == &ns_dentry_operations && dentry->d_fsdata == &mntns_operations;
 }
 
 struct mnt_namespace *to_mnt_ns(struct ns_common *ns)
@@ -1753,8 +1737,7 @@ static bool mnt_ns_loop(struct dentry *dentry)
 	return current->nsproxy->mnt_ns->seq >= mnt_ns->seq;
 }
 
-struct mount *copy_tree(struct mount *mnt, struct dentry *dentry,
-					int flag)
+struct mount *copy_tree(struct mount *mnt, struct dentry *dentry, int flag)
 {
 	struct mount *res, *p, *q, *r, *parent;
 
@@ -1771,14 +1754,13 @@ struct mount *copy_tree(struct mount *mnt, struct dentry *dentry,
 	q->mnt_mountpoint = mnt->mnt_mountpoint;
 
 	p = mnt;
-	list_for_each_entry(r, &mnt->mnt_mounts, mnt_child) {
+	list_for_each_entry (r, &mnt->mnt_mounts, mnt_child) {
 		struct mount *s;
 		if (!is_subdir(r->mnt_mountpoint, dentry))
 			continue;
 
 		for (s = r; s; s = next_mnt(s, r)) {
-			if (!(flag & CL_COPY_UNBINDABLE) &&
-			    IS_MNT_UNBINDABLE(s)) {
+			if (!(flag & CL_COPY_UNBINDABLE) && IS_MNT_UNBINDABLE(s)) {
 				if (s->mnt.mnt_flags & MNT_LOCKED) {
 					/* Both unbindable and locked. */
 					q = ERR_PTR(-EPERM);
@@ -1788,8 +1770,7 @@ struct mount *copy_tree(struct mount *mnt, struct dentry *dentry,
 					continue;
 				}
 			}
-			if (!(flag & CL_COPY_MNT_NS_FILE) &&
-			    is_mnt_ns_file(s->mnt.mnt_root)) {
+			if (!(flag & CL_COPY_MNT_NS_FILE) && is_mnt_ns_file(s->mnt.mnt_root)) {
 				s = skip_mnt_tree(s);
 				continue;
 			}
@@ -1827,8 +1808,7 @@ struct vfsmount *collect_mounts(const struct path *path)
 	if (!check_mnt(real_mount(path->mnt)))
 		tree = ERR_PTR(-EINVAL);
 	else
-		tree = copy_tree(real_mount(path->mnt), path->dentry,
-				 CL_COPY_ALL | CL_PRIVATE);
+		tree = copy_tree(real_mount(path->mnt), path->dentry, CL_COPY_ALL | CL_PRIVATE);
 	namespace_unlock();
 	if (IS_ERR(tree))
 		return ERR_CAST(tree);
@@ -1869,7 +1849,7 @@ static bool has_locked_children(struct mount *mnt, struct dentry *dentry)
 {
 	struct mount *child;
 
-	list_for_each_entry(child, &mnt->mnt_mounts, mnt_child) {
+	list_for_each_entry (child, &mnt->mnt_mounts, mnt_child) {
 		if (!is_subdir(child->mnt_mountpoint, dentry))
 			continue;
 
@@ -1917,14 +1897,13 @@ invalid:
 }
 EXPORT_SYMBOL_GPL(clone_private_mount);
 
-int iterate_mounts(int (*f)(struct vfsmount *, void *), void *arg,
-		   struct vfsmount *root)
+int iterate_mounts(int (*f)(struct vfsmount *, void *), void *arg, struct vfsmount *root)
 {
 	struct mount *mnt;
 	int res = f(root, arg);
 	if (res)
 		return res;
-	list_for_each_entry(mnt, &real_mount(root)->mnt_list, mnt_list) {
+	list_for_each_entry (mnt, &real_mount(root)->mnt_list, mnt_list) {
 		res = f(&mnt->mnt, arg);
 		if (res)
 			return res;
@@ -1998,10 +1977,7 @@ int count_mounts(struct mnt_namespace *ns, struct mount *mnt)
 	old = ns->mounts;
 	pending = ns->pending_mounts;
 	sum = old + pending;
-	if ((old > sum) ||
-	    (pending > sum) ||
-	    (max < sum) ||
-	    (mounts > (max - sum)))
+	if ((old > sum) || (pending > sum) || (max < sum) || (mounts > (max - sum)))
 		return -ENOSPC;
 
 	ns->pending_mounts = pending + mounts;
@@ -2071,10 +2047,7 @@ int count_mounts(struct mnt_namespace *ns, struct mount *mnt)
  * Must be called without spinlocks held, since this function can sleep
  * in allocations.
  */
-static int attach_recursive_mnt(struct mount *source_mnt,
-			struct mount *dest_mnt,
-			struct mountpoint *dest_mp,
-			bool moving)
+static int attach_recursive_mnt(struct mount *source_mnt, struct mount *dest_mnt, struct mountpoint *dest_mp, bool moving)
 {
 	struct user_namespace *user_ns = current->nsproxy->mnt_ns->user_ns;
 	HLIST_HEAD(tree_list);
@@ -2124,11 +2097,10 @@ static int attach_recursive_mnt(struct mount *source_mnt,
 		commit_tree(source_mnt);
 	}
 
-	hlist_for_each_entry_safe(child, n, &tree_list, mnt_hash) {
+	hlist_for_each_entry_safe (child, n, &tree_list, mnt_hash) {
 		struct mount *q;
 		hlist_del_init(&child->mnt_hash);
-		q = __lookup_mnt(&child->mnt_parent->mnt,
-				 child->mnt_mountpoint);
+		q = __lookup_mnt(&child->mnt_parent->mnt, child->mnt_mountpoint);
 		if (q)
 			mnt_change_mountpoint(child, smp, q);
 		/* Notice when we are propagating across user namespaces */
@@ -2142,7 +2114,7 @@ static int attach_recursive_mnt(struct mount *source_mnt,
 
 	return 0;
 
- out_cleanup_ids:
+out_cleanup_ids:
 	while (!hlist_empty(&tree_list)) {
 		child = hlist_entry(tree_list.first, struct mount, mnt_hash);
 		child->mnt_parent->mnt_ns->pending_mounts = 0;
@@ -2150,7 +2122,7 @@ static int attach_recursive_mnt(struct mount *source_mnt,
 	}
 	unlock_mount_hash();
 	cleanup_group_ids(source_mnt, NULL);
- out:
+out:
 	ns->pending_mounts = 0;
 
 	read_seqlock_excl(&mount_lock);
@@ -2206,8 +2178,7 @@ static int graft_tree(struct mount *mnt, struct mount *p, struct mountpoint *mp)
 	if (mnt->mnt.mnt_sb->s_flags & SB_NOUSER)
 		return -EINVAL;
 
-	if (d_is_dir(mp->m_dentry) !=
-	      d_is_dir(mnt->mnt.mnt_root))
+	if (d_is_dir(mp->m_dentry) != d_is_dir(mnt->mnt.mnt_root))
 		return -ENOTDIR;
 
 	return attach_recursive_mnt(mnt, p, mp, false);
@@ -2260,7 +2231,7 @@ static int do_change_type(struct path *path, int ms_flags)
 		change_mnt_propagation(m, type);
 	unlock_mount_hash();
 
- out_unlock:
+out_unlock:
 	namespace_unlock();
 	return err;
 }
@@ -2292,8 +2263,7 @@ static struct mount *__do_loopback(struct path *old_path, int recurse)
 /*
  * do loopback mount.
  */
-static int do_loopback(struct path *path, const char *old_name,
-				int recurse)
+static int do_loopback(struct path *path, const char *old_name, int recurse)
 {
 	struct path old_path;
 	struct mount *mnt = NULL, *parent;
@@ -2301,7 +2271,7 @@ static int do_loopback(struct path *path, const char *old_name,
 	int err;
 	if (!old_name || !*old_name)
 		return -EINVAL;
-	err = kern_path(old_name, LOOKUP_FOLLOW|LOOKUP_AUTOMOUNT, &old_path);
+	err = kern_path(old_name, LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT, &old_path);
 	if (err)
 		return err;
 
@@ -2388,9 +2358,7 @@ SYSCALL_DEFINE3(open_tree, int, dfd, const char *, filename, unsigned, flags)
 
 	BUILD_BUG_ON(OPEN_TREE_CLOEXEC != O_CLOEXEC);
 
-	if (flags & ~(AT_EMPTY_PATH | AT_NO_AUTOMOUNT | AT_RECURSIVE |
-		      AT_SYMLINK_NOFOLLOW | OPEN_TREE_CLONE |
-		      OPEN_TREE_CLOEXEC))
+	if (flags & ~(AT_EMPTY_PATH | AT_NO_AUTOMOUNT | AT_RECURSIVE | AT_SYMLINK_NOFOLLOW | OPEN_TREE_CLONE | OPEN_TREE_CLOEXEC))
 		return -EINVAL;
 
 	if ((flags & (AT_RECURSIVE | OPEN_TREE_CLONE)) == AT_RECURSIVE)
@@ -2438,24 +2406,19 @@ static bool can_change_locked_flags(struct mount *mnt, unsigned int mnt_flags)
 {
 	unsigned int fl = mnt->mnt.mnt_flags;
 
-	if ((fl & MNT_LOCK_READONLY) &&
-	    !(mnt_flags & MNT_READONLY))
+	if ((fl & MNT_LOCK_READONLY) && !(mnt_flags & MNT_READONLY))
 		return false;
 
-	if ((fl & MNT_LOCK_NODEV) &&
-	    !(mnt_flags & MNT_NODEV))
+	if ((fl & MNT_LOCK_NODEV) && !(mnt_flags & MNT_NODEV))
 		return false;
 
-	if ((fl & MNT_LOCK_NOSUID) &&
-	    !(mnt_flags & MNT_NOSUID))
+	if ((fl & MNT_LOCK_NOSUID) && !(mnt_flags & MNT_NOSUID))
 		return false;
 
-	if ((fl & MNT_LOCK_NOEXEC) &&
-	    !(mnt_flags & MNT_NOEXEC))
+	if ((fl & MNT_LOCK_NOEXEC) && !(mnt_flags & MNT_NOEXEC))
 		return false;
 
-	if ((fl & MNT_LOCK_ATIME) &&
-	    ((fl & MNT_ATIME_MASK) != (mnt_flags & MNT_ATIME_MASK)))
+	if ((fl & MNT_LOCK_ATIME) && ((fl & MNT_ATIME_MASK) != (mnt_flags & MNT_ATIME_MASK)))
 		return false;
 
 	return true;
@@ -2491,9 +2454,7 @@ static void mnt_warn_timestamp_expiry(struct path *mountpoint, struct vfsmount *
 {
 	struct super_block *sb = mnt->mnt_sb;
 
-	if (!__mnt_is_readonly(mnt) &&
-	   (!(sb->s_iflags & SB_I_TS_EXPIRY_WARNED)) &&
-	   (ktime_get_real_seconds() + TIME_UPTIME_SEC_MAX > sb->s_time_max)) {
+	if (!__mnt_is_readonly(mnt) && (!(sb->s_iflags & SB_I_TS_EXPIRY_WARNED)) && (ktime_get_real_seconds() + TIME_UPTIME_SEC_MAX > sb->s_time_max)) {
 		char *buf, *mntpath;
 
 		buf = (char *)__get_free_page(GFP_KERNEL);
@@ -2504,11 +2465,8 @@ static void mnt_warn_timestamp_expiry(struct path *mountpoint, struct vfsmount *
 		if (IS_ERR(mntpath))
 			mntpath = "(unknown)";
 
-		pr_warn("%s filesystem being %s at %s supports timestamps until %ptTd (0x%llx)\n",
-			sb->s_type->name,
-			is_mounted(mnt) ? "remounted" : "mounted",
-			mntpath, &sb->s_time_max,
-			(unsigned long long)sb->s_time_max);
+		pr_warn("%s filesystem being %s at %s supports timestamps until %ptTd (0x%llx)\n", sb->s_type->name, is_mounted(mnt) ? "remounted" : "mounted",
+			mntpath, &sb->s_time_max, (unsigned long long)sb->s_time_max);
 
 		sb->s_iflags |= SB_I_TS_EXPIRY_WARNED;
 		if (buf)
@@ -2552,8 +2510,7 @@ static int do_reconfigure_mnt(struct path *path, unsigned int mnt_flags)
  * If you've mounted a non-root directory somewhere and want to do remount
  * on it - tough luck.
  */
-static int do_remount(struct path *path, int ms_flags, int sb_flags,
-		      int mnt_flags, void *data)
+static int do_remount(struct path *path, int ms_flags, int sb_flags, int mnt_flags, void *data)
 {
 	int err;
 	struct super_block *sb = path->mnt->mnt_sb;
@@ -2663,8 +2620,7 @@ static int do_move_mount(struct path *old_path, struct path *new_path)
 	if (old_path->dentry != old_path->mnt->mnt_root)
 		goto out;
 
-	if (d_is_dir(new_path->dentry) !=
-	    d_is_dir(old_path->dentry))
+	if (d_is_dir(new_path->dentry) != d_is_dir(old_path->dentry))
 		goto out;
 	/*
 	 * Don't move a mount residing in a shared parent.
@@ -2684,8 +2640,7 @@ static int do_move_mount(struct path *old_path, struct path *new_path)
 		if (p == old)
 			goto out;
 
-	err = attach_recursive_mnt(old, real_mount(new_path->mnt), mp,
-				   attached);
+	err = attach_recursive_mnt(old, real_mount(new_path->mnt), mp, attached);
 	if (err)
 		goto out;
 
@@ -2750,8 +2705,7 @@ static int do_add_mount(struct mount *newmnt, struct path *path, int mnt_flags)
 
 	/* Refuse the same filesystem on the same mount point */
 	err = -EBUSY;
-	if (path->mnt->mnt_sb == newmnt->mnt.mnt_sb &&
-	    path->mnt->mnt_root == path->dentry)
+	if (path->mnt->mnt_sb == newmnt->mnt.mnt_sb && path->mnt->mnt_root == path->dentry)
 		goto unlock;
 
 	err = -EINVAL;
@@ -2772,8 +2726,7 @@ static bool mount_too_revealing(const struct super_block *sb, int *new_mnt_flags
  * Create a new mount using a superblock configuration and request it
  * be added to the namespace tree.
  */
-static int do_new_mount_fc(struct fs_context *fc, struct path *mountpoint,
-			   unsigned int mnt_flags)
+static int do_new_mount_fc(struct fs_context *fc, struct path *mountpoint, unsigned int mnt_flags)
 {
 	struct vfsmount *mnt;
 	struct super_block *sb = fc->root->d_sb;
@@ -2806,8 +2759,7 @@ static int do_new_mount_fc(struct fs_context *fc, struct path *mountpoint,
  * create a new mount for userspace and request it to be added into the
  * namespace's tree
  */
-static int do_new_mount(struct path *path, const char *fstype, int sb_flags,
-			int mnt_flags, const char *name, void *data)
+static int do_new_mount(struct path *path, const char *fstype, int sb_flags, int mnt_flags, const char *name, void *data)
 {
 	struct file_system_type *type;
 	struct fs_context *fc;
@@ -2838,8 +2790,7 @@ static int do_new_mount(struct path *path, const char *fstype, int sb_flags,
 		return PTR_ERR(fc);
 
 	if (subtype)
-		err = vfs_parse_fs_string(fc, "subtype",
-					  subtype, strlen(subtype));
+		err = vfs_parse_fs_string(fc, "subtype", subtype, strlen(subtype));
 	if (!err && name)
 		err = vfs_parse_fs_string(fc, "source", name, strlen(name));
 	if (!err)
@@ -2864,8 +2815,7 @@ int finish_automount(struct vfsmount *m, struct path *path)
 	 */
 	BUG_ON(mnt_get_count(mnt) < 2);
 
-	if (m->mnt_sb == path->mnt->mnt_sb &&
-	    m->mnt_root == path->dentry) {
+	if (m->mnt_sb == path->mnt->mnt_sb && m->mnt_root == path->dentry) {
 		err = -ELOOP;
 		goto fail;
 	}
@@ -2922,16 +2872,15 @@ void mark_mounts_for_expiry(struct list_head *mounts)
 	 * - still marked for expiry (marked on the last call here; marks are
 	 *   cleared by mntput())
 	 */
-	list_for_each_entry_safe(mnt, next, mounts, mnt_expire) {
-		if (!xchg(&mnt->mnt_expiry_mark, 1) ||
-			propagate_mount_busy(mnt, 1))
+	list_for_each_entry_safe (mnt, next, mounts, mnt_expire) {
+		if (!xchg(&mnt->mnt_expiry_mark, 1) || propagate_mount_busy(mnt, 1))
 			continue;
 		list_move(&mnt->mnt_expire, &graveyard);
 	}
 	while (!list_empty(&graveyard)) {
 		mnt = list_first_entry(&graveyard, struct mount, mnt_expire);
 		touch_mnt_namespace(mnt->mnt_ns);
-		umount_tree(mnt, UMOUNT_PROPAGATE|UMOUNT_SYNC);
+		umount_tree(mnt, UMOUNT_PROPAGATE | UMOUNT_SYNC);
 	}
 	unlock_mount_hash();
 	namespace_unlock();
@@ -2999,10 +2948,9 @@ static void shrink_submounts(struct mount *mnt)
 	/* extract submounts of 'mountpoint' from the expiration list */
 	while (select_submounts(mnt, &graveyard)) {
 		while (!list_empty(&graveyard)) {
-			m = list_first_entry(&graveyard, struct mount,
-						mnt_expire);
+			m = list_first_entry(&graveyard, struct mount, mnt_expire);
 			touch_mnt_namespace(m->mnt_ns);
-			umount_tree(m, UMOUNT_PROPAGATE|UMOUNT_SYNC);
+			umount_tree(m, UMOUNT_PROPAGATE | UMOUNT_SYNC);
 		}
 	}
 }
@@ -3013,8 +2961,7 @@ static void shrink_submounts(struct mount *mnt)
  * Note that this function differs from copy_from_user() in that it will oops
  * on bad values of `to', rather than returning a short copy.
  */
-static long exact_copy_from_user(void *to, const void __user * from,
-				 unsigned long n)
+static long exact_copy_from_user(void *to, const void __user *from, unsigned long n)
 {
 	char *t = to;
 	const char __user *f = from;
@@ -3035,7 +2982,7 @@ static long exact_copy_from_user(void *to, const void __user * from,
 	return n;
 }
 
-void *copy_mount_options(const void __user * data)
+void *copy_mount_options(const void __user *data)
 {
 	int i;
 	unsigned long size;
@@ -3086,8 +3033,7 @@ char *copy_mount_string(const void __user *data)
  * Therefore, if this magic number is present, it carries no information
  * and must be discarded.
  */
-long do_mount(const char *dev_name, const char __user *dir_name,
-		const char *type_page, unsigned long flags, void *data_page)
+long do_mount(const char *dev_name, const char __user *dir_name, const char *type_page, unsigned long flags, void *data_page)
 {
 	struct path path;
 	unsigned int mnt_flags = 0, sb_flags;
@@ -3109,8 +3055,7 @@ long do_mount(const char *dev_name, const char __user *dir_name,
 	if (retval)
 		return retval;
 
-	retval = security_sb_mount(dev_name, &path,
-				   type_page, flags, data_page);
+	retval = security_sb_mount(dev_name, &path, type_page, flags, data_page);
 	if (!retval && !may_mount())
 		retval = -EPERM;
 	if (!retval && (flags & SB_MANDLOCK) && !may_mandlock())
@@ -3139,27 +3084,17 @@ long do_mount(const char *dev_name, const char __user *dir_name,
 		mnt_flags |= MNT_READONLY;
 
 	/* The default atime for remount is preservation */
-	if ((flags & MS_REMOUNT) &&
-	    ((flags & (MS_NOATIME | MS_NODIRATIME | MS_RELATIME |
-		       MS_STRICTATIME)) == 0)) {
+	if ((flags & MS_REMOUNT) && ((flags & (MS_NOATIME | MS_NODIRATIME | MS_RELATIME | MS_STRICTATIME)) == 0)) {
 		mnt_flags &= ~MNT_ATIME_MASK;
 		mnt_flags |= path.mnt->mnt_flags & MNT_ATIME_MASK;
 	}
 
-	sb_flags = flags & (SB_RDONLY |
-			    SB_SYNCHRONOUS |
-			    SB_MANDLOCK |
-			    SB_DIRSYNC |
-			    SB_SILENT |
-			    SB_POSIXACL |
-			    SB_LAZYTIME |
-			    SB_I_VERSION);
+	sb_flags = flags & (SB_RDONLY | SB_SYNCHRONOUS | SB_MANDLOCK | SB_DIRSYNC | SB_SILENT | SB_POSIXACL | SB_LAZYTIME | SB_I_VERSION);
 
 	if ((flags & (MS_REMOUNT | MS_BIND)) == (MS_REMOUNT | MS_BIND))
 		retval = do_reconfigure_mnt(&path, mnt_flags);
 	else if (flags & MS_REMOUNT)
-		retval = do_remount(&path, flags, sb_flags, mnt_flags,
-				    data_page);
+		retval = do_remount(&path, flags, sb_flags, mnt_flags, data_page);
 	else if (flags & MS_BIND)
 		retval = do_loopback(&path, dev_name, flags & MS_REC);
 	else if (flags & (MS_SHARED | MS_PRIVATE | MS_SLAVE | MS_UNBINDABLE))
@@ -3167,8 +3102,7 @@ long do_mount(const char *dev_name, const char __user *dir_name,
 	else if (flags & MS_MOVE)
 		retval = do_move_mount_old(&path, dev_name);
 	else
-		retval = do_new_mount(&path, type_page, sb_flags, mnt_flags,
-				      dev_name, data_page);
+		retval = do_new_mount(&path, type_page, sb_flags, mnt_flags, dev_name, data_page);
 dput_out:
 	path_put(&path);
 	return retval;
@@ -3236,9 +3170,7 @@ static struct mnt_namespace *alloc_mnt_ns(struct user_namespace *user_ns, bool a
 	return new_ns;
 }
 
-__latent_entropy
-struct mnt_namespace *copy_mnt_ns(unsigned long flags, struct mnt_namespace *ns,
-		struct user_namespace *user_ns, struct fs_struct *new_fs)
+__latent_entropy struct mnt_namespace *copy_mnt_ns(unsigned long flags, struct mnt_namespace *ns, struct user_namespace *user_ns, struct fs_struct *new_fs)
 {
 	struct mnt_namespace *new_ns;
 	struct vfsmount *rootmnt = NULL, *pwdmnt = NULL;
@@ -3334,8 +3266,7 @@ struct dentry *mount_subtree(struct vfsmount *m, const char *name)
 	ns->mounts++;
 	list_add(&mnt->mnt_list, &ns->list);
 
-	err = vfs_path_lookup(m->mnt_root, m,
-			name, LOOKUP_FOLLOW|LOOKUP_AUTOMOUNT, &path);
+	err = vfs_path_lookup(m->mnt_root, m, name, LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT, &path);
 
 	put_mnt_ns(ns);
 
@@ -3353,8 +3284,7 @@ struct dentry *mount_subtree(struct vfsmount *m, const char *name)
 }
 EXPORT_SYMBOL(mount_subtree);
 
-int ksys_mount(const char __user *dev_name, const char __user *dir_name,
-	       const char __user *type, unsigned long flags, void __user *data)
+int ksys_mount(const char __user *dev_name, const char __user *dir_name, const char __user *type, unsigned long flags, void __user *data)
 {
 	int ret;
 	char *kernel_type;
@@ -3387,8 +3317,7 @@ out_type:
 	return ret;
 }
 
-SYSCALL_DEFINE5(mount, char __user *, dev_name, char __user *, dir_name,
-		char __user *, type, unsigned long, flags, void __user *, data)
+SYSCALL_DEFINE5(mount, char __user *, dev_name, char __user *, dir_name, char __user *, type, unsigned long, flags, void __user *, data)
 {
 	return ksys_mount(dev_name, dir_name, type, flags, data);
 }
@@ -3397,8 +3326,7 @@ SYSCALL_DEFINE5(mount, char __user *, dev_name, char __user *, dir_name,
  * Create a kernel mount representation for a new, prepared superblock
  * (specified by fs_fd) and attach to an open_tree-like file descriptor.
  */
-SYSCALL_DEFINE3(fsmount, int, fs_fd, unsigned int, flags,
-		unsigned int, attr_flags)
+SYSCALL_DEFINE3(fsmount, int, fs_fd, unsigned int, flags, unsigned int, attr_flags)
 {
 	struct mnt_namespace *ns;
 	struct fs_context *fc;
@@ -3415,12 +3343,7 @@ SYSCALL_DEFINE3(fsmount, int, fs_fd, unsigned int, flags,
 	if ((flags & ~(FSMOUNT_CLOEXEC)) != 0)
 		return -EINVAL;
 
-	if (attr_flags & ~(MOUNT_ATTR_RDONLY |
-			   MOUNT_ATTR_NOSUID |
-			   MOUNT_ATTR_NODEV |
-			   MOUNT_ATTR_NOEXEC |
-			   MOUNT_ATTR__ATIME |
-			   MOUNT_ATTR_NODIRATIME))
+	if (attr_flags & ~(MOUNT_ATTR_RDONLY | MOUNT_ATTR_NOSUID | MOUNT_ATTR_NODEV | MOUNT_ATTR_NOEXEC | MOUNT_ATTR__ATIME | MOUNT_ATTR_NODIRATIME))
 		return -EINVAL;
 
 	if (attr_flags & MOUNT_ATTR_RDONLY)
@@ -3541,10 +3464,7 @@ err_fsfd:
  *
  * Note the flags value is a combination of MOVE_MOUNT_* flags.
  */
-SYSCALL_DEFINE5(move_mount,
-		int, from_dfd, const char *, from_pathname,
-		int, to_dfd, const char *, to_pathname,
-		unsigned int, flags)
+SYSCALL_DEFINE5(move_mount, int, from_dfd, const char *, from_pathname, int, to_dfd, const char *, to_pathname, unsigned int, flags)
 {
 	struct path from_path, to_path;
 	unsigned int lflags;
@@ -3561,18 +3481,24 @@ SYSCALL_DEFINE5(move_mount,
 	 * to clear it afterwards.
 	 */
 	lflags = 0;
-	if (flags & MOVE_MOUNT_F_SYMLINKS)	lflags |= LOOKUP_FOLLOW;
-	if (flags & MOVE_MOUNT_F_AUTOMOUNTS)	lflags |= LOOKUP_AUTOMOUNT;
-	if (flags & MOVE_MOUNT_F_EMPTY_PATH)	lflags |= LOOKUP_EMPTY;
+	if (flags & MOVE_MOUNT_F_SYMLINKS)
+		lflags |= LOOKUP_FOLLOW;
+	if (flags & MOVE_MOUNT_F_AUTOMOUNTS)
+		lflags |= LOOKUP_AUTOMOUNT;
+	if (flags & MOVE_MOUNT_F_EMPTY_PATH)
+		lflags |= LOOKUP_EMPTY;
 
 	ret = user_path_at(from_dfd, from_pathname, lflags, &from_path);
 	if (ret < 0)
 		return ret;
 
 	lflags = 0;
-	if (flags & MOVE_MOUNT_T_SYMLINKS)	lflags |= LOOKUP_FOLLOW;
-	if (flags & MOVE_MOUNT_T_AUTOMOUNTS)	lflags |= LOOKUP_AUTOMOUNT;
-	if (flags & MOVE_MOUNT_T_EMPTY_PATH)	lflags |= LOOKUP_EMPTY;
+	if (flags & MOVE_MOUNT_T_SYMLINKS)
+		lflags |= LOOKUP_FOLLOW;
+	if (flags & MOVE_MOUNT_T_AUTOMOUNTS)
+		lflags |= LOOKUP_AUTOMOUNT;
+	if (flags & MOVE_MOUNT_T_EMPTY_PATH)
+		lflags |= LOOKUP_EMPTY;
 
 	ret = user_path_at(to_dfd, to_pathname, lflags, &to_path);
 	if (ret < 0)
@@ -3596,8 +3522,7 @@ out_from:
  *
  * namespace_sem or mount_lock is held
  */
-bool is_path_reachable(struct mount *mnt, struct dentry *dentry,
-			 const struct path *root)
+bool is_path_reachable(struct mount *mnt, struct dentry *dentry, const struct path *root)
 {
 	while (&mnt->mnt != root->mnt && mnt_has_parent(mnt)) {
 		dentry = mnt->mnt_mountpoint;
@@ -3641,8 +3566,7 @@ EXPORT_SYMBOL(path_is_under);
  *    though, so you may need to say mount --bind /nfs/my_root /nfs/my_root
  *    first.
  */
-SYSCALL_DEFINE2(pivot_root, const char __user *, new_root,
-		const char __user *, put_old)
+SYSCALL_DEFINE2(pivot_root, const char __user *, new_root, const char __user *, put_old)
 {
 	struct path new, old, root;
 	struct mount *new_mnt, *root_mnt, *old_mnt, *root_parent, *ex_parent;
@@ -3652,13 +3576,11 @@ SYSCALL_DEFINE2(pivot_root, const char __user *, new_root,
 	if (!may_mount())
 		return -EPERM;
 
-	error = user_path_at(AT_FDCWD, new_root,
-			     LOOKUP_FOLLOW | LOOKUP_DIRECTORY, &new);
+	error = user_path_at(AT_FDCWD, new_root, LOOKUP_FOLLOW | LOOKUP_DIRECTORY, &new);
 	if (error)
 		goto out0;
 
-	error = user_path_at(AT_FDCWD, put_old,
-			     LOOKUP_FOLLOW | LOOKUP_DIRECTORY, &old);
+	error = user_path_at(AT_FDCWD, put_old, LOOKUP_FOLLOW | LOOKUP_DIRECTORY, &old);
 	if (error)
 		goto out1;
 
@@ -3678,9 +3600,7 @@ SYSCALL_DEFINE2(pivot_root, const char __user *, new_root,
 	old_mnt = real_mount(old.mnt);
 	ex_parent = new_mnt->mnt_parent;
 	root_parent = root_mnt->mnt_parent;
-	if (IS_MNT_SHARED(old_mnt) ||
-		IS_MNT_SHARED(ex_parent) ||
-		IS_MNT_SHARED(root_parent))
+	if (IS_MNT_SHARED(old_mnt) || IS_MNT_SHARED(ex_parent) || IS_MNT_SHARED(root_parent))
 		goto out4;
 	if (!check_mnt(root_mnt) || !check_mnt(new_mnt))
 		goto out4;
@@ -3709,7 +3629,7 @@ SYSCALL_DEFINE2(pivot_root, const char __user *, new_root,
 		goto out4;
 	lock_mount_hash();
 	umount_mnt(new_mnt);
-	root_mp = unhash_mnt(root_mnt);  /* we'll need its mountpoint */
+	root_mp = unhash_mnt(root_mnt); /* we'll need its mountpoint */
 	if (root_mnt->mnt.mnt_flags & MNT_LOCKED) {
 		new_mnt->mnt.mnt_flags |= MNT_LOCKED;
 		root_mnt->mnt.mnt_flags &= ~MNT_LOCKED;
@@ -3774,19 +3694,11 @@ void __init mnt_init(void)
 {
 	int err;
 
-	mnt_cache = kmem_cache_create("mnt_cache", sizeof(struct mount),
-			0, SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
+	mnt_cache = kmem_cache_create("mnt_cache", sizeof(struct mount), 0, SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
 
-	mount_hashtable = alloc_large_system_hash("Mount-cache",
-				sizeof(struct hlist_head),
-				mhash_entries, 19,
-				HASH_ZERO,
-				&m_hash_shift, &m_hash_mask, 0, 0);
-	mountpoint_hashtable = alloc_large_system_hash("Mountpoint-cache",
-				sizeof(struct hlist_head),
-				mphash_entries, 19,
-				HASH_ZERO,
-				&mp_hash_shift, &mp_hash_mask, 0, 0);
+	mount_hashtable = alloc_large_system_hash("Mount-cache", sizeof(struct hlist_head), mhash_entries, 19, HASH_ZERO, &m_hash_shift, &m_hash_mask, 0, 0);
+	mountpoint_hashtable =
+		alloc_large_system_hash("Mountpoint-cache", sizeof(struct hlist_head), mphash_entries, 19, HASH_ZERO, &mp_hash_shift, &mp_hash_mask, 0, 0);
 
 	if (!mount_hashtable || !mountpoint_hashtable)
 		panic("Failed to allocate mount hash table\n");
@@ -3795,8 +3707,7 @@ void __init mnt_init(void)
 
 	err = sysfs_init();
 	if (err)
-		printk(KERN_WARNING "%s: sysfs_init error: %d\n",
-			__func__, err);
+		printk(KERN_WARNING "%s: sysfs_init error: %d\n", __func__, err);
 	fs_kobj = kobject_create_and_add("fs", NULL);
 	if (!fs_kobj)
 		printk(KERN_WARNING "%s: kobj create error\n", __func__);
@@ -3833,7 +3744,7 @@ void kern_unmount(struct vfsmount *mnt)
 	/* release long term mount so mount point can be released */
 	if (!IS_ERR_OR_NULL(mnt)) {
 		real_mount(mnt)->mnt_ns = NULL;
-		synchronize_rcu();	/* yecchhh... */
+		synchronize_rcu(); /* yecchhh... */
 		mntput(mnt);
 	}
 }
@@ -3868,16 +3779,14 @@ bool current_chrooted(void)
 	return chrooted;
 }
 
-static bool mnt_already_visible(struct mnt_namespace *ns,
-				const struct super_block *sb,
-				int *new_mnt_flags)
+static bool mnt_already_visible(struct mnt_namespace *ns, const struct super_block *sb, int *new_mnt_flags)
 {
 	int new_flags = *new_mnt_flags;
 	struct mount *mnt;
 	bool visible = false;
 
 	down_read(&namespace_sem);
-	list_for_each_entry(mnt, &ns->list, mnt_list) {
+	list_for_each_entry (mnt, &ns->list, mnt_list) {
 		struct mount *child;
 		int mnt_flags;
 
@@ -3900,18 +3809,16 @@ static bool mnt_already_visible(struct mnt_namespace *ns,
 		/* Verify the mount flags are equal to or more permissive
 		 * than the proposed new mount.
 		 */
-		if ((mnt_flags & MNT_LOCK_READONLY) &&
-		    !(new_flags & MNT_READONLY))
+		if ((mnt_flags & MNT_LOCK_READONLY) && !(new_flags & MNT_READONLY))
 			continue;
-		if ((mnt_flags & MNT_LOCK_ATIME) &&
-		    ((mnt_flags & MNT_ATIME_MASK) != (new_flags & MNT_ATIME_MASK)))
+		if ((mnt_flags & MNT_LOCK_ATIME) && ((mnt_flags & MNT_ATIME_MASK) != (new_flags & MNT_ATIME_MASK)))
 			continue;
 
 		/* This mount is not fully visible if there are any
 		 * locked child mounts that cover anything except for
 		 * empty directories.
 		 */
-		list_for_each_entry(child, &mnt->mnt_mounts, mnt_child) {
+		list_for_each_entry (child, &mnt->mnt_mounts, mnt_child) {
 			struct inode *inode = child->mnt_mountpoint->d_inode;
 			/* Only worry about locked mounts */
 			if (!(child->mnt.mnt_flags & MNT_LOCKED))
@@ -3921,11 +3828,10 @@ static bool mnt_already_visible(struct mnt_namespace *ns,
 				goto next;
 		}
 		/* Preserve the locked attributes */
-		*new_mnt_flags |= mnt_flags & (MNT_LOCK_READONLY | \
-					       MNT_LOCK_ATIME);
+		*new_mnt_flags |= mnt_flags & (MNT_LOCK_READONLY | MNT_LOCK_ATIME);
 		visible = true;
 		goto found;
-	next:	;
+	next:;
 	}
 found:
 	up_read(&namespace_sem);
@@ -3947,8 +3853,7 @@ static bool mount_too_revealing(const struct super_block *sb, int *new_mnt_flags
 		return false;
 
 	if ((s_iflags & required_iflags) != required_iflags) {
-		WARN_ONCE(1, "Expected s_iflags to contain 0x%lx\n",
-			  required_iflags);
+		WARN_ONCE(1, "Expected s_iflags to contain 0x%lx\n", required_iflags);
 		return true;
 	}
 
@@ -3964,8 +3869,7 @@ bool mnt_may_suid(struct vfsmount *mnt)
 	 * suid/sgid bits, file caps, or security labels that originate
 	 * in other namespaces.
 	 */
-	return !(mnt->mnt_flags & MNT_NOSUID) && check_mnt(real_mount(mnt)) &&
-	       current_in_userns(mnt->mnt_sb->s_user_ns);
+	return !(mnt->mnt_flags & MNT_NOSUID) && check_mnt(real_mount(mnt)) && current_in_userns(mnt->mnt_sb->s_user_ns);
 }
 
 static struct ns_common *mntns_get(struct task_struct *task)
@@ -3996,9 +3900,7 @@ static int mntns_install(struct nsproxy *nsproxy, struct ns_common *ns)
 	struct path root;
 	int err;
 
-	if (!ns_capable(mnt_ns->user_ns, CAP_SYS_ADMIN) ||
-	    !ns_capable(current_user_ns(), CAP_SYS_CHROOT) ||
-	    !ns_capable(current_user_ns(), CAP_SYS_ADMIN))
+	if (!ns_capable(mnt_ns->user_ns, CAP_SYS_ADMIN) || !ns_capable(current_user_ns(), CAP_SYS_CHROOT) || !ns_capable(current_user_ns(), CAP_SYS_ADMIN))
 		return -EPERM;
 
 	if (is_anon_ns(mnt_ns))
@@ -4012,8 +3914,7 @@ static int mntns_install(struct nsproxy *nsproxy, struct ns_common *ns)
 	nsproxy->mnt_ns = mnt_ns;
 
 	/* Find the root */
-	err = vfs_path_lookup(mnt_ns->root->mnt.mnt_root, &mnt_ns->root->mnt,
-				"/", LOOKUP_DOWN, &root);
+	err = vfs_path_lookup(mnt_ns->root->mnt.mnt_root, &mnt_ns->root->mnt, "/", LOOKUP_DOWN, &root);
 	if (err) {
 		/* revert to old namespace */
 		nsproxy->mnt_ns = old_mnt_ns;
@@ -4037,10 +3938,10 @@ static struct user_namespace *mntns_owner(struct ns_common *ns)
 }
 
 const struct proc_ns_operations mntns_operations = {
-	.name		= "mnt",
-	.type		= CLONE_NEWNS,
-	.get		= mntns_get,
-	.put		= mntns_put,
-	.install	= mntns_install,
-	.owner		= mntns_owner,
+	.name = "mnt",
+	.type = CLONE_NEWNS,
+	.get = mntns_get,
+	.put = mntns_put,
+	.install = mntns_install,
+	.owner = mntns_owner,
 };

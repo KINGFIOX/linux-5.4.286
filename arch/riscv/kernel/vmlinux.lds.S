@@ -4,7 +4,7 @@
  * Copyright (C) 2017 SiFive
  */
 
-#define LOAD_OFFSET PAGE_OFFSET
+#define LOAD_OFFSET PAGE_OFFSET /*0*/
 #include <asm/vmlinux.lds.h>
 #include <asm/page.h>
 #include <asm/cache.h>
@@ -21,7 +21,7 @@ SECTIONS
 	. = LOAD_OFFSET;
 	_start = .;
 	__init_begin = .;
-	HEAD_TEXT_SECTION
+	HEAD_TEXT_SECTION /* defined in include/asm-generic/vmlinux.lds.h */
 	INIT_TEXT_SECTION(PAGE_SIZE)
 	INIT_DATA_SECTION(16)
 	/* we have to discard exit text and such at runtime, not link time */

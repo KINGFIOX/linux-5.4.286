@@ -54,7 +54,7 @@ static struct sighand_struct init_sighand = {
  * Set up the first task table, touch at your own risk!. Base=0,
  * limit=0x1fffff (=2MB)
  */
-struct task_struct init_task
+struct task_struct init_task  // 静态初始化 init
 #ifdef CONFIG_ARCH_TASK_STRUCT_ON_STACK
 	__init_task_data
 #endif
@@ -63,7 +63,7 @@ struct task_struct init_task
 	.thread_info	= INIT_THREAD_INFO(init_task),
 	.stack_refcount	= REFCOUNT_INIT(1),
 #endif
-	.state		= 0,
+	.state		= 0, 	/* -1 unrunnable, 0 runnable, >0 stopped: */
 	.stack		= init_stack,
 	.usage		= REFCOUNT_INIT(2),
 	.flags		= PF_KTHREAD,
@@ -86,7 +86,7 @@ struct task_struct init_task
 		.run_list	= LIST_HEAD_INIT(init_task.rt.run_list),
 		.time_slice	= RR_TIMESLICE,
 	},
-	.tasks		= LIST_HEAD_INIT(init_task.tasks),
+	.tasks		= LIST_HEAD_INIT(init_task.tasks),  // init_task is always the head of tasks(linked list), init_task.tasks.prev 指向链表中, 最后插入的进程
 #ifdef CONFIG_SMP
 	.pushable_tasks	= PLIST_NODE_INIT(init_task.pushable_tasks, MAX_PRIO),
 #endif

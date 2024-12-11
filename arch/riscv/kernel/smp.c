@@ -20,16 +20,9 @@
 #include <asm/tlbflush.h>
 #include <asm/cacheflush.h>
 
-enum ipi_message_type {
-	IPI_RESCHEDULE,
-	IPI_CALL_FUNC,
-	IPI_CPU_STOP,
-	IPI_MAX
-};
+enum ipi_message_type { IPI_RESCHEDULE, IPI_CALL_FUNC, IPI_CPU_STOP, IPI_MAX };
 
-unsigned long __cpuid_to_hartid_map[NR_CPUS] = {
-	[0 ... NR_CPUS-1] = INVALID_HARTID
-};
+unsigned long __cpuid_to_hartid_map[NR_CPUS] = { [0 ... NR_CPUS - 1] = INVALID_HARTID };
 
 void __init smp_setup_processor_id(void)
 {
@@ -59,7 +52,7 @@ void riscv_cpuid_to_hartid_mask(const struct cpumask *in, struct cpumask *out)
 	int cpu;
 
 	cpumask_clear(out);
-	for_each_cpu(cpu, in)
+	for_each_cpu (cpu, in)
 		cpumask_set_cpu(cpuid_to_hartid_map(cpu), out);
 }
 
@@ -87,7 +80,7 @@ static void send_ipi_mask(const struct cpumask *mask, enum ipi_message_type op)
 	int cpu;
 
 	smp_mb__before_atomic();
-	for_each_cpu(cpu, mask)
+	for_each_cpu (cpu, mask)
 		set_bit(op, &ipi_data[cpu].bits);
 	smp_mb__after_atomic();
 
@@ -150,10 +143,10 @@ void riscv_software_interrupt(void)
 	}
 }
 
-static const char * const ipi_names[] = {
-	[IPI_RESCHEDULE]	= "Rescheduling interrupts",
-	[IPI_CALL_FUNC]		= "Function call interrupts",
-	[IPI_CPU_STOP]		= "CPU stop interrupts",
+static const char *const ipi_names[] = {
+	[IPI_RESCHEDULE] = "Rescheduling interrupts",
+	[IPI_CALL_FUNC] = "Function call interrupts",
+	[IPI_CPU_STOP] = "CPU stop interrupts",
 };
 
 void show_ipi_stats(struct seq_file *p, int prec)
@@ -161,9 +154,8 @@ void show_ipi_stats(struct seq_file *p, int prec)
 	unsigned int cpu, i;
 
 	for (i = 0; i < IPI_MAX; i++) {
-		seq_printf(p, "%*s%u:%s", prec - 1, "IPI", i,
-			   prec >= 4 ? " " : "");
-		for_each_online_cpu(cpu)
+		seq_printf(p, "%*s%u:%s", prec - 1, "IPI", i, prec >= 4 ? " " : "");
+		for_each_online_cpu (cpu)
 			seq_printf(p, "%10lu ", ipi_data[cpu].stats[i]);
 		seq_printf(p, " %s\n", ipi_names[i]);
 	}
@@ -200,8 +192,7 @@ void smp_send_stop(void)
 		udelay(1);
 
 	if (num_online_cpus() > 1)
-		pr_warn("SMP: failed to stop secondary CPUs %*pbl\n",
-			   cpumask_pr_args(cpu_online_mask));
+		pr_warn("SMP: failed to stop secondary CPUs %*pbl\n", cpumask_pr_args(cpu_online_mask));
 }
 
 void smp_send_reschedule(int cpu)

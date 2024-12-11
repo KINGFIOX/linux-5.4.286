@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Helper macros to support writing architecture specific
  * linker scripts.

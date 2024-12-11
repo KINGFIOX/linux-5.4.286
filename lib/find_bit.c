@@ -17,8 +17,7 @@
 #include <linux/export.h>
 #include <linux/kernel.h>
 
-#if !defined(find_next_bit) || !defined(find_next_zero_bit) || \
-		!defined(find_next_and_bit)
+#if !defined(find_next_bit) || !defined(find_next_zero_bit) || !defined(find_next_and_bit)
 
 /*
  * This is a common helper function for find_next_bit, find_next_zero_bit, and
@@ -27,9 +26,8 @@
  *    searching it for one bits.
  *  - The optional "addr2", which is anded with "addr1" if present.
  */
-static inline unsigned long _find_next_bit(const unsigned long *addr1,
-		const unsigned long *addr2, unsigned long nbits,
-		unsigned long start, unsigned long invert)
+static inline unsigned long _find_next_bit(const unsigned long *addr1, const unsigned long *addr2, unsigned long nbits, unsigned long start,
+					   unsigned long invert)
 {
 	unsigned long tmp;
 
@@ -64,8 +62,7 @@ static inline unsigned long _find_next_bit(const unsigned long *addr1,
 /*
  * Find the next set bit in a memory region.
  */
-unsigned long find_next_bit(const unsigned long *addr, unsigned long size,
-			    unsigned long offset)
+unsigned long find_next_bit(const unsigned long *addr, unsigned long size, unsigned long offset)
 {
 	return _find_next_bit(addr, NULL, size, offset, 0UL);
 }
@@ -73,8 +70,7 @@ EXPORT_SYMBOL(find_next_bit);
 #endif
 
 #ifndef find_next_zero_bit
-unsigned long find_next_zero_bit(const unsigned long *addr, unsigned long size,
-				 unsigned long offset)
+unsigned long find_next_zero_bit(const unsigned long *addr, unsigned long size, unsigned long offset)
 {
 	return _find_next_bit(addr, NULL, size, offset, ~0UL);
 }
@@ -82,9 +78,7 @@ EXPORT_SYMBOL(find_next_zero_bit);
 #endif
 
 #if !defined(find_next_and_bit)
-unsigned long find_next_and_bit(const unsigned long *addr1,
-		const unsigned long *addr2, unsigned long size,
-		unsigned long offset)
+unsigned long find_next_and_bit(const unsigned long *addr1, const unsigned long *addr2, unsigned long size, unsigned long offset)
 {
 	return _find_next_bit(addr1, addr2, size, offset, 0UL);
 }
@@ -132,7 +126,7 @@ unsigned long find_last_bit(const unsigned long *addr, unsigned long size)
 {
 	if (size) {
 		unsigned long val = BITMAP_LAST_WORD_MASK(size);
-		unsigned long idx = (size-1) / BITS_PER_LONG;
+		unsigned long idx = (size - 1) / BITS_PER_LONG;
 
 		do {
 			val &= addr[idx];
@@ -150,9 +144,8 @@ EXPORT_SYMBOL(find_last_bit);
 #ifdef __BIG_ENDIAN
 
 #if !defined(find_next_bit_le) || !defined(find_next_zero_bit_le)
-static inline unsigned long _find_next_bit_le(const unsigned long *addr1,
-		const unsigned long *addr2, unsigned long nbits,
-		unsigned long start, unsigned long invert)
+static inline unsigned long _find_next_bit_le(const unsigned long *addr1, const unsigned long *addr2, unsigned long nbits, unsigned long start,
+					      unsigned long invert)
 {
 	unsigned long tmp;
 
@@ -184,8 +177,7 @@ static inline unsigned long _find_next_bit_le(const unsigned long *addr1,
 #endif
 
 #ifndef find_next_zero_bit_le
-unsigned long find_next_zero_bit_le(const void *addr, unsigned
-		long size, unsigned long offset)
+unsigned long find_next_zero_bit_le(const void *addr, unsigned long size, unsigned long offset)
 {
 	return _find_next_bit_le(addr, NULL, size, offset, ~0UL);
 }
@@ -193,8 +185,7 @@ EXPORT_SYMBOL(find_next_zero_bit_le);
 #endif
 
 #ifndef find_next_bit_le
-unsigned long find_next_bit_le(const void *addr, unsigned
-		long size, unsigned long offset)
+unsigned long find_next_bit_le(const void *addr, unsigned long size, unsigned long offset)
 {
 	return _find_next_bit_le(addr, NULL, size, offset, 0UL);
 }

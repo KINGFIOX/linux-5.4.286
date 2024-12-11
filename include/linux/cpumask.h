@@ -46,6 +46,7 @@ extern unsigned int nr_cpu_ids;
  * not all bits may be allocated. */
 #define nr_cpumask_bits nr_cpu_ids
 #else
+// number of cpus
 #define nr_cpumask_bits ((unsigned int)NR_CPUS)
 #endif
 
@@ -143,7 +144,7 @@ static inline void cpu_max_bits_warn(unsigned int cpu, unsigned int bits)
 /* verify cpu argument to cpumask_* operators */
 static inline unsigned int cpumask_check(unsigned int cpu)
 {
-	cpu_max_bits_warn(cpu, nr_cpumask_bits);
+	cpu_max_bits_warn(cpu, nr_cpumask_bits); // do nothing
 	return cpu;
 }
 

@@ -72,15 +72,19 @@ struct task_group;
  * mistake.
  */
 
+// 对于进程状态的设置, 虽然可以直接 p->state = TASK_XXX
+// 但是推荐使用 set_current_state().
+// set_current_state 在设置进程状态时, 会考虑 smp 多核环境下的 cache coherence.
+
 /* Used in tsk->state: */
 #define TASK_RUNNING 0x0000
-#define TASK_INTERRUPTIBLE 0x0001
-#define TASK_UNINTERRUPTIBLE 0x0002
-#define __TASK_STOPPED 0x0004
+#define TASK_INTERRUPTIBLE 0x0001 // 可中断睡眠 state
+#define TASK_UNINTERRUPTIBLE 0x0002 // 不可中断睡眠 state, 不可响应信号
+#define __TASK_STOPPED 0x0004 // receive SIGSTOP
 #define __TASK_TRACED 0x0008
 /* Used in tsk->exit_state: */
 #define EXIT_DEAD 0x0010
-#define EXIT_ZOMBIE 0x0020
+#define EXIT_ZOMBIE 0x0020 // 僵尸态: 进程已经消亡, 但是 task_struct 还没有释放
 #define EXIT_TRACE (EXIT_ZOMBIE | EXIT_DEAD)
 /* Used in tsk->state again: */
 #define TASK_PARKED 0x0040
@@ -88,7 +92,7 @@ struct task_group;
 #define TASK_WAKEKILL 0x0100
 #define TASK_WAKING 0x0200
 #define TASK_NOLOAD 0x0400
-#define TASK_NEW 0x0800
+#define TASK_NEW 0x0800 // NOTE: 新建 state
 #define TASK_STATE_MAX 0x1000
 
 /* Convenience macros for the sake of set_current_state: */
@@ -619,8 +623,13 @@ struct task_struct {
 	 * For reasons of header soup (see current_thread_info()), this
 	 * must be the first element of task_struct.
 	 */
+	// HISTORY: linux4.0 thread_info 是被放到 kernel_stack 栈顶的.(可能被攻击)
+	// 5.4 之后, thread_info 被放到 task_struct 中.
 	struct thread_info thread_info;
 #endif
+
+	/* -------------------- 进程属性的相关信息 -------------------- */
+
 	/* -1 unrunnable, 0 runnable, >0 stopped: */
 	volatile long state;
 
@@ -633,7 +642,7 @@ struct task_struct {
 		void *stack;
 	refcount_t usage;
 	/* Per task flags (PF_*), defined further below: */
-	unsigned int flags;
+	unsigned int flags; // 比方说进程退出时会设置 PF_EXITING
 	unsigned int ptrace;
 
 #ifdef CONFIG_SMP
@@ -659,14 +668,16 @@ struct task_struct {
 #endif
 	int on_rq;
 
-	int prio;
-	int static_prio;
-	int normal_prio;
-	unsigned int rt_priority;
+	/* -------------------- 进程调度的相关信息 -------------------- */
 
-	const struct sched_class *sched_class;
-	struct sched_entity se;
-	struct sched_rt_entity rt;
+	int prio; // 进程的动态优先级
+	int static_prio; // 进程启动时分配. kernel 不存储 nice, 取而代之的是 static_prio
+	int normal_prio; // 基于 static_prio 和 调度策略计算得到的优先级
+	unsigned int rt_priority; // 实时进程的优先级
+
+	const struct sched_class *sched_class; // 调度类
+	struct sched_entity se; // 普通进程调度实体
+	struct sched_rt_entity rt; // 实时进程调度实体
 #ifdef CONFIG_CGROUP_SCHED
 	struct task_group *sched_task_group;
 #endif
@@ -688,8 +699,8 @@ struct task_struct {
 	unsigned int btrace_seq;
 #endif
 
-	unsigned int policy;
-	int nr_cpus_allowed;
+	unsigned int policy; // 进程的类型, 普通 or 实时
+	int nr_cpus_allowed; // 进程在哪些 CPU 上运行
 	const cpumask_t *cpus_ptr;
 	cpumask_t cpus_mask;
 
@@ -710,11 +721,14 @@ struct task_struct {
 
 	struct sched_info sched_info;
 
-	struct list_head tasks;
+	// API: next_task(), for_each_process(p)
+	struct list_head tasks; // 系统中, 所有进程都在这个表上 .只有 pid == tgid 才会被插入到 tasks 中, 线程组中其余的线程会被挂在 thread_group 中
 #ifdef CONFIG_SMP
 	struct plist_node pushable_tasks;
 	struct rb_node pushable_dl_tasks;
 #endif
+
+	/* -------------------- 内存管理 -------------------- */
 
 	struct mm_struct *mm;
 	struct mm_struct *active_mm;
@@ -726,8 +740,8 @@ struct task_struct {
 	struct task_rss_stat rss_stat;
 #endif
 	int exit_state;
-	int exit_code;
-	int exit_signal;
+	int exit_code; // used by waitpid
+	int exit_signal; // the signal that caused the process to exit. such as SIGABORT, SIGSEGV, etc.
 	/* The signal sent when the parent dies: */
 	int pdeath_signal;
 	/* JOBCTL_*, siglock protected: */
@@ -777,8 +791,9 @@ struct task_struct {
 
 	struct restart_block restart_block;
 
-	pid_t pid;
-	pid_t tgid;
+	// 为了循环使用 pid, 内核用 bitmap 机制管理当前已经分配的 pid 和 空闲 pid.
+	pid_t pid; // getpid
+	pid_t tgid; // 多线程情况下: 上面的 pid 实际上是 tid, tgid 是主线程的 pid
 
 #ifdef CONFIG_STACKPROTECTOR
 	/* Canary value for the -fstack-protector GCC feature: */
@@ -789,6 +804,8 @@ struct task_struct {
 	 * older sibling, respectively.  (p->father can be replaced with
 	 * p->real_parent->pid)
 	 */
+
+	/* -------------------- 进程间的关系 -------------------- */
 
 	/* Real parent process: */
 	struct task_struct __rcu *real_parent;
@@ -815,7 +832,8 @@ struct task_struct {
 	/* PID/PID hash table linkage. */
 	struct pid *thread_pid;
 	struct hlist_node pid_links[PIDTYPE_MAX];
-	struct list_head thread_group;
+	// API: next_thread(), for_each_process_thread(p, t)
+	struct list_head thread_group; // head is (pid == tgid)
 	struct list_head thread_node;
 
 	struct completion *vfork_done;
@@ -893,11 +911,16 @@ struct task_struct {
 	unsigned long last_switch_count;
 	unsigned long last_switch_time;
 #endif
+
+	/* -------------------- 文件系统 -------------------- */
+
 	/* Filesystem information: */
 	struct fs_struct *fs;
 
 	/* Open file information: */
 	struct files_struct *files;
+
+	/* -------------------- -------------------- */
 
 	/* Namespaces: */
 	struct nsproxy *nsproxy;
