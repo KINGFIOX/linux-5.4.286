@@ -1861,10 +1861,10 @@ static inline s64 atomic64_cmpxchg(atomic64_t *v, s64 old, s64 new)
 #endif /* atomic64_try_cmpxchg */
 
 #ifndef atomic64_try_cmpxchg
-static inline bool atomic64_try_cmpxchg(atomic64_t *v, s64 *old, s64 new)
+static inline bool atomic64_try_cmpxchg(atomic64_t *ptr, s64 *old, s64 new)
 {
 	s64 r, o = *old;
-	r = atomic64_cmpxchg(v, o, new);
+	r = atomic64_cmpxchg(ptr, o, new); // defined in arch/riscv/include/asm/atomic.h
 	if (unlikely(r != o))
 		*old = r;
 	return likely(r == o);

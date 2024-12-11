@@ -99,12 +99,11 @@ static void print_mmu(struct seq_file *f, const char *mmu_type)
 	if (strcmp(mmu_type, "riscv,sv32") != 0)
 		return;
 #elif defined(CONFIG_64BIT)
-	if (strcmp(mmu_type, "riscv,sv39") != 0 &&
-	    strcmp(mmu_type, "riscv,sv48") != 0)
+	if (strcmp(mmu_type, "riscv,sv39") != 0 && strcmp(mmu_type, "riscv,sv48") != 0)
 		return;
 #endif
 
-	seq_printf(f, "mmu\t\t: %s\n", mmu_type+6);
+	seq_printf(f, "mmu\t\t: %s\n", mmu_type + 6);
 }
 
 static void *c_start(struct seq_file *m, loff_t *pos)
@@ -137,8 +136,7 @@ static int c_show(struct seq_file *m, void *v)
 		print_isa(m, isa);
 	if (!of_property_read_string(node, "mmu-type", &mmu))
 		print_mmu(m, mmu);
-	if (!of_property_read_string(node, "compatible", &compat)
-	    && strcmp(compat, "riscv"))
+	if (!of_property_read_string(node, "compatible", &compat) && strcmp(compat, "riscv"))
 		seq_printf(m, "uarch\t\t: %s\n", compat);
 	seq_puts(m, "\n");
 	of_node_put(node);
@@ -146,11 +144,6 @@ static int c_show(struct seq_file *m, void *v)
 	return 0;
 }
 
-const struct seq_operations cpuinfo_op = {
-	.start	= c_start,
-	.next	= c_next,
-	.stop	= c_stop,
-	.show	= c_show
-};
+const struct seq_operations cpuinfo_op = { .start = c_start, .next = c_next, .stop = c_stop, .show = c_show };
 
 #endif /* CONFIG_PROC_FS */

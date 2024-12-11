@@ -40,7 +40,7 @@
 #endif
 
 #define LDSEM_UNLOCKED 0L
-#define LDSEM_WAIT_BIAS (-LDSEM_ACTIVE_MASK - 1)
+#define LDSEM_WAIT_BIAS (-LDSEM_ACTIVE_MASK - 1) // -(-1) - 1 == 0
 #define LDSEM_ACTIVE_BIAS 1L
 #define LDSEM_READ_BIAS LDSEM_ACTIVE_BIAS // add
 #define LDSEM_WRITE_BIAS (LDSEM_WAIT_BIAS + LDSEM_ACTIVE_BIAS)
@@ -154,10 +154,10 @@ static void ldsem_wake(struct ld_semaphore *sem)
 static struct ld_semaphore __sched *down_read_failed(struct ld_semaphore *sem, long count, long timeout)
 {
 	struct ldsem_waiter waiter;
-	long adjust = -LDSEM_ACTIVE_BIAS + LDSEM_WAIT_BIAS;
+	long adjust /*0xffff_fffe_ffff_ffff*/ = -LDSEM_ACTIVE_BIAS + LDSEM_WAIT_BIAS; // 用于修改信号量的计数
 
 	/* set up my own style of waitqueue */
-	raw_spin_lock_irq(&sem->wait_lock);
+	raw_spin_lock_irq(&sem->wait_lock); // 用锁来实现信号量
 
 	/*
 	 * Try to reverse the lock attempt but if the count has changed
@@ -169,13 +169,13 @@ static struct ld_semaphore __sched *down_read_failed(struct ld_semaphore *sem, l
 			count += adjust;
 			break;
 		}
-		if (count > 0) {
+		if (count > 0) { // 如果 sem 原来的值大于0, 说明 P(sem) 成功, 返回
 			raw_spin_unlock_irq(&sem->wait_lock);
-			return sem;
+			return sem; // 忽然相当这样可以做链式编程, 如果是在 C++/Rust 中. 返回传入的第一个参数
 		}
 	} while (1);
 
-	list_add_tail(&waiter.list, &sem->read_wait);
+	list_add_tail(&waiter.list, &sem->read_wait); // add this task to read_wait in sem
 	sem->wait_readers++;
 
 	waiter.task = current;

@@ -364,6 +364,7 @@ static inline long atomic_long_cmpxchg_relaxed(atomic_long_t *v, long old, long 
 
 static inline bool atomic_long_try_cmpxchg(atomic_long_t *v, long *old, long new)
 {
+	// defined in include/linux/atomic-fallback.h
 	return atomic64_try_cmpxchg(v, (s64 *)old, new);
 }
 
