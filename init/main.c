@@ -419,6 +419,17 @@ noinline void __ref rest_init(void)
 	 * We need to spawn init first so that it obtains pid 1, however
 	 * the init task will end up wanting to create kthreads, which, if
 	 * we schedule it before we create kthreadd, will OOPS.
+	 * 初始化内核所有数据结构之后, 进入 rest_init. rest_init 中会创建另一个内核线程,
+	 * 这个内核线程就是 pid == 1 的进程, 或 init 进程, 并与 pid == 0 进程共享所有的数据结构
+	 * 进程 1 从内核线程变成普通进程 init 后,
+	 * 他的主要作用是: 根据 /etc/inittab 文件的内容启动所需要的任务
+	 * 初始化系统配置、启动一个登录对话等, 下面是 /etc/inittab 文件的示例
+	 * ```inittab
+	 * ::sysinit:/etc/init.d/rcS
+	 * ::respawn:-/bin/sh
+	 * ::askfirst:-/bin/sh
+	 * ::ctrlaltdel:-/bin/umount -a -r # ctrl + alt + del 触发重启
+	 * ```
 	 */
 	pid = kernel_thread(kernel_init, NULL, CLONE_FS);
 	/*

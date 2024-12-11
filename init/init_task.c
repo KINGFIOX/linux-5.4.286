@@ -53,8 +53,9 @@ static struct sighand_struct init_sighand = {
 /*
  * Set up the first task table, touch at your own risk!. Base=0,
  * limit=0x1fffff (=2MB)
+ * 静态初始化 init, 这个就是 pid == 0 的进程. (并没有显式的初始化 pid == tgid == 0, 而是 .data 段本来就会被初始化为 0)
  */
-struct task_struct init_task  // 静态初始化 init
+struct task_struct init_task
 #ifdef CONFIG_ARCH_TASK_STRUCT_ON_STACK
 	__init_task_data
 #endif

@@ -29,8 +29,7 @@ static DEFINE_SPINLOCK(kthread_create_lock);
 static LIST_HEAD(kthread_create_list);
 struct task_struct *kthreadd_task;
 
-struct kthread_create_info
-{
+struct kthread_create_info {
 	/* Information passed to kthread() from kthreadd. */
 	int (*threadfn)(void *data);
 	void *data;
@@ -322,16 +321,11 @@ static void create_kthread(struct kthread_create_info *create)
 	}
 }
 
-static __printf(4, 0)
-struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
-						    void *data, int node,
-						    const char namefmt[],
-						    va_list args)
+static __printf(4, 0) struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data), void *data, int node, const char namefmt[], va_list args)
 {
 	DECLARE_COMPLETION_ONSTACK(done);
 	struct task_struct *task;
-	struct kthread_create_info *create = kmalloc(sizeof(*create),
-						     GFP_KERNEL);
+	struct kthread_create_info *create = kmalloc(sizeof(*create), GFP_KERNEL);
 
 	if (!create)
 		return ERR_PTR(-ENOMEM);
@@ -409,10 +403,7 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
  *
  * Returns a task_struct or ERR_PTR(-ENOMEM) or ERR_PTR(-EINTR).
  */
-struct task_struct *kthread_create_on_node(int (*threadfn)(void *data),
-					   void *data, int node,
-					   const char namefmt[],
-					   ...)
+struct task_struct *kthread_create_on_node(int (*threadfn)(void *data), void *data, int node, const char namefmt[], ...)
 {
 	struct task_struct *task;
 	va_list args;
@@ -477,14 +468,11 @@ EXPORT_SYMBOL(kthread_bind);
  * Description: This helper function creates and names a kernel thread
  * The thread will be woken and put into park mode.
  */
-struct task_struct *kthread_create_on_cpu(int (*threadfn)(void *data),
-					  void *data, unsigned int cpu,
-					  const char *namefmt)
+struct task_struct *kthread_create_on_cpu(int (*threadfn)(void *data), void *data, unsigned int cpu, const char *namefmt)
 {
 	struct task_struct *p;
 
-	p = kthread_create_on_node(threadfn, data, cpu_to_node(cpu), namefmt,
-				   cpu);
+	p = kthread_create_on_node(threadfn, data, cpu_to_node(cpu), namefmt, cpu);
 	if (IS_ERR(p))
 		return p;
 	kthread_bind(p, cpu);
@@ -646,8 +634,7 @@ int kthreadd(void *unused)
 		while (!list_empty(&kthread_create_list)) {
 			struct kthread_create_info *create;
 
-			create = list_entry(kthread_create_list.next,
-					    struct kthread_create_info, list);
+			create = list_entry(kthread_create_list.next, struct kthread_create_info, list);
 			list_del_init(&create->list);
 			spin_unlock(&kthread_create_lock);
 
@@ -661,9 +648,7 @@ int kthreadd(void *unused)
 	return 0;
 }
 
-void __kthread_init_worker(struct kthread_worker *worker,
-				const char *name,
-				struct lock_class_key *key)
+void __kthread_init_worker(struct kthread_worker *worker, const char *name, struct lock_class_key *key)
 {
 	memset(worker, 0, sizeof(struct kthread_worker));
 	raw_spin_lock_init(&worker->lock);
@@ -704,7 +689,7 @@ int kthread_worker_fn(void *worker_ptr)
 		set_freezable();
 
 repeat:
-	set_current_state(TASK_INTERRUPTIBLE);	/* mb paired w/ kthread_stop */
+	set_current_state(TASK_INTERRUPTIBLE); /* mb paired w/ kthread_stop */
 
 	if (kthread_should_stop()) {
 		__set_current_state(TASK_RUNNING);
@@ -717,8 +702,7 @@ repeat:
 	work = NULL;
 	raw_spin_lock_irq(&worker->lock);
 	if (!list_empty(&worker->work_list)) {
-		work = list_first_entry(&worker->work_list,
-					struct kthread_work, node);
+		work = list_first_entry(&worker->work_list, struct kthread_work, node);
 		list_del_init(&work->node);
 	}
 	worker->current_work = work;
@@ -751,9 +735,7 @@ repeat:
 }
 EXPORT_SYMBOL_GPL(kthread_worker_fn);
 
-static __printf(3, 0) struct kthread_worker *
-__kthread_create_worker(int cpu, unsigned int flags,
-			const char namefmt[], va_list args)
+static __printf(3, 0) struct kthread_worker *__kthread_create_worker(int cpu, unsigned int flags, const char namefmt[], va_list args)
 {
 	struct kthread_worker *worker;
 	struct task_struct *task;
@@ -768,8 +750,7 @@ __kthread_create_worker(int cpu, unsigned int flags,
 	if (cpu >= 0)
 		node = cpu_to_node(cpu);
 
-	task = __kthread_create_on_node(kthread_worker_fn, worker,
-						node, namefmt, args);
+	task = __kthread_create_on_node(kthread_worker_fn, worker, node, namefmt, args);
 	if (IS_ERR(task))
 		goto fail_task;
 
@@ -795,8 +776,7 @@ fail_task:
  * when the needed structures could not get allocated, and ERR_PTR(-EINTR)
  * when the worker was SIGKILLed.
  */
-struct kthread_worker *
-kthread_create_worker(unsigned int flags, const char namefmt[], ...)
+struct kthread_worker *kthread_create_worker(unsigned int flags, const char namefmt[], ...)
 {
 	struct kthread_worker *worker;
 	va_list args;
@@ -826,9 +806,7 @@ EXPORT_SYMBOL(kthread_create_worker);
  * when the needed structures could not get allocated, and ERR_PTR(-EINTR)
  * when the worker was SIGKILLed.
  */
-struct kthread_worker *
-kthread_create_worker_on_cpu(int cpu, unsigned int flags,
-			     const char namefmt[], ...)
+struct kthread_worker *kthread_create_worker_on_cpu(int cpu, unsigned int flags, const char namefmt[], ...)
 {
 	struct kthread_worker *worker;
 	va_list args;
@@ -846,16 +824,14 @@ EXPORT_SYMBOL(kthread_create_worker_on_cpu);
  * It happens when it is already pending in a worker list
  * or when it is being cancelled.
  */
-static inline bool queuing_blocked(struct kthread_worker *worker,
-				   struct kthread_work *work)
+static inline bool queuing_blocked(struct kthread_worker *worker, struct kthread_work *work)
 {
 	lockdep_assert_held(&worker->lock);
 
 	return !list_empty(&work->node) || work->canceling;
 }
 
-static void kthread_insert_work_sanity_check(struct kthread_worker *worker,
-					     struct kthread_work *work)
+static void kthread_insert_work_sanity_check(struct kthread_worker *worker, struct kthread_work *work)
 {
 	lockdep_assert_held(&worker->lock);
 	WARN_ON_ONCE(!list_empty(&work->node));
@@ -864,9 +840,7 @@ static void kthread_insert_work_sanity_check(struct kthread_worker *worker,
 }
 
 /* insert @work before @pos in @worker */
-static void kthread_insert_work(struct kthread_worker *worker,
-				struct kthread_work *work,
-				struct list_head *pos)
+static void kthread_insert_work(struct kthread_worker *worker, struct kthread_work *work, struct list_head *pos)
 {
 	kthread_insert_work_sanity_check(worker, work);
 
@@ -890,8 +864,7 @@ static void kthread_insert_work(struct kthread_worker *worker,
  * Reinitialize the work if it needs to be used by another worker.
  * For example, when the worker was stopped and started again.
  */
-bool kthread_queue_work(struct kthread_worker *worker,
-			struct kthread_work *work)
+bool kthread_queue_work(struct kthread_worker *worker, struct kthread_work *work)
 {
 	bool ret = false;
 	unsigned long flags;
@@ -942,9 +915,7 @@ void kthread_delayed_work_timer_fn(struct timer_list *t)
 }
 EXPORT_SYMBOL(kthread_delayed_work_timer_fn);
 
-static void __kthread_queue_delayed_work(struct kthread_worker *worker,
-					 struct kthread_delayed_work *dwork,
-					 unsigned long delay)
+static void __kthread_queue_delayed_work(struct kthread_worker *worker, struct kthread_delayed_work *dwork, unsigned long delay)
 {
 	struct timer_list *timer = &dwork->timer;
 	struct kthread_work *work = &dwork->work;
@@ -986,9 +957,7 @@ static void __kthread_queue_delayed_work(struct kthread_worker *worker,
  * either the timer was running or the work was queued. It returns %true
  * otherwise.
  */
-bool kthread_queue_delayed_work(struct kthread_worker *worker,
-				struct kthread_delayed_work *dwork,
-				unsigned long delay)
+bool kthread_queue_delayed_work(struct kthread_worker *worker, struct kthread_delayed_work *dwork, unsigned long delay)
 {
 	struct kthread_work *work = &dwork->work;
 	unsigned long flags;
@@ -1007,14 +976,13 @@ bool kthread_queue_delayed_work(struct kthread_worker *worker,
 EXPORT_SYMBOL_GPL(kthread_queue_delayed_work);
 
 struct kthread_flush_work {
-	struct kthread_work	work;
-	struct completion	done;
+	struct kthread_work work;
+	struct completion done;
 };
 
 static void kthread_flush_work_fn(struct kthread_work *work)
 {
-	struct kthread_flush_work *fwork =
-		container_of(work, struct kthread_flush_work, work);
+	struct kthread_flush_work *fwork = container_of(work, struct kthread_flush_work, work);
 	complete(&fwork->done);
 }
 
@@ -1044,8 +1012,7 @@ void kthread_flush_work(struct kthread_work *work)
 	if (!list_empty(&work->node))
 		kthread_insert_work(worker, &fwork.work, work->node.next);
 	else if (worker->current_work == work)
-		kthread_insert_work(worker, &fwork.work,
-				    worker->work_list.next);
+		kthread_insert_work(worker, &fwork.work, worker->work_list.next);
 	else
 		noop = true;
 
@@ -1063,11 +1030,9 @@ EXPORT_SYMBOL_GPL(kthread_flush_work);
  * The function is called under worker->lock. The lock is temporary
  * released but the timer can't be set again in the meantime.
  */
-static void kthread_cancel_delayed_work_timer(struct kthread_work *work,
-					      unsigned long *flags)
+static void kthread_cancel_delayed_work_timer(struct kthread_work *work, unsigned long *flags)
 {
-	struct kthread_delayed_work *dwork =
-		container_of(work, struct kthread_delayed_work, work);
+	struct kthread_delayed_work *dwork = container_of(work, struct kthread_delayed_work, work);
 	struct kthread_worker *worker = work->worker;
 
 	/*
@@ -1133,9 +1098,7 @@ static bool __kthread_cancel_work(struct kthread_work *work)
  * See __kthread_cancel_work() and kthread_delayed_work_timer_fn()
  * for details.
  */
-bool kthread_mod_delayed_work(struct kthread_worker *worker,
-			      struct kthread_delayed_work *dwork,
-			      unsigned long delay)
+bool kthread_mod_delayed_work(struct kthread_worker *worker, struct kthread_delayed_work *dwork, unsigned long delay)
 {
 	struct kthread_work *work = &dwork->work;
 	unsigned long flags;
@@ -1310,7 +1273,6 @@ EXPORT_SYMBOL(kthread_destroy_worker);
 void kthread_associate_blkcg(struct cgroup_subsys_state *css)
 {
 	struct kthread *kthread = __to_kthread(current);
-
 
 	if (!kthread)
 		return;
