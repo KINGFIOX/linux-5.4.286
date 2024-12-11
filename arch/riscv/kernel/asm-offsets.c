@@ -11,7 +11,8 @@
 
 void asm_offsets(void)
 {
-	OFFSET(TASK_THREAD_RA, task_struct, thread.ra);
+	// asm volatile("\n.ascii \"->TASK_THREAD_RA %0 offsetof(struct task_struct, thread.ra)\"" : : "i"(__builtin_offsetof(struct task_struct, thread.ra)));
+	OFFSET(TASK_THREAD_RA, task_struct, thread.ra); // struct thread_struct 在 struct task_struct 的末尾
 	OFFSET(TASK_THREAD_SP, task_struct, thread.sp);
 	OFFSET(TASK_THREAD_S0, task_struct, thread.s[0]);
 	OFFSET(TASK_THREAD_S1, task_struct, thread.s[1]);

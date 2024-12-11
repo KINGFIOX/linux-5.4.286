@@ -902,7 +902,7 @@ struct rq {
 	atomic_t nr_iowait; // IO 等待任务计数
 
 #ifdef CONFIG_MEMBARRIER
-	int membarrier_state; // 当前内存屏障的状态 ? 不懂
+	int membarrier_state;
 #endif
 
 #ifdef CONFIG_SMP

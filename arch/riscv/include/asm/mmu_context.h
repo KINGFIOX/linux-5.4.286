@@ -13,14 +13,12 @@
 #include <linux/mm.h>
 #include <linux/sched.h>
 
-static inline void enter_lazy_tlb(struct mm_struct *mm,
-	struct task_struct *task)
+static inline void enter_lazy_tlb(struct mm_struct *mm, struct task_struct *task)
 {
 }
 
 /* Initialize context-related info for a new mm_struct */
-static inline int init_new_context(struct task_struct *task,
-	struct mm_struct *mm)
+static inline int init_new_context(struct task_struct *task, struct mm_struct *mm)
 {
 	return 0;
 }
@@ -29,17 +27,14 @@ static inline void destroy_context(struct mm_struct *mm)
 {
 }
 
-void switch_mm(struct mm_struct *prev, struct mm_struct *next,
-	struct task_struct *task);
+void switch_mm(struct mm_struct *prev, struct mm_struct *next, struct task_struct *task);
 
-static inline void activate_mm(struct mm_struct *prev,
-			       struct mm_struct *next)
+static inline void activate_mm(struct mm_struct *prev, struct mm_struct *next)
 {
 	switch_mm(prev, next, NULL);
 }
 
-static inline void deactivate_mm(struct task_struct *task,
-	struct mm_struct *mm)
+static inline void deactivate_mm(struct task_struct *task, struct mm_struct *mm)
 {
 }
 

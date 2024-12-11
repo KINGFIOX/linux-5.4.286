@@ -22,7 +22,7 @@ void riscv_fill_hwcap(void)
 	struct device_node *node;
 	const char *isa;
 	size_t i;
-	static unsigned long isa2hwcap[256] = {0};
+	static unsigned long isa2hwcap[256] = { 0 };
 
 	isa2hwcap['i'] = isa2hwcap['I'] = COMPAT_HWCAP_ISA_I;
 	isa2hwcap['m'] = isa2hwcap['M'] = COMPAT_HWCAP_ISA_M;
@@ -33,7 +33,7 @@ void riscv_fill_hwcap(void)
 
 	elf_hwcap = 0;
 
-	for_each_of_cpu_node(node) {
+	for_each_of_cpu_node (node) {
 		unsigned long this_hwcap = 0;
 
 		if (riscv_of_processor_hartid(node) < 0)

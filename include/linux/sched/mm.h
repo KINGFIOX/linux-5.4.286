@@ -134,25 +134,20 @@ static inline void mm_update_next_owner(struct mm_struct *mm)
 
 #ifdef CONFIG_MMU
 #ifndef arch_get_mmap_end
-#define arch_get_mmap_end(addr)	(TASK_SIZE)
+#define arch_get_mmap_end(addr) (TASK_SIZE)
 #endif
 
 #ifndef arch_get_mmap_base
 #define arch_get_mmap_base(addr, base) (base)
 #endif
 
-extern void arch_pick_mmap_layout(struct mm_struct *mm,
-				  struct rlimit *rlim_stack);
-extern unsigned long
-arch_get_unmapped_area(struct file *, unsigned long, unsigned long,
-		       unsigned long, unsigned long);
-extern unsigned long
-arch_get_unmapped_area_topdown(struct file *filp, unsigned long addr,
-			  unsigned long len, unsigned long pgoff,
-			  unsigned long flags);
+extern void arch_pick_mmap_layout(struct mm_struct *mm, struct rlimit *rlim_stack);
+extern unsigned long arch_get_unmapped_area(struct file *, unsigned long, unsigned long, unsigned long, unsigned long);
+extern unsigned long arch_get_unmapped_area_topdown(struct file *filp, unsigned long addr, unsigned long len, unsigned long pgoff, unsigned long flags);
 #else
-static inline void arch_pick_mmap_layout(struct mm_struct *mm,
-					 struct rlimit *rlim_stack) {}
+static inline void arch_pick_mmap_layout(struct mm_struct *mm, struct rlimit *rlim_stack)
+{
+}
 #endif
 
 static inline bool in_vfork(struct task_struct *tsk)
@@ -175,8 +170,7 @@ static inline bool in_vfork(struct task_struct *tsk)
 	 * another oom-unkillable task does this it should blame itself.
 	 */
 	rcu_read_lock();
-	ret = tsk->vfork_done &&
-			rcu_dereference(tsk->real_parent)->mm == tsk->mm;
+	ret = tsk->vfork_done && rcu_dereference(tsk->real_parent)->mm == tsk->mm;
 	rcu_read_unlock();
 
 	return ret;
@@ -190,8 +184,7 @@ static inline bool in_vfork(struct task_struct *tsk)
  */
 static inline gfp_t current_gfp_context(gfp_t flags)
 {
-	if (unlikely(current->flags &
-		     (PF_MEMALLOC_NOIO | PF_MEMALLOC_NOFS | PF_MEMALLOC_NOCMA))) {
+	if (unlikely(current->flags & (PF_MEMALLOC_NOIO | PF_MEMALLOC_NOFS | PF_MEMALLOC_NOCMA))) {
 		/*
 		 * NOIO implies both NOIO and NOFS and it is a weaker context
 		 * so always make sure it makes precedence
@@ -214,10 +207,18 @@ extern void __fs_reclaim_release(void);
 extern void fs_reclaim_acquire(gfp_t gfp_mask);
 extern void fs_reclaim_release(gfp_t gfp_mask);
 #else
-static inline void __fs_reclaim_acquire(void) { }
-static inline void __fs_reclaim_release(void) { }
-static inline void fs_reclaim_acquire(gfp_t gfp_mask) { }
-static inline void fs_reclaim_release(gfp_t gfp_mask) { }
+static inline void __fs_reclaim_acquire(void)
+{
+}
+static inline void __fs_reclaim_release(void)
+{
+}
+static inline void fs_reclaim_acquire(gfp_t gfp_mask)
+{
+}
+static inline void fs_reclaim_release(gfp_t gfp_mask)
+{
+}
 #endif
 
 /**
@@ -357,16 +358,16 @@ static inline void memalloc_unuse_memcg(void)
 
 #ifdef CONFIG_MEMBARRIER
 enum {
-	MEMBARRIER_STATE_PRIVATE_EXPEDITED_READY		= (1U << 0),
-	MEMBARRIER_STATE_PRIVATE_EXPEDITED			= (1U << 1),
-	MEMBARRIER_STATE_GLOBAL_EXPEDITED_READY			= (1U << 2),
-	MEMBARRIER_STATE_GLOBAL_EXPEDITED			= (1U << 3),
-	MEMBARRIER_STATE_PRIVATE_EXPEDITED_SYNC_CORE_READY	= (1U << 4),
-	MEMBARRIER_STATE_PRIVATE_EXPEDITED_SYNC_CORE		= (1U << 5),
+	MEMBARRIER_STATE_PRIVATE_EXPEDITED_READY = (1U << 0),
+	MEMBARRIER_STATE_PRIVATE_EXPEDITED = (1U << 1),
+	MEMBARRIER_STATE_GLOBAL_EXPEDITED_READY = (1U << 2),
+	MEMBARRIER_STATE_GLOBAL_EXPEDITED = (1U << 3),
+	MEMBARRIER_STATE_PRIVATE_EXPEDITED_SYNC_CORE_READY = (1U << 4),
+	MEMBARRIER_STATE_PRIVATE_EXPEDITED_SYNC_CORE = (1U << 5),
 };
 
 enum {
-	MEMBARRIER_FLAG_SYNC_CORE	= (1U << 0),
+	MEMBARRIER_FLAG_SYNC_CORE = (1U << 0),
 };
 
 #ifdef CONFIG_ARCH_HAS_MEMBARRIER_CALLBACKS
@@ -377,8 +378,7 @@ static inline void membarrier_mm_sync_core_before_usermode(struct mm_struct *mm)
 {
 	if (current->mm != mm)
 		return;
-	if (likely(!(atomic_read(&mm->membarrier_state) &
-		     MEMBARRIER_STATE_PRIVATE_EXPEDITED_SYNC_CORE)))
+	if (likely(!(atomic_read(&mm->membarrier_state) & MEMBARRIER_STATE_PRIVATE_EXPEDITED_SYNC_CORE)))
 		return;
 	sync_core_before_usermode();
 }
@@ -387,9 +387,7 @@ extern void membarrier_exec_mmap(struct mm_struct *mm);
 
 #else
 #ifdef CONFIG_ARCH_HAS_MEMBARRIER_CALLBACKS
-static inline void membarrier_arch_switch_mm(struct mm_struct *prev,
-					     struct mm_struct *next,
-					     struct task_struct *tsk)
+static inline void membarrier_arch_switch_mm(struct mm_struct *prev, struct mm_struct *next, struct task_struct *tsk)
 {
 }
 #endif

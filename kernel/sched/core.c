@@ -3212,7 +3212,7 @@ static inline void prepare_task_switch(struct rq *rq, struct task_struct *prev, 
 	rseq_preempt(prev); // do nothing
 	fire_sched_out_preempt_notifiers(prev, next); // do nothing
 	prepare_task(next); // set next->on_cpu = 1
-	prepare_arch_switch(next);  // do nothing in riscv
+	prepare_arch_switch(next); // do nothing in riscv
 }
 
 /**
@@ -3254,7 +3254,7 @@ static struct rq *finish_task_switch(struct task_struct *prev) __releases(rq->lo
 	if (WARN_ONCE(preempt_count() != 2 * PREEMPT_DISABLE_OFFSET, "corrupted preempt_count: %s/%d/0x%x\n", current->comm, current->pid, preempt_count()))
 		preempt_count_set(FORK_PREEMPT_COUNT);
 
-	rq->prev_mm = NULL;
+	rq->prev_mm = NULL; // reset the ref of prev_mm, which is set in context_switch
 
 	/*
 	 * A task struct has one reference for the use as "current".
@@ -3268,7 +3268,10 @@ static struct rq *finish_task_switch(struct task_struct *prev) __releases(rq->lo
 	 * transition, resulting in a double drop.
 	 */
 	prev_state = prev->state;
+	// update statistics
 	vtime_task_switch(prev);
+
+	// the inverse pair of sequence in  prepare_task_switch() pair
 	perf_event_task_sched_in(prev, current);
 	finish_task(prev);
 	finish_lock_switch(rq);
@@ -3289,8 +3292,8 @@ static struct rq *finish_task_switch(struct task_struct *prev) __releases(rq->lo
 	 * - a sync_core for SYNC_CORE.
 	 */
 	if (mm) {
-		membarrier_mm_sync_core_before_usermode(mm);
-		mmdrop(mm);
+		membarrier_mm_sync_core_before_usermode(mm); // 内存屏障同步管理. do nothing in riscv
+		mmdrop(mm); // unpin the mm. defined in kernel/fork.c
 	}
 	if (unlikely(prev_state == TASK_DEAD)) {
 		if (prev->sched_class->task_dead)
@@ -3300,7 +3303,7 @@ static struct rq *finish_task_switch(struct task_struct *prev) __releases(rq->lo
 		 * Remove function-return probe instances associated with this
 		 * task and put them back on the free list.
 		 */
-		kprobe_flush_task(prev);
+		kprobe_flush_task(prev); // do nothing if kprobes are disabled
 
 		/* Task is done with its stack. */
 		put_task_stack(prev);
@@ -3397,14 +3400,14 @@ static __always_inline struct rq *context_switch(struct rq *rq, struct task_stru
 	 * kernel ->   user   switch + mmdrop() active
 	 *   user ->   user   switch
 	 */
-	if (!next->mm) { // to kernel
-		enter_lazy_tlb(prev->active_mm, next);
+	if (!next->mm) { // to kernel(kernel 没有 mm)
+		enter_lazy_tlb(prev->active_mm, next); // do nothing in riscv
 
-		next->active_mm = prev->active_mm;
+		next->active_mm = prev->active_mm; // 如果是进入内核线程, 那么 mm 就继承自 prev
 		if (prev->mm) // from user
-			mmgrab(prev->active_mm);
+			mmgrab(prev->active_mm); // pin prev->active_mm not to be freed
 		else
-			prev->active_mm = NULL;
+			prev->active_mm = NULL; // 如果 prev 是内核线程, 那么 active_mm 就为 NULL
 	} else { // to user
 		membarrier_switch_mm(rq, prev->active_mm, next->mm);
 		/*
@@ -3415,7 +3418,7 @@ static __always_inline struct rq *context_switch(struct rq *rq, struct task_stru
 		 * case 'prev->active_mm == next->mm' through
 		 * finish_task_switch()'s mmdrop().
 		 */
-		switch_mm_irqs_off(prev->active_mm, next->mm, next);
+		switch_mm_irqs_off(prev->active_mm, next->mm, next); // just switch_mm in riscv, switch pgd
 
 		if (!prev->mm) { // from kernel
 			/* will mmdrop() in finish_task_switch(). */
@@ -3426,7 +3429,7 @@ static __always_inline struct rq *context_switch(struct rq *rq, struct task_stru
 
 	rq->clock_update_flags &= ~(RQCF_ACT_SKIP | RQCF_REQ_SKIP);
 
-	prepare_lock_switch(rq, next, rf);
+	prepare_lock_switch(rq, next, rf /*rq_flags*/);
 
 	/* Here we just switch the register state and the stack. */
 	switch_to(prev, next, prev);

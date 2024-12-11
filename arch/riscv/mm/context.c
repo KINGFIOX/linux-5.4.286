@@ -58,7 +58,7 @@ void switch_mm(struct mm_struct *prev, struct mm_struct *next, struct task_struc
 	cpumask_set_cpu(cpu, mm_cpumask(next));
 
 	csr_write(CSR_SATP, virt_to_pfn(next->pgd) | SATP_MODE);
-	local_flush_tlb_all();
+	local_flush_tlb_all(); // sfence.vma
 
 	flush_icache_deferred(next);
 }

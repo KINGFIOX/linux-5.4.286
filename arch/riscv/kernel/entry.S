@@ -362,10 +362,10 @@ ENDPROC(ret_from_kernel_thread)
  */
 ENTRY(__switch_to)
 	/* Save context into prev->thread */
-	li    a4,  TASK_THREAD_RA
-	add   a3, a0, a4
-	add   a4, a1, a4
-	REG_S ra,  TASK_THREAD_RA_RA(a3)
+	li    a4,  TASK_THREAD_RA // get the offset of thread.ra in struct task_struct
+	add   a3, a0, a4 // __prev
+	add   a4, a1, a4 // __next
+	REG_S ra,  TASK_THREAD_RA_RA(a3) // TASK_THREAD_RA_RA is the offset of ra to thread.ra in struct task_struct
 	REG_S sp,  TASK_THREAD_SP_RA(a3)
 	REG_S s0,  TASK_THREAD_S0_RA(a3)
 	REG_S s1,  TASK_THREAD_S1_RA(a3)
@@ -395,17 +395,17 @@ ENTRY(__switch_to)
 	REG_L s10, TASK_THREAD_S10_RA(a4)
 	REG_L s11, TASK_THREAD_S11_RA(a4)
 	/* Swap the CPU entry around. */
-	lw a3, TASK_TI_CPU(a0)
-	lw a4, TASK_TI_CPU(a1)
-	sw a3, TASK_TI_CPU(a1)
-	sw a4, TASK_TI_CPU(a0)
+	lw a3, TASK_TI_CPU(a0)  // a3 <- __prev->thread_info.cpu
+	lw a4, TASK_TI_CPU(a1)  // a4 <- __next->thread_info.cpu
+	sw a3, TASK_TI_CPU(a1)  // __next->thread_info.cpu = __prev->thread_info.cpu
+	sw a4, TASK_TI_CPU(a0)  // __prev->thread_info.cpu = __next->thread_info.cpu
 #if TASK_TI != 0
 #error "TASK_TI != 0: tp will contain a 'struct thread_info', not a 'struct task_struct' so get_current() won't work."
 	addi tp, a1, TASK_TI
 #else
-	move tp, a1
+	move tp, a1 // the task_struct of __next.
 #endif
-	ret
+	ret // a0 = the task struct of __prev
 ENDPROC(__switch_to)
 
 	.section ".rodata"

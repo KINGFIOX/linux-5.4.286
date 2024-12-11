@@ -11,25 +11,20 @@
  * except MEMBARRIER_CMD_QUERY.
  */
 #ifdef CONFIG_ARCH_HAS_MEMBARRIER_SYNC_CORE
-#define MEMBARRIER_PRIVATE_EXPEDITED_SYNC_CORE_BITMASK			\
-	(MEMBARRIER_CMD_PRIVATE_EXPEDITED_SYNC_CORE			\
-	| MEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED_SYNC_CORE)
+#define MEMBARRIER_PRIVATE_EXPEDITED_SYNC_CORE_BITMASK (MEMBARRIER_CMD_PRIVATE_EXPEDITED_SYNC_CORE | MEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED_SYNC_CORE)
 #else
-#define MEMBARRIER_PRIVATE_EXPEDITED_SYNC_CORE_BITMASK	0
+#define MEMBARRIER_PRIVATE_EXPEDITED_SYNC_CORE_BITMASK 0
 #endif
 
-#define MEMBARRIER_CMD_BITMASK						\
-	(MEMBARRIER_CMD_GLOBAL | MEMBARRIER_CMD_GLOBAL_EXPEDITED	\
-	| MEMBARRIER_CMD_REGISTER_GLOBAL_EXPEDITED			\
-	| MEMBARRIER_CMD_PRIVATE_EXPEDITED				\
-	| MEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED			\
-	| MEMBARRIER_PRIVATE_EXPEDITED_SYNC_CORE_BITMASK)
+#define MEMBARRIER_CMD_BITMASK                                                                                                                                 \
+	(MEMBARRIER_CMD_GLOBAL | MEMBARRIER_CMD_GLOBAL_EXPEDITED | MEMBARRIER_CMD_REGISTER_GLOBAL_EXPEDITED | MEMBARRIER_CMD_PRIVATE_EXPEDITED |               \
+	 MEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED | MEMBARRIER_PRIVATE_EXPEDITED_SYNC_CORE_BITMASK)
 
 static DEFINE_MUTEX(membarrier_ipi_mutex);
 
 static void ipi_mb(void *info)
 {
-	smp_mb();	/* IPIs should be serializing but paranoid. */
+	smp_mb(); /* IPIs should be serializing but paranoid. */
 }
 
 static void ipi_sync_core(void *info)
@@ -44,19 +39,18 @@ static void ipi_sync_core(void *info)
 	 * sync_core_before_usermode() might end up being deferred until
 	 * after membarrier()'s smp_mb().
 	 */
-	smp_mb();	/* IPIs should be serializing but paranoid. */
+	smp_mb(); /* IPIs should be serializing but paranoid. */
 
 	sync_core_before_usermode();
 }
 
 static void ipi_sync_rq_state(void *info)
 {
-	struct mm_struct *mm = (struct mm_struct *) info;
+	struct mm_struct *mm = (struct mm_struct *)info;
 
 	if (current->mm != mm)
 		return;
-	this_cpu_write(runqueues.membarrier_state,
-		       atomic_read(&mm->membarrier_state));
+	this_cpu_write(runqueues.membarrier_state, atomic_read(&mm->membarrier_state));
 	/*
 	 * Issue a memory barrier after setting
 	 * MEMBARRIER_STATE_GLOBAL_EXPEDITED in the current runqueue to
@@ -94,7 +88,7 @@ static int membarrier_global_expedited(void)
 	 * Matches memory barriers around rq->curr modification in
 	 * scheduler.
 	 */
-	smp_mb();	/* system call entry is not a mb. */
+	smp_mb(); /* system call entry is not a mb. */
 
 	if (!zalloc_cpumask_var(&tmpmask, GFP_KERNEL))
 		return -ENOMEM;
@@ -102,7 +96,7 @@ static int membarrier_global_expedited(void)
 	mutex_lock(&membarrier_ipi_mutex);
 	cpus_read_lock();
 	rcu_read_lock();
-	for_each_online_cpu(cpu) {
+	for_each_online_cpu (cpu) {
 		struct task_struct *p;
 
 		/*
@@ -116,8 +110,7 @@ static int membarrier_global_expedited(void)
 		if (cpu == raw_smp_processor_id())
 			continue;
 
-		if (!(READ_ONCE(cpu_rq(cpu)->membarrier_state) &
-		    MEMBARRIER_STATE_GLOBAL_EXPEDITED))
+		if (!(READ_ONCE(cpu_rq(cpu)->membarrier_state) & MEMBARRIER_STATE_GLOBAL_EXPEDITED))
 			continue;
 
 		/*
@@ -145,7 +138,7 @@ static int membarrier_global_expedited(void)
 	 * waiting for the last IPI. Matches memory barriers around
 	 * rq->curr modification in scheduler.
 	 */
-	smp_mb();	/* exit from system call is not a mb */
+	smp_mb(); /* exit from system call is not a mb */
 	mutex_unlock(&membarrier_ipi_mutex);
 
 	return 0;
@@ -161,13 +154,11 @@ static int membarrier_private_expedited(int flags)
 	if (flags & MEMBARRIER_FLAG_SYNC_CORE) {
 		if (!IS_ENABLED(CONFIG_ARCH_HAS_MEMBARRIER_SYNC_CORE))
 			return -EINVAL;
-		if (!(atomic_read(&mm->membarrier_state) &
-		      MEMBARRIER_STATE_PRIVATE_EXPEDITED_SYNC_CORE_READY))
+		if (!(atomic_read(&mm->membarrier_state) & MEMBARRIER_STATE_PRIVATE_EXPEDITED_SYNC_CORE_READY))
 			return -EPERM;
 		ipi_func = ipi_sync_core;
 	} else {
-		if (!(atomic_read(&mm->membarrier_state) &
-		      MEMBARRIER_STATE_PRIVATE_EXPEDITED_READY))
+		if (!(atomic_read(&mm->membarrier_state) & MEMBARRIER_STATE_PRIVATE_EXPEDITED_READY))
 			return -EPERM;
 	}
 
@@ -178,7 +169,7 @@ static int membarrier_private_expedited(int flags)
 	 * Matches memory barriers around rq->curr modification in
 	 * scheduler.
 	 */
-	smp_mb();	/* system call entry is not a mb. */
+	smp_mb(); /* system call entry is not a mb. */
 
 	if (!zalloc_cpumask_var(&tmpmask, GFP_KERNEL))
 		return -ENOMEM;
@@ -186,7 +177,7 @@ static int membarrier_private_expedited(int flags)
 	mutex_lock(&membarrier_ipi_mutex);
 	cpus_read_lock();
 	rcu_read_lock();
-	for_each_online_cpu(cpu) {
+	for_each_online_cpu (cpu) {
 		struct task_struct *p;
 
 		/*
@@ -217,7 +208,7 @@ static int membarrier_private_expedited(int flags)
 	 * waiting for the last IPI. Matches memory barriers around
 	 * rq->curr modification in scheduler.
 	 */
-	smp_mb();	/* exit from system call is not a mb */
+	smp_mb(); /* exit from system call is not a mb */
 	mutex_unlock(&membarrier_ipi_mutex);
 
 	return 0;
@@ -263,7 +254,7 @@ static int sync_runqueues_membarrier_state(struct mm_struct *mm)
 	mutex_lock(&membarrier_ipi_mutex);
 	cpus_read_lock();
 	rcu_read_lock();
-	for_each_online_cpu(cpu) {
+	for_each_online_cpu (cpu) {
 		struct rq *rq = cpu_rq(cpu);
 		struct task_struct *p;
 
@@ -288,15 +279,13 @@ static int membarrier_register_global_expedited(void)
 	struct mm_struct *mm = p->mm;
 	int ret;
 
-	if (atomic_read(&mm->membarrier_state) &
-	    MEMBARRIER_STATE_GLOBAL_EXPEDITED_READY)
+	if (atomic_read(&mm->membarrier_state) & MEMBARRIER_STATE_GLOBAL_EXPEDITED_READY)
 		return 0;
 	atomic_or(MEMBARRIER_STATE_GLOBAL_EXPEDITED, &mm->membarrier_state);
 	ret = sync_runqueues_membarrier_state(mm);
 	if (ret)
 		return ret;
-	atomic_or(MEMBARRIER_STATE_GLOBAL_EXPEDITED_READY,
-		  &mm->membarrier_state);
+	atomic_or(MEMBARRIER_STATE_GLOBAL_EXPEDITED_READY, &mm->membarrier_state);
 
 	return 0;
 }
@@ -305,15 +294,12 @@ static int membarrier_register_private_expedited(int flags)
 {
 	struct task_struct *p = current;
 	struct mm_struct *mm = p->mm;
-	int ready_state = MEMBARRIER_STATE_PRIVATE_EXPEDITED_READY,
-	    set_state = MEMBARRIER_STATE_PRIVATE_EXPEDITED,
-	    ret;
+	int ready_state = MEMBARRIER_STATE_PRIVATE_EXPEDITED_READY, set_state = MEMBARRIER_STATE_PRIVATE_EXPEDITED, ret;
 
 	if (flags & MEMBARRIER_FLAG_SYNC_CORE) {
 		if (!IS_ENABLED(CONFIG_ARCH_HAS_MEMBARRIER_SYNC_CORE))
 			return -EINVAL;
-		ready_state =
-			MEMBARRIER_STATE_PRIVATE_EXPEDITED_SYNC_CORE_READY;
+		ready_state = MEMBARRIER_STATE_PRIVATE_EXPEDITED_SYNC_CORE_READY;
 	}
 
 	/*
@@ -368,8 +354,7 @@ SYSCALL_DEFINE2(membarrier, int, cmd, int, flags)
 	if (unlikely(flags))
 		return -EINVAL;
 	switch (cmd) {
-	case MEMBARRIER_CMD_QUERY:
-	{
+	case MEMBARRIER_CMD_QUERY: {
 		int cmd_mask = MEMBARRIER_CMD_BITMASK;
 
 		if (tick_nohz_full_enabled())
