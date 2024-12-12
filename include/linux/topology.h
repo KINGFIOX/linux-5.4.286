@@ -39,18 +39,18 @@
 #define nr_cpus_node(node) cpumask_weight(cpumask_of_node(node))
 #endif
 
-#define for_each_node_with_cpus(node)			\
-	for_each_online_node(node)			\
+#define for_each_node_with_cpus(node)                                                                                                                          \
+	for_each_online_node (node)                                                                                                                            \
 		if (nr_cpus_node(node))
 
 int arch_update_cpu_topology(void);
 
 /* Conform to ACPI 2.0 SLIT distance definitions */
-#define LOCAL_DISTANCE		10
-#define REMOTE_DISTANCE		20
-#define DISTANCE_BITS           8
+#define LOCAL_DISTANCE 10
+#define REMOTE_DISTANCE 20
+#define DISTANCE_BITS 8
 #ifndef node_distance
-#define node_distance(from,to)	((from) == (to) ? LOCAL_DISTANCE : REMOTE_DISTANCE)
+#define node_distance(from, to) ((from) == (to) ? LOCAL_DISTANCE : REMOTE_DISTANCE)
 #endif
 #ifndef RECLAIM_DISTANCE
 /*
@@ -76,7 +76,7 @@ int arch_update_cpu_topology(void);
 extern int __read_mostly node_reclaim_distance;
 
 #ifndef PENALTY_FOR_NODE_WITH_CPUS
-#define PENALTY_FOR_NODE_WITH_CPUS	(1)
+#define PENALTY_FOR_NODE_WITH_CPUS (1)
 #endif
 
 #ifdef CONFIG_USE_PERCPU_NUMA_NODE_ID
@@ -111,17 +111,19 @@ static inline void set_cpu_numa_node(int cpu, int node)
 }
 #endif
 
-#else	/* !CONFIG_USE_PERCPU_NUMA_NODE_ID */
+#else /* !CONFIG_USE_PERCPU_NUMA_NODE_ID */
 
 /* Returns the number of the current Node. */
 #ifndef numa_node_id
 static inline int numa_node_id(void)
 {
+	// return ((void)(0), 0);
+	// return cpu_to_node(0);
 	return cpu_to_node(raw_smp_processor_id());
 }
 #endif
 
-#endif	/* [!]CONFIG_USE_PERCPU_NUMA_NODE_ID */
+#endif /* [!]CONFIG_USE_PERCPU_NUMA_NODE_ID */
 
 #ifdef CONFIG_HAVE_MEMORYLESS_NODES
 
@@ -171,7 +173,7 @@ static inline void set_cpu_numa_mem(int cpu, int node)
 }
 #endif
 
-#else	/* !CONFIG_HAVE_MEMORYLESS_NODES */
+#else /* !CONFIG_HAVE_MEMORYLESS_NODES */
 
 #ifndef numa_mem_id
 /* Returns the number of the nearest Node with memory */
@@ -195,25 +197,25 @@ static inline int cpu_to_mem(int cpu)
 }
 #endif
 
-#endif	/* [!]CONFIG_HAVE_MEMORYLESS_NODES */
+#endif /* [!]CONFIG_HAVE_MEMORYLESS_NODES */
 
 #ifndef topology_physical_package_id
-#define topology_physical_package_id(cpu)	((void)(cpu), -1)
+#define topology_physical_package_id(cpu) ((void)(cpu), -1)
 #endif
 #ifndef topology_die_id
-#define topology_die_id(cpu)			((void)(cpu), -1)
+#define topology_die_id(cpu) ((void)(cpu), -1)
 #endif
 #ifndef topology_core_id
-#define topology_core_id(cpu)			((void)(cpu), 0)
+#define topology_core_id(cpu) ((void)(cpu), 0)
 #endif
 #ifndef topology_sibling_cpumask
-#define topology_sibling_cpumask(cpu)		cpumask_of(cpu)
+#define topology_sibling_cpumask(cpu) cpumask_of(cpu)
 #endif
 #ifndef topology_core_cpumask
-#define topology_core_cpumask(cpu)		cpumask_of(cpu)
+#define topology_core_cpumask(cpu) cpumask_of(cpu)
 #endif
 #ifndef topology_die_cpumask
-#define topology_die_cpumask(cpu)		cpumask_of(cpu)
+#define topology_die_cpumask(cpu) cpumask_of(cpu)
 #endif
 
 #ifdef CONFIG_SCHED_SMT
@@ -227,6 +229,5 @@ static inline const struct cpumask *cpu_cpu_mask(int cpu)
 {
 	return cpumask_of_node(cpu_to_node(cpu));
 }
-
 
 #endif /* _LINUX_TOPOLOGY_H */

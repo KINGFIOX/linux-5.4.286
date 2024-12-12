@@ -64,6 +64,12 @@ struct mem_cgroup;
 #define _struct_page_alignment
 #endif
 
+// 内核使用 struct page 来描述物理页面. 页面需要如下信息
+// 1. 页面当前的状态 (flags)
+// 2. 一个页面是否空闲. 也要知道有多少个进程、内存路径使用了这个页面 (_refcount, _mapcount)
+// 3. 谁在使用这个页面, 比方说使用者是: 用户空间的匿名页面, 还是内容缓存. (mapping)
+// 4. 这个页面是否被 slab 机制使用 (lru, s_mem)
+// 5. 这个页面是否属于线性映射 (virtual)
 struct page {
 	unsigned long flags; /* Atomic flags, some possibly * updated asynchronously */
 	/*
@@ -78,8 +84,10 @@ struct page {
 			/**
 			 * @lru: Pageout list, eg. active_list protected by pgdat->lru_lock.
 			 * Sometimes used as a generic list by the page owner.
+			 * 在 slab 机制中, lru 使被用来把一个 slab 添加到 slab 满链表、slab 空闲链表、slab 部分满链表中.
 			 */
 			struct list_head lru;
+			// 当页面被用于文件缓存时, mapping 指向一个与文件缓存关联的 address_space 对象.
 			struct address_space *mapping; /* See page-flags.h for PAGE_MAPPING_FLAGS */
 			pgoff_t index; /* Our offset within mapping. */
 			/**
@@ -183,7 +191,7 @@ struct page {
 		 * If the page can be mapped to userspace, encodes the number
 		 * of times this page is referenced by a page table.
 		 */
-		atomic_t _mapcount;
+		atomic_t _mapcount; // 页面被进程的引用次数. 主要用于 RMAP 系统
 
 		/*
 		 * If the page is neither PageSlab nor mappable to userspace,
@@ -198,7 +206,7 @@ struct page {
 	};
 
 	/* Usage count. *DO NOT USE DIRECTLY*. See page_ref.h */
-	atomic_t _refcount;
+	atomic_t _refcount; // 内核中引用页面的次数
 
 #ifdef CONFIG_MEMCG
 	struct mem_cgroup *mem_cgroup;
@@ -215,6 +223,7 @@ struct page {
 	 * WANT_PAGE_VIRTUAL in asm/page.h
 	 */
 #if defined(WANT_PAGE_VIRTUAL)
+	// 指向页面对应的虚拟地址的指针.
 	void *virtual; /* Kernel virtual address (NULL if not kmapped, ie. highmem) */
 #endif /* WANT_PAGE_VIRTUAL */
 

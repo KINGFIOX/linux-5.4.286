@@ -346,6 +346,8 @@ static inline void page_init_poison(struct page *page, size_t size)
 
 #define TESTSCFLAG_FALSE(uname) TESTSETFLAG_FALSE(uname) TESTCLEARFLAG_FALSE(uname)
 
+// clang-format off
+
 __PAGEFLAG(Locked, locked, PF_NO_TAIL)
 PAGEFLAG(Waiters, waiters, PF_ONLY_HEAD)
 __CLEARPAGEFLAG(Waiters, waiters, PF_ONLY_HEAD)
@@ -454,6 +456,8 @@ SETPAGEFLAG(Young, young, PF_ANY)
 TESTCLEARFLAG(Young, young, PF_ANY)
 PAGEFLAG(Idle, idle, PF_ANY)
 #endif
+
+// clang-format on
 
 /*
  * On an anonymous page mapped into a user virtual memory area,

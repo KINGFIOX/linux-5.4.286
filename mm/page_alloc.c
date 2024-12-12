@@ -4479,8 +4479,8 @@ got_pg:
 	return page;
 }
 
-static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order, int preferred_nid, nodemask_t *nodemask, struct alloc_context *ac, gfp_t *alloc_mask,
-				       unsigned int *alloc_flags)
+static inline bool prepare_alloc_pages(gfp_t gfp_mask /*分配掩码*/, unsigned int order /*分配阶数*/, int preferred_nid /*0*/, nodemask_t *nodemask /*NULL*/,
+				       struct alloc_context *ac /**/, gfp_t *alloc_mask /**/, unsigned int *alloc_flags /**/)
 {
 	ac->high_zoneidx = gfp_zone(gfp_mask);
 	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
@@ -4525,8 +4525,10 @@ static inline void finalise_ac(gfp_t gfp_mask, struct alloc_context *ac)
 
 /*
  * This is the 'heart' of the zoned buddy allocator.
+ * gfp_mask defined in include/linux/gfp.h. 分为: zone modifier, mobility and placement modifier, watermark modifier, page reclaim modifier, action modifier
+ * 
  */
-struct page *__alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid, nodemask_t *nodemask)
+struct page *__alloc_pages_nodemask(gfp_t gfp_mask /*分配掩码*/, unsigned int order /*分配阶数*/, int preferred_nid /*0*/, nodemask_t *nodemask /*NULL*/)
 {
 	struct page *page;
 	unsigned int alloc_flags = ALLOC_WMARK_LOW;

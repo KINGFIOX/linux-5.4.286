@@ -2,6 +2,14 @@
 #ifndef _LINUX_MMZONE_H
 #define _LINUX_MMZONE_H
 
+//! linux 内核将物理内存划分为多个区域(ZONE), 每个 ZONE 根据物理属性或用途进行分类.
+//! ZONE_DMA
+//! ZONE_DMA32
+//! ZONE_NORMAL: 可以直接寻址的内存区域, 通常用于普通的内存分配
+//! ZONE_HIGHMEM: 高端内存区域, 仅在某些架构上存在, 主要用于: 可通过内核的临时映射访问的内存
+//! ZONE_MOVABLE: 可移动的内存区域, 允许内核在内存碎片化时移动页面, 以提高内存利用率
+//! ZONE_DEVICE: 专用于设备内存的区域, 如 GPU 的显存
+
 #ifndef __ASSEMBLY__
 #ifndef __GENERATING_BOUNDS_H
 
@@ -400,6 +408,12 @@ enum zone_type {
 
 #ifndef __GENERATING_BOUNDS_H
 
+//! struct zone 总体上可以分成以下 3 部分:
+//! 1. 只读
+//! 2. 写敏感
+//! 3. 统计信息
+//! 每个内存管理区在系统启动的时候, 会计算出 3 个 watermark: WMARK_MIN, WMARK_LOW, WMARK_HIGH, 这在 page_allocator 和 kswapd页面回收 中会用到.
+
 struct zone {
 	/* Read-mostly fields */
 
@@ -416,15 +430,15 @@ struct zone {
 	 * memory (otherwise we risk to run OOM on the lower zones despite
 	 * there being tons of freeable ram on the higher zones).  This array is
 	 * recalculated at runtime if the sysctl_lowmem_reserve_ratio sysctl
-	 * changes.
+	 * changes. (内存管理区中, 预留的内存). OOM(out of memory)
 	 */
 	long lowmem_reserve[MAX_NR_ZONES];
 
 #ifdef CONFIG_NUMA
 	int node;
 #endif
-	struct pglist_data *zone_pgdat;
-	struct per_cpu_pageset __percpu *pageset;
+	struct pglist_data *zone_pgdat; // 指向内存节点
+	struct per_cpu_pageset __percpu *pageset; // 用于维护 per-CPU 变量上的一系列页面, 以减少自旋锁的争用
 
 #ifndef CONFIG_SPARSEMEM
 	/*
@@ -435,7 +449,7 @@ struct zone {
 #endif /* CONFIG_SPARSEMEM */
 
 	/* zone_start_pfn == zone_start_paddr >> PAGE_SHIFT */
-	unsigned long zone_start_pfn;
+	unsigned long zone_start_pfn; // 内存管理区, 开始页面的 physical frame number
 
 	/*
 	 * spanned_pages is the total pages spanned by the zone, including
@@ -472,9 +486,9 @@ struct zone {
 	 * mem_hotplug_begin/end(). Any reader who can't tolerant drift of
 	 * present_pages should get_online_mems() to get a stable value.
 	 */
-	atomic_long_t managed_pages;
-	unsigned long spanned_pages;
-	unsigned long present_pages;
+	atomic_long_t managed_pages; // 内存管理区中, 被伙伴系统管理的页面数量
+	unsigned long spanned_pages; // 内存管理区包含的页面数量
+	unsigned long present_pages; // 内存管理区中, 实际存在的页面数量. 对一些架构来说 present_pages == spanned_pages
 
 	const char *name;
 
@@ -497,7 +511,7 @@ struct zone {
 	/* Write-intensive fields used from the page allocator */
 	ZONE_PADDING(_pad1_)
 
-	/* free areas of different sizes */
+	/* free areas of different sizes. 管理空闲区域的数组, 包含管理链表等 */
 	struct free_area free_area[MAX_ORDER];
 
 	/* zone flags, see below */
@@ -763,7 +777,7 @@ typedef struct pglist_data {
 
 	/* Per-node vmstats */
 	struct per_cpu_nodestat __percpu *per_cpu_nodestats;
-	atomic_long_t vm_stat[NR_VM_NODE_STAT_ITEMS];
+	atomic_long_t vm_stat[NR_VM_NODE_STAT_ITEMS]; // 内存管理区计数(这个计数这是统计数据)
 } pg_data_t;
 
 #define node_present_pages(nid) (NODE_DATA(nid)->node_present_pages)

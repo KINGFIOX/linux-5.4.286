@@ -26,8 +26,7 @@
  * Each entry is a u64 representing the corresponding
  * physical page count.
  */
-static ssize_t kpagecount_read(struct file *file, char __user *buf,
-			     size_t count, loff_t *ppos)
+static ssize_t kpagecount_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
 {
 	u64 __user *out = (u64 __user *)buf;
 	struct page *ppage;
@@ -143,7 +142,6 @@ u64 stable_page_flags(struct page *page)
 	} else if (is_zero_pfn(page_to_pfn(page)))
 		u |= 1 << KPF_ZERO_PAGE;
 
-
 	/*
 	 * Caveats on high order pages: page->_refcount will only be set
 	 * -1 on the head page; SLUB/SLQB do the same for PG_slab;
@@ -162,49 +160,48 @@ u64 stable_page_flags(struct page *page)
 	if (page_is_idle(page))
 		u |= 1 << KPF_IDLE;
 
-	u |= kpf_copy_bit(k, KPF_LOCKED,	PG_locked);
+	u |= kpf_copy_bit(k, KPF_LOCKED, PG_locked);
 
-	u |= kpf_copy_bit(k, KPF_SLAB,		PG_slab);
+	u |= kpf_copy_bit(k, KPF_SLAB, PG_slab);
 	if (PageTail(page) && PageSlab(compound_head(page)))
 		u |= 1 << KPF_SLAB;
 
-	u |= kpf_copy_bit(k, KPF_ERROR,		PG_error);
-	u |= kpf_copy_bit(k, KPF_DIRTY,		PG_dirty);
-	u |= kpf_copy_bit(k, KPF_UPTODATE,	PG_uptodate);
-	u |= kpf_copy_bit(k, KPF_WRITEBACK,	PG_writeback);
+	u |= kpf_copy_bit(k, KPF_ERROR, PG_error);
+	u |= kpf_copy_bit(k, KPF_DIRTY, PG_dirty);
+	u |= kpf_copy_bit(k, KPF_UPTODATE, PG_uptodate);
+	u |= kpf_copy_bit(k, KPF_WRITEBACK, PG_writeback);
 
-	u |= kpf_copy_bit(k, KPF_LRU,		PG_lru);
-	u |= kpf_copy_bit(k, KPF_REFERENCED,	PG_referenced);
-	u |= kpf_copy_bit(k, KPF_ACTIVE,	PG_active);
-	u |= kpf_copy_bit(k, KPF_RECLAIM,	PG_reclaim);
+	u |= kpf_copy_bit(k, KPF_LRU, PG_lru);
+	u |= kpf_copy_bit(k, KPF_REFERENCED, PG_referenced);
+	u |= kpf_copy_bit(k, KPF_ACTIVE, PG_active);
+	u |= kpf_copy_bit(k, KPF_RECLAIM, PG_reclaim);
 
 	if (PageSwapCache(page))
 		u |= 1 << KPF_SWAPCACHE;
-	u |= kpf_copy_bit(k, KPF_SWAPBACKED,	PG_swapbacked);
+	u |= kpf_copy_bit(k, KPF_SWAPBACKED, PG_swapbacked);
 
-	u |= kpf_copy_bit(k, KPF_UNEVICTABLE,	PG_unevictable);
-	u |= kpf_copy_bit(k, KPF_MLOCKED,	PG_mlocked);
+	u |= kpf_copy_bit(k, KPF_UNEVICTABLE, PG_unevictable);
+	u |= kpf_copy_bit(k, KPF_MLOCKED, PG_mlocked);
 
 #ifdef CONFIG_MEMORY_FAILURE
-	u |= kpf_copy_bit(k, KPF_HWPOISON,	PG_hwpoison);
+	u |= kpf_copy_bit(k, KPF_HWPOISON, PG_hwpoison);
 #endif
 
 #ifdef CONFIG_ARCH_USES_PG_UNCACHED
-	u |= kpf_copy_bit(k, KPF_UNCACHED,	PG_uncached);
+	u |= kpf_copy_bit(k, KPF_UNCACHED, PG_uncached);
 #endif
 
-	u |= kpf_copy_bit(k, KPF_RESERVED,	PG_reserved);
-	u |= kpf_copy_bit(k, KPF_MAPPEDTODISK,	PG_mappedtodisk);
-	u |= kpf_copy_bit(k, KPF_PRIVATE,	PG_private);
-	u |= kpf_copy_bit(k, KPF_PRIVATE_2,	PG_private_2);
-	u |= kpf_copy_bit(k, KPF_OWNER_PRIVATE,	PG_owner_priv_1);
-	u |= kpf_copy_bit(k, KPF_ARCH,		PG_arch_1);
+	u |= kpf_copy_bit(k, KPF_RESERVED, PG_reserved);
+	u |= kpf_copy_bit(k, KPF_MAPPEDTODISK, PG_mappedtodisk);
+	u |= kpf_copy_bit(k, KPF_PRIVATE, PG_private);
+	u |= kpf_copy_bit(k, KPF_PRIVATE_2, PG_private_2);
+	u |= kpf_copy_bit(k, KPF_OWNER_PRIVATE, PG_owner_priv_1);
+	u |= kpf_copy_bit(k, KPF_ARCH, PG_arch_1);
 
 	return u;
 };
 
-static ssize_t kpageflags_read(struct file *file, char __user *buf,
-			     size_t count, loff_t *ppos)
+static ssize_t kpageflags_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
 {
 	u64 __user *out = (u64 __user *)buf;
 	struct page *ppage;
@@ -248,8 +245,7 @@ static const struct file_operations proc_kpageflags_operations = {
 };
 
 #ifdef CONFIG_MEMCG
-static ssize_t kpagecgroup_read(struct file *file, char __user *buf,
-				size_t count, loff_t *ppos)
+static ssize_t kpagecgroup_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
 {
 	u64 __user *out = (u64 __user *)buf;
 	struct page *ppage;
