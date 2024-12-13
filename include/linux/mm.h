@@ -1265,7 +1265,7 @@ static inline struct zone *page_zone(const struct page *page)
 
 static inline pg_data_t *page_pgdat(const struct page *page)
 {
-	return NODE_DATA(page_to_nid(page));
+	return NODE_DATA(page_to_nid(page)); // which is always `contig_page_data`
 }
 
 #ifdef SECTION_IN_PAGE_FLAGS

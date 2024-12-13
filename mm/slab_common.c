@@ -53,7 +53,7 @@ static DECLARE_WORK(slab_caches_to_rcu_destroy_work, slab_caches_to_rcu_destroy_
 /*
  * Merge control. If this is set then no merging of slab caches will occur.
  */
-static bool slab_nomerge = !IS_ENABLED(CONFIG_SLAB_MERGE_DEFAULT);
+static bool slab_nomerge = !IS_ENABLED(CONFIG_SLAB_MERGE_DEFAULT); // slab_nomerge init to false
 
 static int __init setup_slab_nomerge(char *str)
 {
@@ -263,15 +263,13 @@ static unsigned int calculate_alignment(slab_flags_t flags, unsigned int align, 
 {
 	/*
 	 * If the user wants hardware cache aligned objects then follow that
-	 * suggestion if the object is sufficiently large.
+	 * **suggestion** if the object is sufficiently large.
 	 *
-	 * The hardware cache alignment cannot override the specified
-	 * alignment though. If that is greater then use it.
+	 * The hardware cache alignment cannot override the specified alignment though.
+	 * If that is greater then use it.
 	 */
 	if (flags & SLAB_HWCACHE_ALIGN) {
-		unsigned int ralign;
-
-		ralign = cache_line_size();
+		unsigned int ralign = cache_line_size(); // 64
 		while (size <= ralign / 2)
 			ralign /= 2;
 		align = max(align, ralign);
@@ -309,19 +307,23 @@ int slab_unmergeable(struct kmem_cache *s)
 	return 0;
 }
 
-struct kmem_cache *find_mergeable(unsigned int size, unsigned int align, slab_flags_t flags, const char *name, void (*ctor)(void *))
+struct kmem_cache *find_mergeable(unsigned int size, //
+				  unsigned int align, //
+				  slab_flags_t flags, //
+				  const char *name, //
+				  void (*ctor)(void *))
 {
 	struct kmem_cache *s;
 
-	if (slab_nomerge)
+	if (slab_nomerge) // false
 		return NULL;
 
-	if (ctor)
+	if (ctor) // 不会根据 ctor 来找 mergeable cache
 		return NULL;
 
 	size = ALIGN(size, sizeof(void *));
 	align = calculate_alignment(flags, align, size);
-	size = ALIGN(size, align);
+	size = ALIGN(size, align); // recalculate size
 	flags = kmem_cache_flags(size, flags, name, NULL);
 
 	if (flags & SLAB_NEVER_MERGE)
@@ -444,7 +446,7 @@ struct kmem_cache *kmem_cache_create_usercopy(const char *name, unsigned int siz
 	get_online_mems(); // do nothing
 	memcg_get_cache_ids(); // do nothing
 
-	mutex_lock(&slab_mutex); // slab_mutex is a global lock
+	mutex_lock(&slab_mutex); // `slab_mutex` is a global lock, which is used to protect `slab_caches`
 
 	err = kmem_cache_sanity_check(name, size); // do nothing
 	if (err) {
@@ -452,26 +454,25 @@ struct kmem_cache *kmem_cache_create_usercopy(const char *name, unsigned int siz
 	}
 
 	/* Refuse requests with allocator specific flags */
-	if (flags & ~SLAB_FLAGS_PERMITTED) { // 如果传入的 flags 包含 SLAB_FLAGS_PERMITTED 之外的标志，则返回错误
+	if (flags & ~SLAB_FLAGS_PERMITTED) { // if the `flags` is invalid, return error
 		err = -EINVAL;
 		goto out_unlock;
 	}
 
 	/*
-	 * Some allocators will constraint the set of valid flags to a subset
-	 * of all flags. We expect them to define CACHE_CREATE_MASK in this
-	 * case, and we'll just provide them with a sanitized version of the
-	 * passed flags.
+	 * Some allocators will constraint the set of valid flags to a subset of all flags.
+	 * We expect them to define CACHE_CREATE_MASK in this case,
+	 * and we'll just provide them with a sanitized version of the passed flags.
+	 * flags 只保留与 cache_create 相关的标志
 	 */
 	flags &= CACHE_CREATE_MASK;
 
 	/* Fail closed on bad usersize of useroffset values. */
-	if (WARN_ON(!usersize && useroffset) || WARN_ON(size < usersize || size - usersize < useroffset)) // size, offset 有问题
+	if (WARN_ON(!usersize && useroffset) || WARN_ON(size < usersize || size - usersize < useroffset))
 		usersize = useroffset = 0;
 
 	if (!usersize) // 并非真正的创建一个 cache, 而是 make a alias of an existing cache.
 		s = __kmem_cache_alias(name, size, align, flags, ctor); // defined in mm/slub.c.
-
 	if (s) //
 		goto out_unlock;
 
@@ -1279,9 +1280,8 @@ void __init create_kmalloc_caches(slab_flags_t flags)
 #endif /* !CONFIG_SLOB */
 
 /*
- * To avoid unnecessary overhead, we pass through large allocation requests
- * directly to the page allocator. We use __GFP_COMP, because we will need to
- * know the allocation order to free the pages properly in kfree.
+ * To avoid unnecessary overhead, we pass through large allocation requests directly to the page allocator.
+ * We use __GFP_COMP, because we will need to know the allocation order to free the pages properly in kfree.
  */
 void *kmalloc_order(size_t size, gfp_t flags, unsigned int order)
 {
@@ -1291,8 +1291,8 @@ void *kmalloc_order(size_t size, gfp_t flags, unsigned int order)
 	flags |= __GFP_COMP;
 	page = alloc_pages(flags, order); // get a block of pages
 	if (likely(page)) {
-		ret = page_address(page); //
-		mod_node_page_state(page_pgdat(page), NR_SLAB_UNRECLAIMABLE, 1 << order);
+		ret = page_address(page);
+		mod_node_page_state(page_pgdat(page) /*contig_page_data*/, NR_SLAB_UNRECLAIMABLE, 1 << order);
 	}
 	ret = kasan_kmalloc_large(ret, size, flags);
 	/* As ret might get tagged, call kmemleak hook after KASAN. */

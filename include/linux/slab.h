@@ -473,6 +473,8 @@ extern void *kmalloc_order(size_t size, gfp_t flags, unsigned int order) __assum
 #ifdef CONFIG_TRACING
 extern void *kmalloc_order_trace(size_t size, gfp_t flags, unsigned int order) __assume_page_alignment __malloc;
 #else
+
+// wrapper of kmalloc_order
 static __always_inline void *kmalloc_order_trace(size_t size, gfp_t flags, unsigned int order)
 {
 	return kmalloc_order(size, flags, order); // trace 了个寂寞.

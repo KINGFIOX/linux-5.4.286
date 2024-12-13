@@ -105,8 +105,7 @@ static inline int arch_is_kernel_initmem_freed(unsigned long addr)
  * contained within the memory region defined by @begin and @end, false
  * otherwise.
  */
-static inline bool memory_contains(void *begin, void *end, void *virt,
-				   size_t size)
+static inline bool memory_contains(void *begin, void *end, void *virt, size_t size)
 {
 	return virt >= begin && virt + size <= end;
 }
@@ -122,8 +121,7 @@ static inline bool memory_contains(void *begin, void *end, void *virt,
  * Returns: true if an object's memory region, specified by @virt and @size,
  * intersects with the region specified by @begin and @end, false otherwise.
  */
-static inline bool memory_intersects(void *begin, void *end, void *virt,
-				     size_t size)
+static inline bool memory_intersects(void *begin, void *end, void *virt, size_t size)
 {
 	void *vend = virt + size;
 
@@ -171,8 +169,7 @@ static inline bool init_section_intersects(void *virt, size_t size)
  */
 static inline bool is_kernel_rodata(unsigned long addr)
 {
-	return addr >= (unsigned long)__start_rodata &&
-	       addr < (unsigned long)__end_rodata;
+	return addr >= (unsigned long)__start_rodata && addr < (unsigned long)__end_rodata;
 }
 
 #endif /* _ASM_GENERIC_SECTIONS_H_ */

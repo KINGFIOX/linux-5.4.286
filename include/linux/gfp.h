@@ -10,8 +10,8 @@
 
 struct vm_area_struct;
 
+// gfp means: get free pages
 // modifier(修饰符) : 修改内存分配行为的标志位
-
 // watermark(水位) : 内存管理中, 用于表示不同内存区域临界点的阈值. 当内存低于水印时触发相应的回收机制.
 
 /*

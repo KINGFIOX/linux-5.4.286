@@ -215,7 +215,7 @@ enum node_stat_item {
 	NR_ACTIVE_FILE, /*  "     "     "   "       "         */
 	NR_UNEVICTABLE, /*  "     "     "   "       "         */
 	NR_SLAB_RECLAIMABLE,
-	NR_SLAB_UNRECLAIMABLE,
+	NR_SLAB_UNRECLAIMABLE, // 用于统计 zone 中 不可回收的slab对象数量
 	NR_ISOLATED_ANON, /* Temporary isolated pages from anon lru */
 	NR_ISOLATED_FILE, /* Temporary isolated pages from file lru */
 	WORKINGSET_NODES,

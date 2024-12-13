@@ -168,7 +168,7 @@
 		(quot * (numer)) + ((rem * (numer)) / (denom));                                                                                                \
 	})
 
-#define _RET_IP_ (unsigned long)__builtin_return_address(0)
+#define _RET_IP_ (unsigned long)__builtin_return_address(0) // get the return address of the caller, which could be used for trace
 #define _THIS_IP_                                                                                                                                              \
 	({                                                                                                                                                     \
 		__label__ __here;                                                                                                                              \

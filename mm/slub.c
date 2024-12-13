@@ -4199,7 +4199,7 @@ void *__kmalloc_track_caller(size_t size, gfp_t gfpflags, unsigned long caller)
 	struct kmem_cache *s;
 	void *ret;
 
-	if (unlikely(size > KMALLOC_MAX_CACHE_SIZE))
+	if (unlikely(size > KMALLOC_MAX_CACHE_SIZE)) // size > 8192
 		return kmalloc_large(size, gfpflags);
 
 	s = kmalloc_slab(size, gfpflags);
