@@ -503,7 +503,7 @@ static inline size_t slab_ksize(const struct kmem_cache *s)
 }
 
 // do nothing, 原样返回
-static /*inline*/ struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s, gfp_t flags)
+static inline struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s, gfp_t flags)
 {
 	flags &= gfp_allowed_mask; // set GFP_BOOT_MASK
 

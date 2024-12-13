@@ -2606,7 +2606,7 @@ static /*__always_inline*/ void *slab_alloc_node(struct kmem_cache *s, gfp_t gfp
 	unsigned long tid;
 
 	s = slab_pre_alloc_hook(s, gfpflags); // do nothing
-	if (!s)
+	if (!s) // if s == NULL
 		return NULL;
 redo:
 	/*
