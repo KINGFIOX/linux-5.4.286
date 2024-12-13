@@ -503,7 +503,7 @@ static inline size_t slab_ksize(const struct kmem_cache *s)
 }
 
 // do nothing, 原样返回
-static inline struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s, gfp_t flags)
+static /*inline*/ struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s, gfp_t flags)
 {
 	flags &= gfp_allowed_mask; // set GFP_BOOT_MASK
 
@@ -512,11 +512,11 @@ static inline struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s, gfp_t
 
 	might_sleep_if(gfpflags_allow_blocking(flags)); // do nothing
 
-	if (should_failslab(s, flags))
+	if (should_failslab(s, flags)) // 0
 		return NULL; // unreachable
 
-	if (memcg_kmem_enabled() && ((flags & __GFP_ACCOUNT) || (s->flags & SLAB_ACCOUNT)))
-		return memcg_kmem_get_cache(s); // unreachable
+	if (memcg_kmem_enabled() && ((flags & __GFP_ACCOUNT) || (s->flags & SLAB_ACCOUNT))) // 0
+		return memcg_kmem_get_cache(s);
 
 	return s;
 }

@@ -2556,8 +2556,7 @@ new_slab:
 }
 
 /*
- * Another one that disabled interrupt and compensates for possible
- * cpu changes by refetching the per cpu area pointer.
+ * Another one that disabled interrupt and compensates for possible cpu changes by refetching the per cpu area pointer.
  */
 static void *__slab_alloc(struct kmem_cache *s, gfp_t gfpflags, int node, unsigned long addr, struct kmem_cache_cpu *c)
 {
@@ -2599,14 +2598,14 @@ static __always_inline void maybe_wipe_obj_freeptr(struct kmem_cache *s, void *o
  *
  * Otherwise we can simply pick the next object from the lockless free list.
  */
-static __always_inline void *slab_alloc_node(struct kmem_cache *s, gfp_t gfpflags, int node, unsigned long addr)
+static /*__always_inline*/ void *slab_alloc_node(struct kmem_cache *s, gfp_t gfpflags, int node, unsigned long addr)
 {
 	void *object;
 	struct kmem_cache_cpu *c;
 	struct page *page;
 	unsigned long tid;
 
-	s = slab_pre_alloc_hook(s, gfpflags);
+	s = slab_pre_alloc_hook(s, gfpflags); // do nothing
 	if (!s)
 		return NULL;
 redo:
@@ -2682,7 +2681,7 @@ redo:
 	return object;
 }
 
-static __always_inline void *slab_alloc(struct kmem_cache *s, gfp_t gfpflags, unsigned long addr)
+static /*__always_inline*/ void *slab_alloc(struct kmem_cache *s, gfp_t gfpflags, unsigned long addr)
 {
 	return slab_alloc_node(s, gfpflags, NUMA_NO_NODE, addr);
 }
@@ -3028,23 +3027,25 @@ void kmem_cache_free_bulk(struct kmem_cache *s, size_t size, void **p)
 }
 EXPORT_SYMBOL(kmem_cache_free_bulk);
 
-/* Note that interrupts must be enabled when calling this function. */
+/*
+ * Note that interrupts must be enabled when calling this function.
+ * 用于一次性的从一个内存缓存中(slab cache)分配多个对象. call seldomly
+ */
 int kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags, size_t size, void **p)
 {
-	struct kmem_cache_cpu *c;
+	struct kmem_cache_cpu *c; // local object cache pool
 	int i;
 
 	/* memcg and kmem_cache debug support */
-	s = slab_pre_alloc_hook(s, flags);
+	s = slab_pre_alloc_hook(s, flags); // do nothing
 	if (unlikely(!s))
 		return false;
 	/*
-	 * Drain objects in the per cpu slab, while disabling local
-	 * IRQs, which protects against PREEMPT and interrupts
-	 * handlers invoking normal fastpath.
+	 * Drain objects in the per cpu slab, while disabling local IRQs,
+	 * which protects against PREEMPT and interrupts handlers invoking normal fastpath.
 	 */
 	local_irq_disable();
-	c = this_cpu_ptr(s->cpu_slab);
+	c = this_cpu_ptr(s->cpu_slab); // c = s.cpu_slab
 
 	for (i = 0; i < size; i++) {
 		void *object = c->freelist;
@@ -3064,7 +3065,7 @@ int kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags, size_t size, void *
 			 * of re-populating per CPU c->freelist
 			 */
 			p[i] = ___slab_alloc(s, flags, NUMA_NO_NODE, _RET_IP_, c);
-			if (unlikely(!p[i]))
+			if (unlikely(!p[i])) //
 				goto error;
 
 			c = this_cpu_ptr(s->cpu_slab);

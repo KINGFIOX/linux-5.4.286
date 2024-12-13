@@ -1767,7 +1767,7 @@ EXPORT_TRACEPOINT_SYMBOL(kmem_cache_free);
 
 int should_failslab(struct kmem_cache *s, gfp_t gfpflags)
 {
-	if (__should_failslab(s, gfpflags))
+	if (__should_failslab(s, gfpflags)) // 0
 		return -ENOMEM; // unreachable
 	return 0;
 }

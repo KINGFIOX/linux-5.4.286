@@ -3,7 +3,6 @@
  * Copyright (C) 2012 Regents of the University of California
  */
 
-
 #ifndef _ASM_RISCV_IRQFLAGS_H
 #define _ASM_RISCV_IRQFLAGS_H
 

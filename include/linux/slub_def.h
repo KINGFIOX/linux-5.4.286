@@ -82,8 +82,10 @@ struct kmem_cache {
 	/* Used for retrieving partial slabs, etc. */
 	slab_flags_t flags;
 	unsigned long min_partial;
+	// `size`, `object_size` was initialized in `__kmem_cache_create` && `create_cache` && `create_boot_cache`
 	unsigned int size; /* The size of an object including metadata */
-	unsigned int object_size; /* The size of an object without metadata */
+	unsigned int object_size; /* The size of an object without metadata. */
+	// `offset` was initialized in `freeptr_outside_object` && `kmem_cache_open` && `calculate_sized`
 	unsigned int offset; /* Free pointer offset */
 #ifdef CONFIG_SLUB_CPU_PARTIAL
 	/* Number of per cpu partial objects to keep around */
