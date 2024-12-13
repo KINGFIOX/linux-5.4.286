@@ -20,8 +20,8 @@
  *
  * swp_entry_t's are *never* stored anywhere in their arch-dependent format.
  */
-#define SWP_TYPE_SHIFT	(BITS_PER_XA_VALUE - MAX_SWAPFILES_SHIFT)
-#define SWP_OFFSET_MASK	((1UL << SWP_TYPE_SHIFT) - 1)
+#define SWP_TYPE_SHIFT (BITS_PER_XA_VALUE - MAX_SWAPFILES_SHIFT)
+#define SWP_OFFSET_MASK ((1UL << SWP_TYPE_SHIFT) - 1)
 
 /*
  * Store a type+offset into a swp_entry_t in an arch-independent format
@@ -100,8 +100,7 @@ static inline void *swp_to_radix_entry(swp_entry_t entry)
 #if IS_ENABLED(CONFIG_DEVICE_PRIVATE)
 static inline swp_entry_t make_device_private_entry(struct page *page, bool write)
 {
-	return swp_entry(write ? SWP_DEVICE_WRITE : SWP_DEVICE_READ,
-			 page_to_pfn(page));
+	return swp_entry(write ? SWP_DEVICE_WRITE : SWP_DEVICE_READ, page_to_pfn(page));
 }
 
 static inline bool is_device_private_entry(swp_entry_t entry)
@@ -165,14 +164,12 @@ static inline swp_entry_t make_migration_entry(struct page *page, int write)
 {
 	BUG_ON(!PageLocked(compound_head(page)));
 
-	return swp_entry(write ? SWP_MIGRATION_WRITE : SWP_MIGRATION_READ,
-			page_to_pfn(page));
+	return swp_entry(write ? SWP_MIGRATION_WRITE : SWP_MIGRATION_READ, page_to_pfn(page));
 }
 
 static inline int is_migration_entry(swp_entry_t entry)
 {
-	return unlikely(swp_type(entry) == SWP_MIGRATION_READ ||
-			swp_type(entry) == SWP_MIGRATION_WRITE);
+	return unlikely(swp_type(entry) == SWP_MIGRATION_READ || swp_type(entry) == SWP_MIGRATION_WRITE);
 }
 
 static inline int is_write_migration_entry(swp_entry_t entry)
@@ -201,12 +198,9 @@ static inline void make_migration_entry_read(swp_entry_t *entry)
 	*entry = swp_entry(SWP_MIGRATION_READ, swp_offset(*entry));
 }
 
-extern void __migration_entry_wait(struct mm_struct *mm, pte_t *ptep,
-					spinlock_t *ptl);
-extern void migration_entry_wait(struct mm_struct *mm, pmd_t *pmd,
-					unsigned long address);
-extern void migration_entry_wait_huge(struct vm_area_struct *vma,
-		struct mm_struct *mm, pte_t *pte);
+extern void __migration_entry_wait(struct mm_struct *mm, pte_t *ptep, spinlock_t *ptl);
+extern void migration_entry_wait(struct mm_struct *mm, pmd_t *pmd, unsigned long address);
+extern void migration_entry_wait_huge(struct vm_area_struct *vma, struct mm_struct *mm, pte_t *pte);
 #else
 
 #define make_migration_entry(page, write) swp_entry(0, 0)
@@ -225,13 +219,18 @@ static inline struct page *migration_entry_to_page(swp_entry_t entry)
 	return NULL;
 }
 
-static inline void make_migration_entry_read(swp_entry_t *entryp) { }
-static inline void __migration_entry_wait(struct mm_struct *mm, pte_t *ptep,
-					spinlock_t *ptl) { }
-static inline void migration_entry_wait(struct mm_struct *mm, pmd_t *pmd,
-					 unsigned long address) { }
-static inline void migration_entry_wait_huge(struct vm_area_struct *vma,
-		struct mm_struct *mm, pte_t *pte) { }
+static inline void make_migration_entry_read(swp_entry_t *entryp)
+{
+}
+static inline void __migration_entry_wait(struct mm_struct *mm, pte_t *ptep, spinlock_t *ptl)
+{
+}
+static inline void migration_entry_wait(struct mm_struct *mm, pmd_t *pmd, unsigned long address)
+{
+}
+static inline void migration_entry_wait_huge(struct vm_area_struct *vma, struct mm_struct *mm, pte_t *pte)
+{
+}
 static inline int is_write_migration_entry(swp_entry_t entry)
 {
 	return 0;
@@ -242,11 +241,9 @@ static inline int is_write_migration_entry(swp_entry_t entry)
 struct page_vma_mapped_walk;
 
 #ifdef CONFIG_ARCH_ENABLE_THP_MIGRATION
-extern void set_pmd_migration_entry(struct page_vma_mapped_walk *pvmw,
-		struct page *page);
+extern void set_pmd_migration_entry(struct page_vma_mapped_walk *pvmw, struct page *page);
 
-extern void remove_migration_pmd(struct page_vma_mapped_walk *pvmw,
-		struct page *new);
+extern void remove_migration_pmd(struct page_vma_mapped_walk *pvmw, struct page *new);
 
 extern void pmd_migration_entry_wait(struct mm_struct *mm, pmd_t *pmd);
 
@@ -273,19 +270,19 @@ static inline int is_pmd_migration_entry(pmd_t pmd)
 	return !pmd_present(pmd) && is_migration_entry(pmd_to_swp_entry(pmd));
 }
 #else
-static inline void set_pmd_migration_entry(struct page_vma_mapped_walk *pvmw,
-		struct page *page)
+static inline void set_pmd_migration_entry(struct page_vma_mapped_walk *pvmw, struct page *page)
 {
 	BUILD_BUG();
 }
 
-static inline void remove_migration_pmd(struct page_vma_mapped_walk *pvmw,
-		struct page *new)
+static inline void remove_migration_pmd(struct page_vma_mapped_walk *pvmw, struct page *new)
 {
 	BUILD_BUG();
 }
 
-static inline void pmd_migration_entry_wait(struct mm_struct *m, pmd_t *p) { }
+static inline void pmd_migration_entry_wait(struct mm_struct *m, pmd_t *p)
+{
+}
 
 static inline swp_entry_t pmd_to_swp_entry(pmd_t pmd)
 {
@@ -348,8 +345,7 @@ static inline void num_poisoned_pages_inc(void)
 }
 #endif
 
-#if defined(CONFIG_MEMORY_FAILURE) || defined(CONFIG_MIGRATION) || \
-    defined(CONFIG_DEVICE_PRIVATE)
+#if defined(CONFIG_MEMORY_FAILURE) || defined(CONFIG_MIGRATION) || defined(CONFIG_DEVICE_PRIVATE)
 static inline int non_swap_entry(swp_entry_t entry)
 {
 	return swp_type(entry) >= MAX_SWAPFILES;

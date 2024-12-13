@@ -4,6 +4,7 @@
 
 #include <linux/numa.h>
 #include <linux/reciprocal_div.h>
+#include <linux/mm_types.h>
 
 /*
  * Definitions unique to the original Linux SLAB allocator.
@@ -26,12 +27,12 @@ struct kmem_cache {
 
 	/* 3) cache_grow/shrink */
 	/* order of pgs per slab (2^n) */
-	unsigned int gfporder; // 一个 slab 中占用 2^gfporder 个页
+	unsigned int gfporder; // (global free page order) 一个 slab 中占用 2^gfporder 个页
 
 	/* force GFP flags, e.g. GFP_DMA */
 	gfp_t allocflags;
 
-	size_t colour; /* cache colouring range. 一个 slab 中可以有多少个不同的缓存行 */
+	size_t colour; /* cache colouring range. 一个 slab 中可以有多少个不同的缓存行. 缓存着色 */
 	unsigned int colour_off; /* colour offset. 着色区的长度, 和 L1 cacheline 大小相同 */
 	struct kmem_cache *freelist_cache; // 每个对象要占用 1Byte 来存放 freelist
 	unsigned int freelist_size;
@@ -87,7 +88,7 @@ struct kmem_cache {
 	unsigned int useroffset; /* Usercopy region offset */
 	unsigned int usersize; /* Usercopy region size */
 
-	struct kmem_cache_node *node[MAX_NUMNODES]; // 每个节点有一个 kmem_cache_node 数据结构.
+	struct kmem_cache_node *node[MAX_NUMNODES]; // each numa node has a kmem_cache_node
 };
 
 static inline void *nearest_obj(struct kmem_cache *cache, struct page *page, void *x)

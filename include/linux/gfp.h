@@ -514,8 +514,9 @@ static inline struct page *__alloc_pages(gfp_t gfp_mask /*分配掩码*/, unsign
 }
 
 /*
- * Allocate pages, preferring the node given as nid. The node must be valid and
- * online. For more general interface, see alloc_pages_node().
+ * Allocate pages, preferring the node given as nid.
+ * The node must be valid and online.
+ * For more general interface, see alloc_pages_node().
  */
 static inline struct page *__alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
 {
@@ -532,7 +533,7 @@ static inline struct page *__alloc_pages_node(int nid, gfp_t gfp_mask, unsigned 
  */
 static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
 {
-	if (nid == NUMA_NO_NODE) // 不会相等的
+	if (nid == NUMA_NO_NODE) // 0
 		nid = numa_mem_id();
 
 	return __alloc_pages_node(nid, gfp_mask, order);

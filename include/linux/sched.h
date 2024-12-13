@@ -185,7 +185,7 @@ struct task_group;
  *
  * Also see the comments of try_to_wake_up().
  */
-#define __set_current_state(state_value) current->state = (state_value)
+#define __set_current_state(state_value) (current->state = (state_value))
 
 #define set_current_state(state_value) smp_store_mb(current->state, (state_value))
 

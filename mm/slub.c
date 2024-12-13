@@ -1800,7 +1800,7 @@ static void *get_partial_node(struct kmem_cache *s, struct kmem_cache_node *n, s
 		return NULL;
 
 	spin_lock(&n->list_lock);
-	list_for_each_entry_safe (page, page2, &n->partial, slab_list) {
+	list_for_each_entry_safe (page, page2 /*next*/, &n->partial, slab_list /*member*/) {
 		void *t;
 
 		if (!pfmemalloc_match(page, flags))

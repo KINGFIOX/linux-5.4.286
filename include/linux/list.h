@@ -637,9 +637,10 @@ static inline void list_splice_tail_init(struct list_head *list, struct list_hea
  * @head:	the head for your list.
  * @member:	the name of the list_head within the struct.
  */
-#define list_for_each_entry_safe(pos, n, head, member)                                                                                                         \
-	for (pos = list_first_entry(head, typeof(*pos), member), n = list_next_entry(pos, member); !list_entry_is_head(pos, head, member);                     \
-	     pos = n, n = list_next_entry(n, member))
+#define list_for_each_entry_safe(pos, next, head, member)                                                                                                      \
+	for (pos = list_first_entry(head, typeof(*pos), member), next = list_next_entry(pos, member); /**/                                                     \
+	     !list_entry_is_head(pos, head, member); /**/                                                                                                      \
+	     pos = next, next = list_next_entry(next, member)) /**/
 
 /**
  * list_for_each_entry_safe_continue - continue list iteration safe against removal
@@ -651,9 +652,10 @@ static inline void list_splice_tail_init(struct list_head *list, struct list_hea
  * Iterate over list of given type, continuing after current point,
  * safe against removal of list entry.
  */
-#define list_for_each_entry_safe_continue(pos, n, head, member)                                                                                                \
-	for (pos = list_next_entry(pos, member), n = list_next_entry(pos, member); !list_entry_is_head(pos, head, member);                                     \
-	     pos = n, n = list_next_entry(n, member))
+#define list_for_each_entry_safe_continue(pos, next, head, member)                                                                                             \
+	for (pos = list_next_entry(pos, member), next = list_next_entry(pos, member); /**/                                                                     \
+	     !list_entry_is_head(pos, head, member); /**/                                                                                                      \
+	     pos = next, next = list_next_entry(next, member)) /**/
 
 /**
  * list_for_each_entry_safe_from - iterate over list from current point safe against removal

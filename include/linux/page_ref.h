@@ -138,7 +138,7 @@ static inline int page_ref_dec_and_test(struct page *page)
 {
 	int ret = atomic_dec_and_test(&page->_refcount);
 
-	if (page_ref_tracepoint_active(__tracepoint_page_ref_mod_and_test))
+	if (page_ref_tracepoint_active(__tracepoint_page_ref_mod_and_test)) // do nothing
 		__page_ref_mod_and_test(page, -1, ret);
 	return ret;
 }

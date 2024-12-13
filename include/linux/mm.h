@@ -565,6 +565,8 @@ int vma_is_stack_for_current(struct vm_area_struct *vma);
 struct mmu_gather;
 struct inode;
 
+// devmap is not supported on riscv
+// devmap(device memory map)
 #if !defined(CONFIG_ARCH_HAS_PTE_DEVMAP) || !defined(CONFIG_TRANSPARENT_HUGEPAGE)
 static inline int pmd_devmap(pmd_t pmd)
 {
@@ -605,7 +607,7 @@ static inline int pgd_devmap(pgd_t pgd)
  */
 static inline int put_page_testzero(struct page *page)
 {
-	VM_BUG_ON_PAGE(page_ref_count(page) == 0, page);
+	VM_BUG_ON_PAGE(page_ref_count(page) == 0, page); // ASSERT(refcnt != 0)
 	return page_ref_dec_and_test(page);
 }
 
@@ -1862,6 +1864,9 @@ static inline pud_t *pud_alloc(struct mm_struct *mm, p4d_t *p4d, unsigned long a
 
 static inline pmd_t *pmd_alloc(struct mm_struct *mm, pud_t *pud, unsigned long address)
 {
+	// pud == NULL 才会执行 __pmd_alloc
+	// __pmd_alloc return 0 才会执行 pmd_offset
+	//
 	return (unlikely(pud_none(*pud)) && __pmd_alloc(mm, pud, address)) ? NULL : pmd_offset(pud, address);
 }
 #endif /* CONFIG_MMU && !__ARCH_HAS_4LEVEL_HACK */
@@ -1921,7 +1926,7 @@ static inline bool ptlock_init(struct page *page)
 /*
  * We use mm->page_table_lock to guard all pagetable pages of the mm.
  */
-static inline spinlock_t *pte_lockptr(struct mm_struct *mm, pmd_t *pmd)
+static inline spinlock_t *pte_lockptr(struct mm_struct *mm, pmd_t *pmd /*UNUSED*/)
 {
 	return &mm->page_table_lock;
 }

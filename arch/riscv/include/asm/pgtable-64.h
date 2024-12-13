@@ -58,6 +58,7 @@ static inline void pud_clear(pud_t *pudp)
 	set_pud(pudp, __pud(0));
 }
 
+// impl From<pud_t> for va64
 static inline unsigned long pud_page_vaddr(pud_t pud)
 {
 	return (unsigned long)pfn_to_virt(pud_val(pud) >> _PAGE_PFN_SHIFT);
@@ -65,8 +66,11 @@ static inline unsigned long pud_page_vaddr(pud_t pud)
 
 /* ---------- ---------- pmd ---------- ---------- */
 
+// impl From<va64> for pmdi9(pmd index)
 #define pmd_index(addr) (((addr) >> PMD_SHIFT) & (PTRS_PER_PMD - 1))
 
+/// @in: pud, va64
+/// @out: slot of pmd
 static inline pmd_t *pmd_offset(pud_t *pud, unsigned long addr)
 {
 	return (pmd_t *)pud_page_vaddr(*pud) + pmd_index(addr);

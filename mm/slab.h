@@ -560,7 +560,7 @@ struct kmem_cache_node {
 
 #ifdef CONFIG_SLUB
 	unsigned long nr_partial;
-	struct list_head partial;
+	struct list_head partial; // 这个链表的成员是:
 #ifdef CONFIG_SLUB_DEBUG
 	atomic_long_t nr_slabs;
 	atomic_long_t total_objects;
@@ -571,6 +571,7 @@ struct kmem_cache_node {
 
 static inline struct kmem_cache_node *get_node(struct kmem_cache *s, int node)
 {
+	// ASSERT(node == 0) on riscv
 	return s->node[node];
 }
 

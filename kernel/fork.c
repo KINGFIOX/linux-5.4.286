@@ -1988,7 +1988,7 @@ static __latent_entropy struct task_struct *copy_process(struct pid *pid, int tr
 	retval = copy_signal(clone_flags, p);
 	if (retval)
 		goto bad_fork_cleanup_sighand;
-	retval = copy_mm(clone_flags, p);
+	retval = copy_mm(clone_flags, p); // NOTE: copy mm
 	if (retval)
 		goto bad_fork_cleanup_signal;
 	retval = copy_namespaces(clone_flags, p);

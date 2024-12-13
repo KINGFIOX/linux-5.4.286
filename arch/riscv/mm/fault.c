@@ -6,7 +6,6 @@
  * Copyright (C) 2012 Regents of the University of California
  */
 
-
 #include <linux/mm.h>
 #include <linux/kernel.h>
 #include <linux/interrupt.h>
@@ -34,8 +33,8 @@ asmlinkage void do_page_fault(struct pt_regs *regs)
 	int code = SEGV_MAPERR;
 	vm_fault_t fault;
 
-	cause = regs->scause;
-	addr = regs->sbadaddr;
+	cause = regs->scause; // scause
+	addr = regs->sbadaddr; // stval
 
 	tsk = current;
 	mm = tsk->mm;
@@ -49,36 +48,39 @@ asmlinkage void do_page_fault(struct pt_regs *regs)
 	 * only copy the information from the master page table,
 	 * nothing more.
 	 */
-	if (unlikely((addr >= VMALLOC_START) && (addr <= VMALLOC_END)))
+	if (unlikely((VMALLOC_START <= addr) && (addr <= VMALLOC_END))) // 访问内核数据导致的异常
 		goto vmalloc_fault;
 
 	/* Enable interrupts if they were enabled in the parent context. */
-	if (likely(regs->sstatus & SR_SPIE))
+	if (likely(regs->sstatus & SR_SPIE)) // 到此为止, 上下文保存完毕, page fault 之前, 如果中断是开启的, 那么就开启中断
 		local_irq_enable();
 
 	/*
 	 * If we're in an interrupt, have no user context, or are running
 	 * in an atomic region, then we must not take the fault.
+	 * 内核线程、中断上下文、原子上下文、缺页处理句柄关闭 => 由 no_context 处理
 	 */
 	if (unlikely(faulthandler_disabled() || !mm))
 		goto no_context;
 
-	if (user_mode(regs))
+	if (user_mode(regs)) // 在用户态下发生的异常
 		flags |= FAULT_FLAG_USER;
 
-	perf_sw_event(PERF_COUNT_SW_PAGE_FAULTS, 1, regs, addr);
+	// perf stat can count page faults, but we compile with no perf options(make menuconfig)
+	perf_sw_event(PERF_COUNT_SW_PAGE_FAULTS, 1, regs, addr); // do nothing.
 
 retry:
 	down_read(&mm->mmap_sem);
-	vma = find_vma(mm, addr);
+	vma = find_vma(mm, addr); // find vma
 	if (unlikely(!vma))
 		goto bad_area;
 	if (likely(vma->vm_start <= addr))
 		goto good_area;
-	if (unlikely(!(vma->vm_flags & VM_GROWSDOWN)))
+	if (unlikely(!(vma->vm_flags & VM_GROWSDOWN))) // check if vma is stack, only stack is grow down
 		goto bad_area;
-	if (unlikely(expand_stack(vma, addr)))
+	if (unlikely(expand_stack(vma, addr))) // expand stack, return 0 if success
 		goto bad_area;
+	// fall through to good_area automatically, if it is stack and expand stack success
 
 	/*
 	 * Ok, we have a good vm_area for this memory access, so
@@ -97,7 +99,7 @@ good_area:
 			goto bad_area;
 		break;
 	case EXC_STORE_PAGE_FAULT:
-		if (!(vma->vm_flags & VM_WRITE))
+		if (!(vma->vm_flags & VM_WRITE)) // vma 不可写
 			goto bad_area;
 		flags |= FAULT_FLAG_WRITE;
 		break;
@@ -107,8 +109,7 @@ good_area:
 
 	/*
 	 * If for any reason at all we could not handle the fault,
-	 * make sure we exit gracefully rather than endlessly redo
-	 * the fault.
+	 * make sure we exit gracefully rather than endlessly redo the fault.
 	 */
 	fault = handle_mm_fault(vma, addr, flags);
 
@@ -136,12 +137,10 @@ good_area:
 	if (flags & FAULT_FLAG_ALLOW_RETRY) {
 		if (fault & VM_FAULT_MAJOR) {
 			tsk->maj_flt++;
-			perf_sw_event(PERF_COUNT_SW_PAGE_FAULTS_MAJ,
-				      1, regs, addr);
+			perf_sw_event(PERF_COUNT_SW_PAGE_FAULTS_MAJ, 1, regs, addr);
 		} else {
 			tsk->min_flt++;
-			perf_sw_event(PERF_COUNT_SW_PAGE_FAULTS_MIN,
-				      1, regs, addr);
+			perf_sw_event(PERF_COUNT_SW_PAGE_FAULTS_MIN, 1, regs, addr);
 		}
 		if (fault & VM_FAULT_RETRY) {
 			/*
@@ -168,14 +167,14 @@ good_area:
 	 * Fix it, but check if it's kernel or user first.
 	 */
 bad_area:
-	up_read(&mm->mmap_sem);
+	up_read(&mm->mmap_sem); // up semaphore
 	/* User mode accesses just cause a SIGSEGV */
 	if (user_mode(regs)) {
 		do_trap(regs, SIGSEGV, code, addr);
 		return;
 	}
 
-no_context:
+no_context: // no_context(regs, addr)
 	/* Are we prepared to handle this kernel fault? */
 	if (fixup_exception(regs))
 		return;
@@ -185,9 +184,7 @@ no_context:
 	 * terminate things with extreme prejudice.
 	 */
 	bust_spinlocks(1);
-	pr_alert("Unable to handle kernel %s at virtual address " REG_FMT "\n",
-		(addr < PAGE_SIZE) ? "NULL pointer dereference" :
-		"paging request", addr);
+	pr_alert("Unable to handle kernel %s at virtual address " REG_FMT "\n", (addr < PAGE_SIZE) ? "NULL pointer dereference" : "paging request", addr);
 	die(regs, "Oops");
 	make_task_dead(SIGKILL);
 
@@ -210,20 +207,19 @@ do_sigbus:
 	do_trap(regs, SIGBUS, BUS_ADRERR, addr);
 	return;
 
-vmalloc_fault:
-	{
-		pgd_t *pgd, *pgd_k;
-		pud_t *pud, *pud_k;
-		p4d_t *p4d, *p4d_k;
-		pmd_t *pmd, *pmd_k;
-		pte_t *pte_k;
-		int index;
+vmalloc_fault : {
+	pgd_t *pgd, *pgd_k;
+	pud_t *pud, *pud_k;
+	p4d_t *p4d, *p4d_k;
+	pmd_t *pmd, *pmd_k;
+	pte_t *pte_k;
+	int index;
 
-		/* User mode accesses just cause a SIGSEGV */
-		if (user_mode(regs))
-			return do_trap(regs, SIGSEGV, code, addr);
+	/* User mode accesses just cause a SIGSEGV */
+	if (user_mode(regs))
+		return do_trap(regs, SIGSEGV, code, addr);
 
-		/*
+	/*
 		 * Synchronize this task's top level page-table
 		 * with the 'reference' page table.
 		 *
@@ -231,52 +227,52 @@ vmalloc_fault:
 		 * We might be inside an interrupt in the middle
 		 * of a task switch.
 		 */
-		index = pgd_index(addr);
-		pgd = (pgd_t *)pfn_to_virt(csr_read(CSR_SATP)) + index;
-		pgd_k = init_mm.pgd + index;
+	index = pgd_index(addr);
+	pgd = (pgd_t *)pfn_to_virt(csr_read(CSR_SATP)) + index;
+	pgd_k = init_mm.pgd + index;
 
-		if (!pgd_present(*pgd_k))
-			goto no_context;
-		set_pgd(pgd, *pgd_k);
+	if (!pgd_present(*pgd_k))
+		goto no_context;
+	set_pgd(pgd, *pgd_k);
 
-		p4d = p4d_offset(pgd, addr);
-		p4d_k = p4d_offset(pgd_k, addr);
-		if (!p4d_present(*p4d_k))
-			goto no_context;
+	p4d = p4d_offset(pgd, addr);
+	p4d_k = p4d_offset(pgd_k, addr);
+	if (!p4d_present(*p4d_k))
+		goto no_context;
 
-		pud = pud_offset(p4d, addr);
-		pud_k = pud_offset(p4d_k, addr);
-		if (!pud_present(*pud_k))
-			goto no_context;
+	pud = pud_offset(p4d, addr);
+	pud_k = pud_offset(p4d_k, addr);
+	if (!pud_present(*pud_k))
+		goto no_context;
 
-		/*
+	/*
 		 * Since the vmalloc area is global, it is unnecessary
 		 * to copy individual PTEs
 		 */
-		pmd = pmd_offset(pud, addr);
-		pmd_k = pmd_offset(pud_k, addr);
-		if (!pmd_present(*pmd_k))
-			goto no_context;
-		set_pmd(pmd, *pmd_k);
+	pmd = pmd_offset(pud, addr);
+	pmd_k = pmd_offset(pud_k, addr);
+	if (!pmd_present(*pmd_k))
+		goto no_context;
+	set_pmd(pmd, *pmd_k);
 
-		/*
+	/*
 		 * Make sure the actual PTE exists as well to
 		 * catch kernel vmalloc-area accesses to non-mapped
 		 * addresses. If we don't do this, this will just
 		 * silently loop forever.
 		 */
-		pte_k = pte_offset_kernel(pmd_k, addr);
-		if (!pte_present(*pte_k))
-			goto no_context;
+	pte_k = pte_offset_kernel(pmd_k, addr);
+	if (!pte_present(*pte_k))
+		goto no_context;
 
-		/*
+	/*
 		 * The kernel assumes that TLBs don't cache invalid
 		 * entries, but in RISC-V, SFENCE.VMA specifies an
 		 * ordering constraint, not a cache flush; it is
 		 * necessary even after writing invalid entries.
 		 */
-		local_flush_tlb_page(addr);
+	local_flush_tlb_page(addr);
 
-		return;
-	}
+	return;
+}
 }
