@@ -29,8 +29,8 @@
 #include "slab.h"
 
 enum slab_state slab_state;
-LIST_HEAD(slab_caches);
-DEFINE_MUTEX(slab_mutex);
+LIST_HEAD(slab_caches); // 所有的 slab
+DEFINE_MUTEX(slab_mutex); //
 struct kmem_cache *kmem_cache;
 
 #ifdef CONFIG_HARDENED_USERCOPY
@@ -354,8 +354,15 @@ struct kmem_cache *find_mergeable(unsigned int size, unsigned int align, slab_fl
 	return NULL;
 }
 
-static struct kmem_cache *create_cache(const char *name, unsigned int object_size, unsigned int align, slab_flags_t flags, unsigned int useroffset,
-				       unsigned int usersize, void (*ctor)(void *), struct mem_cgroup *memcg, struct kmem_cache *root_cache)
+static struct kmem_cache *create_cache(const char *name, //
+				       unsigned int object_size, //
+				       unsigned int align, //
+				       slab_flags_t flags, //
+				       unsigned int useroffset, //
+				       unsigned int usersize, //
+				       void (*ctor)(void *), //
+				       struct mem_cgroup *memcg, //
+				       struct kmem_cache *root_cache)
 {
 	struct kmem_cache *s;
 	int err;
@@ -368,6 +375,7 @@ static struct kmem_cache *create_cache(const char *name, unsigned int object_siz
 	if (!s)
 		goto out;
 
+	// initalize some message
 	s->name = name;
 	s->size = s->object_size = object_size;
 	s->align = align;
@@ -432,19 +440,19 @@ struct kmem_cache *kmem_cache_create_usercopy(const char *name, unsigned int siz
 	const char *cache_name;
 	int err;
 
-	get_online_cpus();
-	get_online_mems();
-	memcg_get_cache_ids();
+	get_online_cpus(); // do nothing
+	get_online_mems(); // do nothing
+	memcg_get_cache_ids(); // do nothing
 
-	mutex_lock(&slab_mutex);
+	mutex_lock(&slab_mutex); // slab_mutex is a global lock
 
-	err = kmem_cache_sanity_check(name, size);
+	err = kmem_cache_sanity_check(name, size); // do nothing
 	if (err) {
 		goto out_unlock;
 	}
 
 	/* Refuse requests with allocator specific flags */
-	if (flags & ~SLAB_FLAGS_PERMITTED) {
+	if (flags & ~SLAB_FLAGS_PERMITTED) { // 如果传入的 flags 包含 SLAB_FLAGS_PERMITTED 之外的标志，则返回错误
 		err = -EINVAL;
 		goto out_unlock;
 	}
@@ -458,15 +466,16 @@ struct kmem_cache *kmem_cache_create_usercopy(const char *name, unsigned int siz
 	flags &= CACHE_CREATE_MASK;
 
 	/* Fail closed on bad usersize of useroffset values. */
-	if (WARN_ON(!usersize && useroffset) || WARN_ON(size < usersize || size - usersize < useroffset))
+	if (WARN_ON(!usersize && useroffset) || WARN_ON(size < usersize || size - usersize < useroffset)) // size, offset 有问题
 		usersize = useroffset = 0;
 
-	if (!usersize)
-		s = __kmem_cache_alias(name, size, align, flags, ctor);
-	if (s)
+	if (!usersize) // 并非真正的创建一个 cache, 而是 make a alias of an existing cache.
+		s = __kmem_cache_alias(name, size, align, flags, ctor); // defined in mm/slub.c.
+
+	if (s) //
 		goto out_unlock;
 
-	cache_name = kstrdup_const(name, GFP_KERNEL);
+	cache_name = kstrdup_const(name, GFP_KERNEL); //
 	if (!cache_name) {
 		err = -ENOMEM;
 		goto out_unlock;
@@ -1280,9 +1289,9 @@ void *kmalloc_order(size_t size, gfp_t flags, unsigned int order)
 	struct page *page;
 
 	flags |= __GFP_COMP;
-	page = alloc_pages(flags, order);
+	page = alloc_pages(flags, order); // get a block of pages
 	if (likely(page)) {
-		ret = page_address(page);
+		ret = page_address(page); //
 		mod_node_page_state(page_pgdat(page), NR_SLAB_UNRECLAIMABLE, 1 << order);
 	}
 	ret = kasan_kmalloc_large(ret, size, flags);
@@ -1759,7 +1768,7 @@ EXPORT_TRACEPOINT_SYMBOL(kmem_cache_free);
 int should_failslab(struct kmem_cache *s, gfp_t gfpflags)
 {
 	if (__should_failslab(s, gfpflags))
-		return -ENOMEM;
+		return -ENOMEM; // unreachable
 	return 0;
 }
 ALLOW_ERROR_INJECTION(should_failslab, ERRNO);

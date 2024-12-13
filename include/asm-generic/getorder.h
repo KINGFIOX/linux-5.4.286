@@ -7,6 +7,8 @@
 #include <linux/compiler.h>
 #include <linux/log2.h>
 
+#define PAGE_SHIFT (12)
+
 /**
  * get_order - Determine the allocation order of a memory size
  * @size: The size for which to get the order
@@ -35,7 +37,7 @@ static inline __attribute_const__ int get_order(unsigned long size)
 		if (size < (1UL << PAGE_SHIFT))
 			return 0;
 
-		return ilog2((size) - 1) - PAGE_SHIFT + 1;
+		return ilog2((size)-1) - PAGE_SHIFT + 1;
 	}
 
 	size--;
@@ -47,6 +49,6 @@ static inline __attribute_const__ int get_order(unsigned long size)
 #endif
 }
 
-#endif	/* __ASSEMBLY__ */
+#endif /* __ASSEMBLY__ */
 
-#endif	/* __ASM_GENERIC_GETORDER_H */
+#endif /* __ASM_GENERIC_GETORDER_H */

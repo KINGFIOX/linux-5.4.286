@@ -346,8 +346,10 @@ static inline int gfpflags_to_migratetype(const gfp_t gfp_flags)
 #undef GFP_MOVABLE_MASK
 #undef GFP_MOVABLE_SHIFT
 
+// check if the allocation is allowed to block
 static inline bool gfpflags_allow_blocking(const gfp_t gfp_flags)
 {
+	// __GFP_DIRECT_RECLAIM would call direct reclaim, which may block
 	return !!(gfp_flags & __GFP_DIRECT_RECLAIM);
 }
 

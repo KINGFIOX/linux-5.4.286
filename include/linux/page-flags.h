@@ -191,6 +191,7 @@ static __always_inline int PageCompound(struct page *page)
 #define PAGE_POISON_PATTERN -1l
 static inline int PagePoisoned(const struct page *page)
 {
+	// posisoned 通常用于表示: struct page 处于一种: 无效、受损的状态.
 	return page->flags == PAGE_POISON_PATTERN;
 }
 

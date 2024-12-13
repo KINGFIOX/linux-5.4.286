@@ -102,7 +102,7 @@ char *kstrndup(const char *s, size_t max, gfp_t gfp)
 		return NULL;
 
 	len = strnlen(s, max);
-	buf = kmalloc_track_caller(len+1, gfp);
+	buf = kmalloc_track_caller(len + 1, gfp);
 	if (buf) {
 		memcpy(buf, s, len);
 		buf[len] = '\0';
@@ -270,8 +270,7 @@ void *memdup_user_nul(const void __user *src, size_t len)
 }
 EXPORT_SYMBOL(memdup_user_nul);
 
-void __vma_link_list(struct mm_struct *mm, struct vm_area_struct *vma,
-		struct vm_area_struct *prev, struct rb_node *rb_parent)
+void __vma_link_list(struct mm_struct *mm, struct vm_area_struct *vma, struct vm_area_struct *prev, struct rb_node *rb_parent)
 {
 	struct vm_area_struct *next;
 
@@ -282,8 +281,7 @@ void __vma_link_list(struct mm_struct *mm, struct vm_area_struct *vma,
 	} else {
 		mm->mmap = vma;
 		if (rb_parent)
-			next = rb_entry(rb_parent,
-					struct vm_area_struct, vm_rb);
+			next = rb_entry(rb_parent, struct vm_area_struct, vm_rb);
 		else
 			next = NULL;
 	}
@@ -295,13 +293,13 @@ void __vma_link_list(struct mm_struct *mm, struct vm_area_struct *vma,
 /* Check if the vma is being used as a stack by this task */
 int vma_is_stack_for_current(struct vm_area_struct *vma)
 {
-	struct task_struct * __maybe_unused t = current;
+	struct task_struct *__maybe_unused t = current;
 
 	return (vma->vm_start <= KSTK_ESP(t) && vma->vm_end >= KSTK_ESP(t));
 }
 
 #ifndef STACK_RND_MASK
-#define STACK_RND_MASK (0x7ff >> (PAGE_SHIFT - 12))     /* 8MB of VA */
+#define STACK_RND_MASK (0x7ff >> (PAGE_SHIFT - 12)) /* 8MB of VA */
 #endif
 
 unsigned long randomize_stack_top(unsigned long stack_top)
@@ -391,8 +389,8 @@ static int mmap_is_legacy(struct rlimit *rlim_stack)
  * Leave enough space between the mmap area and the stack to honour ulimit in
  * the face of randomisation.
  */
-#define MIN_GAP		(SZ_128M)
-#define MAX_GAP		(STACK_TOP / 6 * 5)
+#define MIN_GAP (SZ_128M)
+#define MAX_GAP (STACK_TOP / 6 * 5)
 
 static unsigned long mmap_base(unsigned long rnd, struct rlimit *rlim_stack)
 {
@@ -453,8 +451,7 @@ void arch_pick_mmap_layout(struct mm_struct *mm, struct rlimit *rlim_stack)
  * * 0       on success
  * * -ENOMEM if RLIMIT_MEMLOCK would be exceeded.
  */
-int __account_locked_vm(struct mm_struct *mm, unsigned long pages, bool inc,
-			struct task_struct *task, bool bypass_rlim)
+int __account_locked_vm(struct mm_struct *mm, unsigned long pages, bool inc, struct task_struct *task, bool bypass_rlim)
 {
 	unsigned long locked_vm, limit;
 	int ret = 0;
@@ -475,10 +472,8 @@ int __account_locked_vm(struct mm_struct *mm, unsigned long pages, bool inc,
 		mm->locked_vm = locked_vm - pages;
 	}
 
-	pr_debug("%s: [%d] caller %ps %c%lu %lu/%lu%s\n", __func__, task->pid,
-		 (void *)_RET_IP_, (inc) ? '+' : '-', pages << PAGE_SHIFT,
-		 locked_vm << PAGE_SHIFT, task_rlimit(task, RLIMIT_MEMLOCK),
-		 ret ? " - exceeded" : "");
+	pr_debug("%s: [%d] caller %ps %c%lu %lu/%lu%s\n", __func__, task->pid, (void *)_RET_IP_, (inc) ? '+' : '-', pages << PAGE_SHIFT,
+		 locked_vm << PAGE_SHIFT, task_rlimit(task, RLIMIT_MEMLOCK), ret ? " - exceeded" : "");
 
 	return ret;
 }
@@ -504,17 +499,14 @@ int account_locked_vm(struct mm_struct *mm, unsigned long pages, bool inc)
 		return 0;
 
 	down_write(&mm->mmap_sem);
-	ret = __account_locked_vm(mm, pages, inc, current,
-				  capable(CAP_IPC_LOCK));
+	ret = __account_locked_vm(mm, pages, inc, current, capable(CAP_IPC_LOCK));
 	up_write(&mm->mmap_sem);
 
 	return ret;
 }
 EXPORT_SYMBOL_GPL(account_locked_vm);
 
-unsigned long vm_mmap_pgoff(struct file *file, unsigned long addr,
-	unsigned long len, unsigned long prot,
-	unsigned long flag, unsigned long pgoff)
+unsigned long vm_mmap_pgoff(struct file *file, unsigned long addr, unsigned long len, unsigned long prot, unsigned long flag, unsigned long pgoff)
 {
 	unsigned long ret;
 	struct mm_struct *mm = current->mm;
@@ -525,8 +517,7 @@ unsigned long vm_mmap_pgoff(struct file *file, unsigned long addr,
 	if (!ret) {
 		if (down_write_killable(&mm->mmap_sem))
 			return -EINTR;
-		ret = do_mmap_pgoff(file, addr, len, prot, flag, pgoff,
-				    &populate, &uf);
+		ret = do_mmap_pgoff(file, addr, len, prot, flag, pgoff, &populate, &uf);
 		up_write(&mm->mmap_sem);
 		userfaultfd_unmap_complete(mm, &uf);
 		if (populate)
@@ -535,9 +526,7 @@ unsigned long vm_mmap_pgoff(struct file *file, unsigned long addr,
 	return ret;
 }
 
-unsigned long vm_mmap(struct file *file, unsigned long addr,
-	unsigned long len, unsigned long prot,
-	unsigned long flag, unsigned long offset)
+unsigned long vm_mmap(struct file *file, unsigned long addr, unsigned long len, unsigned long prot, unsigned long flag, unsigned long offset)
 {
 	if (unlikely(offset + PAGE_ALIGN(len) < offset))
 		return -EINVAL;
@@ -602,8 +591,7 @@ void *kvmalloc_node(size_t size, gfp_t flags, int node)
 	if (ret || size <= PAGE_SIZE)
 		return ret;
 
-	return __vmalloc_node_flags_caller(size, node, flags,
-			__builtin_return_address(0));
+	return __vmalloc_node_flags_caller(size, node, flags, __builtin_return_address(0));
 }
 EXPORT_SYMBOL(kvmalloc_node);
 
@@ -757,9 +745,7 @@ int sysctl_max_map_count __read_mostly = DEFAULT_MAX_MAP_COUNT;
 unsigned long sysctl_user_reserve_kbytes __read_mostly = 1UL << 17; /* 128MB */
 unsigned long sysctl_admin_reserve_kbytes __read_mostly = 1UL << 13; /* 8MB */
 
-int overcommit_ratio_handler(struct ctl_table *table, int write,
-			     void __user *buffer, size_t *lenp,
-			     loff_t *ppos)
+int overcommit_ratio_handler(struct ctl_table *table, int write, void __user *buffer, size_t *lenp, loff_t *ppos)
 {
 	int ret;
 
@@ -769,9 +755,7 @@ int overcommit_ratio_handler(struct ctl_table *table, int write,
 	return ret;
 }
 
-int overcommit_kbytes_handler(struct ctl_table *table, int write,
-			     void __user *buffer, size_t *lenp,
-			     loff_t *ppos)
+int overcommit_kbytes_handler(struct ctl_table *table, int write, void __user *buffer, size_t *lenp, loff_t *ppos)
 {
 	int ret;
 
@@ -791,8 +775,7 @@ unsigned long vm_commit_limit(void)
 	if (sysctl_overcommit_kbytes)
 		allowed = sysctl_overcommit_kbytes >> (PAGE_SHIFT - 10);
 	else
-		allowed = ((totalram_pages() - hugetlb_total_pages())
-			   * sysctl_overcommit_ratio / 100);
+		allowed = ((totalram_pages() - hugetlb_total_pages()) * sysctl_overcommit_ratio / 100);
 	allowed += total_swap_pages;
 
 	return allowed;
@@ -838,9 +821,7 @@ int __vm_enough_memory(struct mm_struct *mm, long pages, int cap_sys_admin)
 {
 	long allowed;
 
-	VM_WARN_ONCE(percpu_counter_read(&vm_committed_as) <
-			-(s64)vm_committed_as_batch * num_online_cpus(),
-			"memory commitment underflow");
+	VM_WARN_ONCE(percpu_counter_read(&vm_committed_as) < -(s64)vm_committed_as_batch * num_online_cpus(), "memory commitment underflow");
 
 	vm_acct_memory(pages);
 
@@ -899,7 +880,7 @@ int get_cmdline(struct task_struct *task, char *buffer, int buflen)
 	if (!mm)
 		goto out;
 	if (!mm->arg_end)
-		goto out_mm;	/* Shh! No looking before we're done */
+		goto out_mm; /* Shh! No looking before we're done */
 
 	spin_lock(&mm->arg_lock);
 	arg_start = mm->arg_start;
@@ -919,7 +900,7 @@ int get_cmdline(struct task_struct *task, char *buffer, int buflen)
 	 * If the nul at the end of args has been overwritten, then
 	 * assume application is using setproctitle(3).
 	 */
-	if (res > 0 && buffer[res-1] != '\0' && len < buflen) {
+	if (res > 0 && buffer[res - 1] != '\0' && len < buflen) {
 		len = strnlen(buffer, res);
 		if (len < res) {
 			res = len;
@@ -927,9 +908,7 @@ int get_cmdline(struct task_struct *task, char *buffer, int buflen)
 			len = env_end - env_start;
 			if (len > buflen - res)
 				len = buflen - res;
-			res += access_process_vm(task, env_start,
-						 buffer+res, len,
-						 FOLL_FORCE);
+			res += access_process_vm(task, env_start, buffer + res, len, FOLL_FORCE);
 			res = strnlen(buffer, res);
 		}
 	}

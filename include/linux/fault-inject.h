@@ -2,6 +2,8 @@
 #ifndef _LINUX_FAULT_INJECT_H
 #define _LINUX_FAULT_INJECT_H
 
+#include <linux/types.h>
+
 #ifdef CONFIG_FAULT_INJECTION
 
 #include <linux/types.h>
@@ -31,14 +33,10 @@ struct fault_attr {
 	struct dentry *dname;
 };
 
-#define FAULT_ATTR_INITIALIZER {					\
-		.interval = 1,						\
-		.times = ATOMIC_INIT(1),				\
-		.require_end = ULONG_MAX,				\
-		.stacktrace_depth = 32,					\
-		.ratelimit_state = RATELIMIT_STATE_INIT_DISABLED,	\
-		.verbose = 2,						\
-		.dname = NULL,						\
+#define FAULT_ATTR_INITIALIZER                                                                                                                                 \
+	{                                                                                                                                                      \
+		.interval = 1, .times = ATOMIC_INIT(1), .require_end = ULONG_MAX, .stacktrace_depth = 32, .ratelimit_state = RATELIMIT_STATE_INIT_DISABLED,    \
+		.verbose = 2, .dname = NULL,                                                                                                                   \
 	}
 
 #define DECLARE_FAULT_ATTR(name) struct fault_attr name = FAULT_ATTR_INITIALIZER
@@ -47,13 +45,11 @@ bool should_fail(struct fault_attr *attr, ssize_t size);
 
 #ifdef CONFIG_FAULT_INJECTION_DEBUG_FS
 
-struct dentry *fault_create_debugfs_attr(const char *name,
-			struct dentry *parent, struct fault_attr *attr);
+struct dentry *fault_create_debugfs_attr(const char *name, struct dentry *parent, struct fault_attr *attr);
 
 #else /* CONFIG_FAULT_INJECTION_DEBUG_FS */
 
-static inline struct dentry *fault_create_debugfs_attr(const char *name,
-			struct dentry *parent, struct fault_attr *attr)
+static inline struct dentry *fault_create_debugfs_attr(const char *name, struct dentry *parent, struct fault_attr *attr)
 {
 	return ERR_PTR(-ENODEV);
 }

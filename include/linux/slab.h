@@ -244,7 +244,7 @@ static inline void __check_heap_object(const void *ptr, unsigned long n, struct 
  * SLUB directly allocates requests fitting in to an order-1 page
  * (PAGE_SIZE*2).  Larger requests are passed to the page allocator.
  */
-#define KMALLOC_SHIFT_HIGH (PAGE_SHIFT + 1)
+#define KMALLOC_SHIFT_HIGH (PAGE_SHIFT + 1) // 13
 #define KMALLOC_SHIFT_MAX (MAX_ORDER + PAGE_SHIFT - 1)
 #ifndef KMALLOC_SHIFT_LOW
 #define KMALLOC_SHIFT_LOW 3
@@ -267,7 +267,7 @@ static inline void __check_heap_object(const void *ptr, unsigned long n, struct 
 /* Maximum allocatable size */
 #define KMALLOC_MAX_SIZE (1UL << KMALLOC_SHIFT_MAX)
 /* Maximum size for which we actually use a slab cache */
-#define KMALLOC_MAX_CACHE_SIZE (1UL << KMALLOC_SHIFT_HIGH)
+#define KMALLOC_MAX_CACHE_SIZE (1UL << KMALLOC_SHIFT_HIGH) // 1 << 13 = 8192
 /* Maximum order allocatable via the slab allocagtor */
 #define KMALLOC_MAX_ORDER (KMALLOC_SHIFT_MAX - PAGE_SHIFT)
 
@@ -475,13 +475,13 @@ extern void *kmalloc_order_trace(size_t size, gfp_t flags, unsigned int order) _
 #else
 static __always_inline void *kmalloc_order_trace(size_t size, gfp_t flags, unsigned int order)
 {
-	return kmalloc_order(size, flags, order);
+	return kmalloc_order(size, flags, order); // trace 了个寂寞.
 }
 #endif
 
 static __always_inline void *kmalloc_large(size_t size, gfp_t flags)
 {
-	unsigned int order = get_order(size);
+	unsigned int order = get_order(size); // log2(size)
 	return kmalloc_order_trace(size, flags, order);
 }
 
