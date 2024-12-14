@@ -76,6 +76,8 @@ struct kmem_cache_order_objects {
 
 /*
  * Slab cache management.
+ * kmem_cache 是一个描述符.
+ * kmem_cache_node 是真的内存管理. 指向不同的 numa 的 内存node.
  */
 struct kmem_cache {
 	struct kmem_cache_cpu __percpu *cpu_slab;
@@ -139,7 +141,7 @@ struct kmem_cache {
 	unsigned int useroffset; /* Usercopy region offset */
 	unsigned int usersize; /* Usercopy region size */
 
-	struct kmem_cache_node *node[MAX_NUMNODES];
+	struct kmem_cache_node *node[MAX_NUMNODES]; // 这个 node, 指向了不同的 numa 的 node
 };
 
 #ifdef CONFIG_SLUB_CPU_PARTIAL

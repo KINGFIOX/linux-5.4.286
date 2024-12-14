@@ -11,11 +11,11 @@
 /*
  * Simple doubly linked list implementation.
  *
- * Some of the internal functions ("__xxx") are useful when
- * manipulating whole lists rather than single entries, as
- * sometimes we already know the next/prev entries and we can
- * generate better code by using them directly rather than
- * using the generic single-entry routines.
+ * Some of the internal functions ("__xxx") are useful when manipulating whole lists rather than single entries,
+ * as sometimes we already know the next/prev entries and we can generate better code
+ * by using them directly rather than using the generic single-entry routines.
+ *
+ *
  */
 
 #define LIST_HEAD_INIT(name)                                                                                                                                   \
@@ -89,13 +89,13 @@ static inline void list_add_tail(struct list_head *new, struct list_head *head)
 }
 
 /*
- * Delete a list entry by making the prev/next entries
- * point to each other.
+ * Delete a list entry by making the prev/next entries point to each other.
+ * prev <-> cur <-> next => prev <-> next
  *
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
  */
-static inline void __list_del(struct list_head *prev, struct list_head *next)
+static /*inline*/ void __list_del(struct list_head *prev, struct list_head *next)
 {
 	next->prev = prev;
 	WRITE_ONCE(prev->next, next);
@@ -121,15 +121,15 @@ static inline void __list_del_clearprev(struct list_head *entry)
  * Note: list_empty() on entry does not return true after this, the entry is
  * in an undefined state.
  */
-static inline void __list_del_entry(struct list_head *entry)
+static /*inline*/ void __list_del_entry(struct list_head *entry)
 {
-	if (!__list_del_entry_valid(entry))
+	if (!__list_del_entry_valid(entry)) // 0
 		return;
 
 	__list_del(entry->prev, entry->next);
 }
 
-static inline void list_del(struct list_head *entry)
+static /*inline*/ void list_del(struct list_head *entry)
 {
 	__list_del_entry(entry);
 	entry->next = LIST_POISON1;

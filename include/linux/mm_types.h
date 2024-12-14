@@ -123,13 +123,13 @@ struct page {
 			};
 			struct kmem_cache *slab_cache; /* not slob */
 			/* Double-word boundary */
-			void *freelist; /* first free object */
+			void *freelist; /* first free object. freelist of object on this page */
 			union {
 				void *s_mem; /* slab: first object */
-				unsigned long counters; /* SLUB */
+				unsigned long counters; /* SLUB. the counters is on behalf of struct below */
 				struct { /* SLUB */
 					unsigned inuse : 16;
-					unsigned objects : 15;
+					unsigned objects : 15; // the max number of objects this page can hold
 					unsigned frozen : 1;
 				};
 			};

@@ -115,7 +115,7 @@ static inline void set_cpu_numa_node(int cpu, int node)
 
 /* Returns the number of the current Node. */
 #ifndef numa_node_id
-static inline int numa_node_id(void)
+static inline int numa_node_id(void) // 0
 {
 	// return ((void)(0), 0);
 	// return cpu_to_node(0);
@@ -179,7 +179,7 @@ static inline void set_cpu_numa_mem(int cpu, int node)
 /* Returns the number of the nearest Node with memory */
 static inline int numa_mem_id(void)
 {
-	return numa_node_id();
+	return numa_node_id(); // 0
 }
 #endif
 
