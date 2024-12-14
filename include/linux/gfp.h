@@ -455,10 +455,12 @@ static inline bool gfpflags_normal_context(const gfp_t gfp_flags)
 	 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA) | 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_HIGHMEM) |                                           \
 	 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA | ___GFP_HIGHMEM))
 
-static inline enum zone_type gfp_zone(gfp_t flags)
+/// @in: gfp_t flags
+/// @out: enum zone_type
+__attribute__((optimize("O0"))) static /*inline*/ enum zone_type gfp_zone(gfp_t flags)
 {
 	enum zone_type z;
-	int bit = (__force int)(flags & GFP_ZONEMASK);
+	int bit = (__force int)(flags & GFP_ZONEMASK); // flags should be in GFP_ZONEMASK
 
 	z = (GFP_ZONE_TABLE >> (bit * GFP_ZONES_SHIFT)) & ((1 << GFP_ZONES_SHIFT) - 1);
 	VM_BUG_ON((GFP_ZONE_BAD >> bit) & 1);
@@ -472,7 +474,7 @@ static inline enum zone_type gfp_zone(gfp_t flags)
  * virtual kernel addresses to the allocated page(s).
  */
 
-static inline int gfp_zonelist(gfp_t flags)
+static inline int gfp_zonelist(gfp_t flags) // 0
 {
 #ifdef CONFIG_NUMA
 	if (unlikely(flags & __GFP_THISNODE))
@@ -490,9 +492,10 @@ static inline int gfp_zonelist(gfp_t flags)
  * For the case of non-NUMA systems the NODE_DATA() gets optimized to
  * &contig_page_data at compile-time.
  */
-static inline struct zonelist *node_zonelist(int nid, gfp_t flags)
+__attribute__((optimize("O0"))) static /*inline*/ struct zonelist *node_zonelist(int nid, gfp_t flags)
 {
-	return NODE_DATA(nid)->node_zonelists + gfp_zonelist(flags);
+	// return &contig_page_data.node_zonelists[0]
+	return NODE_DATA(nid)->node_zonelists + gfp_zonelist(flags) /*0*/;
 }
 
 #ifndef HAVE_ARCH_FREE_PAGE

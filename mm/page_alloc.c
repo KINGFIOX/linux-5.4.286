@@ -133,7 +133,7 @@ unsigned long totalreserve_pages __read_mostly;
 unsigned long totalcma_pages __read_mostly;
 
 int percpu_pagelist_fraction;
-gfp_t gfp_allowed_mask __read_mostly = GFP_BOOT_MASK; // lw a5, -1472(gp)
+gfp_t gfp_allowed_mask __read_mostly = GFP_BOOT_MASK; // init in init/main.c
 #ifdef CONFIG_INIT_ON_ALLOC_DEFAULT_ON
 DEFINE_STATIC_KEY_TRUE(init_on_alloc);
 #else
@@ -686,9 +686,8 @@ early_param("debug_pagealloc", early_debug_pagealloc);
 void init_debug_pagealloc(void)
 {
 	if (!debug_pagealloc_enabled())
-		return;
 
-	static_branch_enable(&_debug_pagealloc_enabled);
+		static_branch_enable(&_debug_pagealloc_enabled);
 
 	if (!debug_guardpage_minorder())
 		return;
@@ -4479,9 +4478,15 @@ got_pg:
 	return page;
 }
 
-static inline bool prepare_alloc_pages(gfp_t gfp_mask /*分配掩码*/, unsigned int order /*分配阶数*/, int preferred_nid /*0*/, nodemask_t *nodemask /*NULL*/,
-				       struct alloc_context *ac /**/, gfp_t *alloc_mask /**/, unsigned int *alloc_flags /**/)
+__attribute__((optimize("O0"))) static bool prepare_alloc_pages(gfp_t gfp_mask, // 分配掩码
+								unsigned int order, // 分配阶数
+								int preferred_nid, //
+								nodemask_t *nodemask, // NULL
+								struct alloc_context *ac, //
+								gfp_t *alloc_mask, //
+								unsigned int *alloc_flags) //
 {
+	// record the alloc parameters
 	ac->high_zoneidx = gfp_zone(gfp_mask);
 	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
 	ac->nodemask = nodemask;
@@ -4528,7 +4533,10 @@ static inline void finalise_ac(gfp_t gfp_mask, struct alloc_context *ac)
  * gfp_mask defined in include/linux/gfp.h. 分为: zone modifier, mobility and placement modifier, watermark modifier, page reclaim modifier, action modifier
  * 
  */
-struct page *__alloc_pages_nodemask(gfp_t gfp_mask /*分配掩码*/, unsigned int order /*分配阶数*/, int preferred_nid /*0*/, nodemask_t *nodemask /*NULL*/)
+__attribute__((optimize("O0"))) struct page *__alloc_pages_nodemask(gfp_t gfp_mask, // 分配掩码
+								    unsigned int order, // 分配阶数
+								    int preferred_nid, // 0
+								    nodemask_t *nodemask) // NULL
 {
 	struct page *page;
 	unsigned int alloc_flags = ALLOC_WMARK_LOW;
@@ -4536,15 +4544,15 @@ struct page *__alloc_pages_nodemask(gfp_t gfp_mask /*分配掩码*/, unsigned in
 	struct alloc_context ac = {};
 
 	/*
-	 * There are several places where we assume that the order value is sane
-	 * so bail out early if the request is out of bound.
+	 * There are several places where we assume that the order value is sane so bail out early if the request is out of bound.
+	 * check
 	 */
 	if (unlikely(order >= MAX_ORDER)) {
 		WARN_ON_ONCE(!(gfp_mask & __GFP_NOWARN));
 		return NULL;
 	}
 
-	gfp_mask &= gfp_allowed_mask;
+	gfp_mask &= gfp_allowed_mask; // gfp in gfp_allowed_mask
 	alloc_mask = gfp_mask;
 	if (!prepare_alloc_pages(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
 		return NULL;

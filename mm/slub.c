@@ -1457,13 +1457,16 @@ static void *setup_object(struct kmem_cache *s, struct page *page, void *object)
 /*
  * Slab allocation and freeing
  */
-static __attribute__((optimize("O0"))) /*inline*/ struct page *alloc_slab_page(struct kmem_cache *s, gfp_t flags, int node, struct kmem_cache_order_objects oo)
+static __attribute__((optimize("O0"))) /*inline*/ struct page *alloc_slab_page(struct kmem_cache *s, //
+									       gfp_t flags, //
+									       int node, //
+									       struct kmem_cache_order_objects oo) //
 {
 	struct page *page;
-	unsigned int order = oo_order(oo);
+	unsigned int order = oo_order(oo); // 16 >> 16 = 0
 
 	if (node == NUMA_NO_NODE)
-		page = alloc_pages(flags, order);
+		page = alloc_pages(flags, order); // get page from buddy allocator
 	else
 		page = __alloc_pages_node(node, flags, order);
 
@@ -1663,7 +1666,7 @@ out:
 
 static __attribute__((optimize("O0"))) struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
 {
-	if (unlikely(flags & GFP_SLAB_BUG_MASK)) {
+	if (unlikely(flags & GFP_SLAB_BUG_MASK)) { // 0
 		gfp_t invalid_mask = flags & GFP_SLAB_BUG_MASK;
 		flags &= ~GFP_SLAB_BUG_MASK;
 		pr_warn("Unexpected gfp: %#x (%pGg). Fixing up to gfp: %#x (%pGg). Fix your code!\n", invalid_mask, &invalid_mask, flags, &flags);
@@ -2639,7 +2642,7 @@ static __attribute__((optimize("O0"))) /*__always_inline*/ void *slab_alloc_node
 	struct page *page;
 	unsigned long tid;
 
-	s = slab_pre_alloc_hook(s, gfpflags); // do nothing
+	s = slab_pre_alloc_hook(s, gfpflags); // s = s;
 	if (!s) // if s == NULL
 		return NULL;
 redo:

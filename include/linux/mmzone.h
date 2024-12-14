@@ -414,33 +414,41 @@ enum zone_type {
 //! 3. 统计信息
 //! 每个内存管理区在系统启动的时候, 会计算出 3 个 watermark: WMARK_MIN, WMARK_LOW, WMARK_HIGH, 这在 page_allocator 和 kswapd页面回收 中会用到.
 
+//! struct zone 的目的
+//! 1. 内存分段: DMA, ...
+//! 2. 高效分配, 更加智能的决定在哪里分配页
+//! 3. 资源跟踪, 跟踪 zone 内存的状态, 例如: 空闲页, watermark, 统计信息
+
 struct zone {
 	/* Read-mostly fields */
 
 	/* zone watermarks, access with *_wmark_pages(zone) macros */
-	unsigned long _watermark[NR_WMARK];
-	unsigned long watermark_boost;
+	// watermark: WMARK_MIN, WMARK_LOW, WMARK_HIGH. 用于决定何时开始回收内存或唤醒 kswapd 守护进程.
+	unsigned long _watermark[NR_WMARK /*3*/];
+	unsigned long watermark_boost; // 高内存压力期间, watermark 的提升值(boost)
 
-	unsigned long nr_reserved_highatomic;
+	unsigned long nr_reserved_highatomic; //
 
 	/*
-	 * We don't know if the memory that we're going to allocate will be
-	 * freeable or/and it will be released eventually, so to avoid totally
-	 * wasting several GB of ram we must reserve some of the lower zone
-	 * memory (otherwise we risk to run OOM on the lower zones despite
-	 * there being tons of freeable ram on the higher zones).  This array is
-	 * recalculated at runtime if the sysctl_lowmem_reserve_ratio sysctl
-	 * changes. (内存管理区中, 预留的内存). OOM(out of memory)
+	 * We don't know if the memory that we're going to allocate will be freeable or/and it will be released eventually,
+	 * so to avoid totally wasting several GB of ram we must reserve some of the lower zone memory
+	 * (otherwise we risk to run OOM on the lower zones despite there being tons of freeable ram on the higher zones).
+	 * This array is recalculated at runtime if the sysctl_lowmem_reserve_ratio sysctl changes. (内存管理区中, 预留的内存).
+	 * OOM(out of memory)
+	 * 我们无法预知: 我们将要分配的内存是否可释放, 或者最后是否会被释放.
+	 * 为了避免浪费大量内存, 我们必须保留一些 lower zone memory.
+	 * 否则, 我们会 run OOM on the lower zones 尽管在 higher zones 中有很多 freeable ram.
+	 * 如果 sysctl_lowmem_reserve_ratio 发生变化, 那么 lowmem_reserve 会在运行时重新计算.
 	 */
-	long lowmem_reserve[MAX_NR_ZONES];
+	long lowmem_reserve[MAX_NR_ZONES /*3*/];
 
 #ifdef CONFIG_NUMA
 	int node;
 #endif
-	struct pglist_data *zone_pgdat; // 指向内存节点
-	struct per_cpu_pageset __percpu *pageset; // 用于维护 per-CPU 变量上的一系列页面, 以减少自旋锁的争用
+	struct pglist_data *zone_pgdat; // 反向引用
+	struct per_cpu_pageset __percpu *pageset; // 用于缓存已释放的页, 减少在频繁分配和释放期间对 zone 锁的争用.
 
-#ifndef CONFIG_SPARSEMEM
+#ifndef CONFIG_SPARSEMEM // 稀疏内存, sparse(稀疏)
 	/*
 	 * Flags for a pageblock_nr_pages block. See pageblock-flags.h.
 	 * In SPARSEMEM, this map is stored in struct mem_section
@@ -452,43 +460,39 @@ struct zone {
 	unsigned long zone_start_pfn; // 内存管理区, 开始页面的 physical frame number
 
 	/*
-	 * spanned_pages is the total pages spanned by the zone, including
-	 * holes, which is calculated as:
+	 * spanned_pages is the total pages spanned by the zone, including holes, which is calculated as:
 	 * 	spanned_pages = zone_end_pfn - zone_start_pfn;
 	 *
-	 * present_pages is physical pages existing within the zone, which
-	 * is calculated as:
+	 * present_pages is physical pages existing within the zone, which is calculated as:
 	 *	present_pages = spanned_pages - absent_pages(pages in holes);
+	 * 对一些架构来说 present_pages == spanned_pages, 因为不存在空洞
 	 *
-	 * managed_pages is present pages managed by the buddy system, which
-	 * is calculated as (reserved_pages includes pages allocated by the
-	 * bootmem allocator):
+	 * managed_pages is present pages managed by the buddy system, which is calculated as
+	 * (reserved_pages includes pages allocated by the bootmem allocator):
 	 *	managed_pages = present_pages - reserved_pages;
 	 *
 	 * So present_pages may be used by memory hotplug or memory power
 	 * management logic to figure out unmanaged pages by checking
-	 * (present_pages - managed_pages). And managed_pages should be used
-	 * by page allocator and vm scanner to calculate all kinds of watermarks
-	 * and thresholds.
+	 * (present_pages - managed_pages).
+	 * 如果是页面, 用于 hotplug 或 memory power management logic, 那么就不会被认为是 managed_pages.
+	 * And managed_pages should be used by page allocator and vm scanner to calculate all kinds of watermarks and thresholds.
 	 *
 	 * Locking rules:
 	 *
-	 * zone_start_pfn and spanned_pages are protected by span_seqlock.
+	 * zone_start_pfn and spanned_pages(span, 跨越) are protected by span_seqlock.
 	 * It is a seqlock because it has to be read outside of zone->lock,
-	 * and it is done in the main allocator path.  But, it is written
-	 * quite infrequently.
+	 * and it is done in the main allocator path.
+	 * But, it is written quite infrequently.
 	 *
-	 * The span_seq lock is declared along with zone->lock because it is
-	 * frequently read in proximity to zone->lock.  It's good to
-	 * give them a chance of being in the same cacheline.
+	 * The span_seq lock is declared along with zone->lock because it is frequently read in proximity to zone->lock.
+	 * It's good to give them a chance of being in the same cacheline.
 	 *
-	 * Write access to present_pages at runtime should be protected by
-	 * mem_hotplug_begin/end(). Any reader who can't tolerant drift of
-	 * present_pages should get_online_mems() to get a stable value.
+	 * Write access to present_pages at runtime should be protected by mem_hotplug_begin/end().
+	 * Any reader who can't tolerant drift of present_pages should use get_online_mems() to get a stable value.
 	 */
-	atomic_long_t managed_pages; // 内存管理区中, 被伙伴系统管理的页面数量
-	unsigned long spanned_pages; // 内存管理区包含的页面数量
-	unsigned long present_pages; // 内存管理区中, 实际存在的页面数量. 对一些架构来说 present_pages == spanned_pages
+	atomic_long_t managed_pages;
+	unsigned long spanned_pages;
+	unsigned long present_pages;
 
 	const char *name;
 
@@ -506,13 +510,13 @@ struct zone {
 	seqlock_t span_seqlock;
 #endif
 
-	int initialized;
+	int initialized; // flag
 
 	/* Write-intensive fields used from the page allocator */
-	ZONE_PADDING(_pad1_)
+	ZONE_PADDING(_pad1_) // do nothing
 
-	/* free areas of different sizes. 管理空闲区域的数组, 包含管理链表等 */
-	struct free_area free_area[MAX_ORDER];
+	/* free areas of different sizes. */
+	struct free_area free_area[MAX_ORDER]; // 这个就是 buddy system 的链表了, IMPORTANT
 
 	/* zone flags, see below */
 	unsigned long flags;
@@ -521,12 +525,20 @@ struct zone {
 	spinlock_t lock;
 
 	/* Write-intensive fields used by compaction and vmstats. */
-	ZONE_PADDING(_pad2_)
+	ZONE_PADDING(_pad2_) // do nothing
 
 	/*
 	 * When free pages are below this point, additional steps are taken
 	 * when reading the number of free pages to avoid per-cpu counter
-	 * drift allowing watermarks to be breached
+	 * drift allowing watermarks to be breached. 用于帮助 kernel 在内存紧张情况下,
+	 * 更加准确的管理内存页面.
+	 * 背景: 多核系统中, 每个 CPU 上的计数器都是独立的, 不用全局的 counter, 是为了减少并发性能瓶颈.
+	 * 但是, 这会导致 counter drift(计数漂移) 的情况, 也就是说, 全局的 counter 不一定等于 SUM(counter of each CPU)
+	 * 这会让系统误判可用内存量.
+	 *
+	 * percpu_drift_mark 定义了一个阈值, 当 number of free pages is lower than percpu_drift_mark,
+	 * kernel 在读取 number of free pages 时, 会做一些额外步骤, 以避免由于 counter drift 导致突破 watermark 的情况.
+	 * 突破 watermark 就会启动内存回收等机制, 然而 counter drift 导致的误判, 可能会: 明明不够, 但是系统却认为够, 从而不进行内存回收. 那就死翘翘了.
 	 */
 	unsigned long percpu_drift_mark;
 
@@ -555,12 +567,12 @@ struct zone {
 	bool compact_blockskip_flush;
 #endif
 
-	bool contiguous;
+	bool contiguous; // no hole
 
-	ZONE_PADDING(_pad3_)
+	ZONE_PADDING(_pad3_) // do nothing
 	/* Zone statistics */
 	atomic_long_t vm_stat[NR_VM_ZONE_STAT_ITEMS];
-	atomic_long_t vm_numa_stat[NR_VM_NUMA_STAT_ITEMS];
+	atomic_long_t vm_numa_stat[NR_VM_NUMA_STAT_ITEMS]; // disable
 } ____cacheline_internodealigned_in_smp;
 
 enum pgdat_flags {
@@ -630,7 +642,7 @@ static inline bool zone_intersects(struct zone *zone, unsigned long start_pfn, u
 #define DEF_PRIORITY 12
 
 /* Maximum number of zones on a zonelist */
-#define MAX_ZONES_PER_ZONELIST (MAX_NUMNODES * MAX_NR_ZONES)
+#define MAX_ZONES_PER_ZONELIST (MAX_NUMNODES * MAX_NR_ZONES) // 1 * 3 = 3
 
 enum {
 	ZONELIST_FALLBACK, /* zonelist with fallback */
@@ -668,7 +680,7 @@ struct zoneref {
  * zonelist_node_idx()	- Return the index of the node for an entry
  */
 struct zonelist {
-	struct zoneref _zonerefs[MAX_ZONES_PER_ZONELIST + 1];
+	struct zoneref _zonerefs[MAX_ZONES_PER_ZONELIST + 1 /*3+1=4*/];
 };
 
 #ifndef CONFIG_DISCONTIGMEM
@@ -685,17 +697,17 @@ struct deferred_split {
 #endif
 
 /*
- * On NUMA machines, each NUMA node would have a pg_data_t to describe
- * it's memory layout. On UMA machines there is a single pglist_data which
- * describes the whole memory.
+ * On NUMA machines, each NUMA node would have a pg_data_t to describe it's memory layout.
+ * NUMA 中, 会有多个内存节点, 每个 struct pglist_data 用于描述一个内存节点.
+ * On UMA machines there is a single pglist_data which describes the whole memory.
+ * UMA 中, 只有一个内存节点, 所以只有一个 struct pglist_data, 叫 contig_page_data
  *
- * Memory statistics and page replacement data structures are maintained on a
- * per-zone basis.
+ * Memory statistics and page replacement data structures are maintained on a per-zone basis.
  */
 struct bootmem_data;
 typedef struct pglist_data {
-	struct zone node_zones[MAX_NR_ZONES];
-	struct zonelist node_zonelists[MAX_ZONELISTS];
+	struct zone node_zones[MAX_NR_ZONES /*3*/]; // 一个内存节点会有很多个区域
+	struct zonelist node_zonelists[MAX_ZONELISTS /*1*/];
 	int nr_zones;
 #ifdef CONFIG_FLAT_NODE_MEM_MAP /* means !SPARSEMEM */
 	struct page *node_mem_map;

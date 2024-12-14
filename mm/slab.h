@@ -433,10 +433,16 @@ static inline struct kmem_cache *virt_to_cache(const void *obj)
 	return page->slab_cache;
 }
 
-static __always_inline int charge_slab_page(struct page *page, gfp_t gfp, int order, struct kmem_cache *s)
+static /*__always_inline*/ __attribute__((optimize("O0"))) int charge_slab_page(struct page *page, //
+										gfp_t gfp, //
+										int order, //
+										struct kmem_cache *s) //
 {
-	if (is_root_cache(s)) {
-		mod_node_page_state(page_pgdat(page), cache_vmstat_idx(s), 1 << order);
+	if (is_root_cache(s)) { // true
+		pg_data_t *pgdat = page_pgdat(page); // pgdat = &contig_page_data
+		int item = cache_vmstat_idx(s);
+		int delta = 1 << order; // number of pages
+		mod_node_page_state(pgdat, item, delta);
 		return 0;
 	}
 
