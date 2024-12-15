@@ -323,7 +323,7 @@ struct vm_area_struct {
 
 	/* Second cache line starts here. */
 
-	struct mm_struct *vm_mm; /* The address space we belong to. */
+	struct mm_struct *vm_mm; /* The address space we belong to. 反向引用 */
 	pgprot_t vm_page_prot; /* Access permissions of this VMA. */
 	unsigned long vm_flags; /* Flags, see mm.h. */
 
@@ -343,7 +343,7 @@ struct vm_area_struct {
 	 * or brk vma (with NULL file) can only be in an anon_vma list.
 	 */
 	struct list_head anon_vma_chain; /* Serialized by mmap_sem & * page_table_lock */
-	struct anon_vma *anon_vma; /* Serialized by page_table_lock */
+	struct anon_vma *anon_vma; /* Serialized by page_table_lock. 用于管理 rmap */
 
 	const struct vm_operations_struct *vm_ops; /* Function pointers to deal with this struct. */
 
@@ -379,7 +379,7 @@ struct kioctx_table;
 struct mm_struct {
 	struct {
 		struct vm_area_struct *mmap; /* list of VMAs */
-		struct rb_root mm_rb;
+		struct rb_root mm_rb; // vma 红黑树的根节点
 		u64 vmacache_seqnum; /* per-thread vmacache */
 #ifdef CONFIG_MMU
 		unsigned long (*get_unmapped_area)(struct file *filp, unsigned long addr, unsigned long len, unsigned long pgoff, unsigned long flags);
@@ -418,7 +418,7 @@ struct mm_struct {
 
 		/**
 		 * @mm_count: The number of references to &struct mm_struct
-		 * (@mm_users count as 1).
+		 * (@mm_users count as 1). 主引用计数
 		 *
 		 * Use mmgrab()/mmdrop() to modify. When this drops to 0, the
 		 * &struct mm_struct is freed.
@@ -435,11 +435,11 @@ struct mm_struct {
 					     */
 		struct rw_semaphore mmap_sem;
 
-		struct list_head mmlist; /* List of maybe swapped mm's.	These
-					  * are globally strung together off
-					  * init_mm.mmlist, and are protected
-					  * by mmlist_lock
-					  */
+		/* List of maybe swapped mm's.
+		 * These are globally strung together off init_mm.mmlist, and are protected by mmlist_lock.
+		 * 所有的 struct mm_struct 都会被挂在 init_mm 上.
+		 */
+		struct list_head mmlist;
 
 		unsigned long hiwater_rss; /* High-watermark of RSS usage */
 		unsigned long hiwater_vm; /* High-water virtual memory usage */
@@ -453,9 +453,12 @@ struct mm_struct {
 		unsigned long def_flags;
 
 		spinlock_t arg_lock; /* protect the below fields */
-		unsigned long start_code, end_code, start_data, end_data;
-		unsigned long start_brk, brk, start_stack;
-		unsigned long arg_start, arg_end, env_start, env_end;
+		unsigned long start_code, end_code;
+		unsigned long start_data, end_data;
+		unsigned long start_brk, brk;
+		unsigned long start_stack;
+		unsigned long arg_start, arg_end;
+		unsigned long env_start, env_end;
 
 		unsigned long saved_auxv[AT_VECTOR_SIZE]; /* for /proc/PID/auxv */
 

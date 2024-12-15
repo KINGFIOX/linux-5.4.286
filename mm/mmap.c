@@ -501,8 +501,12 @@ static inline void anon_vma_interval_tree_post_update_vma(struct vm_area_struct 
 		anon_vma_interval_tree_insert(avc, &avc->anon_vma->rb_root);
 }
 
-static int find_vma_links(struct mm_struct *mm, unsigned long addr, unsigned long end, struct vm_area_struct **pprev, struct rb_node ***rb_link,
-			  struct rb_node **rb_parent)
+static __attribute__((optimize("O0"))) int find_vma_links(struct mm_struct *mm, //
+							  unsigned long addr, //
+							  unsigned long end, //
+							  struct vm_area_struct **pprev, //
+							  struct rb_node ***rb_link, //
+							  struct rb_node **rb_parent) //
 {
 	struct rb_node **__rb_link, *__rb_parent, *rb_prev;
 
@@ -1077,9 +1081,17 @@ static int can_vma_merge_after(struct vm_area_struct *vma, unsigned long vm_flag
  * parameter) may establish ptes with the wrong permissions of NNNN
  * instead of the right permissions of XXXX.
  */
-struct vm_area_struct *vma_merge(struct mm_struct *mm, struct vm_area_struct *prev, unsigned long addr, unsigned long end, unsigned long vm_flags,
-				 struct anon_vma *anon_vma, struct file *file, pgoff_t pgoff, struct mempolicy *policy,
-				 struct vm_userfaultfd_ctx vm_userfaultfd_ctx)
+__attribute__((optimize("O0"))) struct vm_area_struct *vma_merge( //
+	struct mm_struct *mm, //
+	struct vm_area_struct *prev, //
+	unsigned long addr, //
+	unsigned long end, //
+	unsigned long vm_flags, //
+	struct anon_vma *anon_vma, //
+	struct file *file, //
+	pgoff_t pgoff, //
+	struct mempolicy *policy, //
+	struct vm_userfaultfd_ctx vm_userfaultfd_ctx) //
 {
 	pgoff_t pglen = (end - addr) >> PAGE_SHIFT;
 	struct vm_area_struct *area, *next;
@@ -2109,14 +2121,12 @@ struct vm_area_struct *find_vma(struct mm_struct *mm, unsigned long addr)
 	if (likely(vma))
 		return vma;
 
-	rb_node = mm->mm_rb.rb_node;
+	rb_node = mm->mm_rb.rb_node; // get the root node of the vma rbtree
 
 	while (rb_node) {
-		struct vm_area_struct *tmp;
+		struct vm_area_struct *tmp = rb_entry(rb_node, struct vm_area_struct, vm_rb);
 
-		tmp = rb_entry(rb_node, struct vm_area_struct, vm_rb);
-
-		if (tmp->vm_end > addr) {
+		if (tmp->vm_end > addr) { // 相当于是做了一个有序遍历的工作
 			vma = tmp;
 			if (tmp->vm_start <= addr)
 				break;
@@ -3041,7 +3051,7 @@ int insert_vm_struct(struct mm_struct *mm, struct vm_area_struct *vma)
 	struct vm_area_struct *prev;
 	struct rb_node **rb_link, *rb_parent;
 
-	if (find_vma_links(mm, vma->vm_start, vma->vm_end, &prev, &rb_link, &rb_parent))
+	if (find_vma_links(mm, vma->vm_start, vma->vm_end, &prev, &rb_link, &rb_parent)) // 不可重复插入
 		return -ENOMEM;
 	if ((vma->vm_flags & VM_ACCOUNT) && security_vm_enough_memory_mm(mm, vma_pages(vma)))
 		return -ENOMEM;

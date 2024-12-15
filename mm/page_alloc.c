@@ -3398,7 +3398,7 @@ static inline unsigned int alloc_flags_nofragment(struct zone *zone, gfp_t gfp_m
 {
 	unsigned int alloc_flags = 0;
 
-	if (gfp_mask & __GFP_KSWAPD_RECLAIM)
+	if (gfp_mask & __GFP_KSWAPD_RECLAIM) // set alloc_flags
 		alloc_flags |= ALLOC_KSWAPD;
 
 #ifdef CONFIG_ZONE_DMA32
@@ -3414,7 +3414,7 @@ static inline unsigned int alloc_flags_nofragment(struct zone *zone, gfp_t gfp_m
 	 * on UMA that if Normal is populated then so is DMA32.
 	 */
 	BUILD_BUG_ON(ZONE_NORMAL - ZONE_DMA32 != 1);
-	if (nr_online_nodes > 1 && !populated_zone(--zone))
+	if (nr_online_nodes > 1 && !populated_zone(--zone)) // 0
 		return alloc_flags;
 
 	alloc_flags |= ALLOC_NOFRAGMENT;
@@ -3440,12 +3440,12 @@ retry:
 	 */
 	no_fallback = alloc_flags & ALLOC_NOFRAGMENT;
 	z = ac->preferred_zoneref;
-	for_next_zone_zonelist_nodemask(zone, z, ac->zonelist, ac->high_zoneidx, ac->nodemask)
+	for_next_zone_zonelist_nodemask(zone, z, ac->zonelist, ac->high_zoneidx, ac->nodemask) // foreach zonelist
 	{
 		struct page *page;
 		unsigned long mark;
 
-		if (cpusets_enabled() && (alloc_flags & ALLOC_CPUSET) && !__cpuset_zone_allowed(zone, gfp_mask))
+		if (cpusets_enabled() && (alloc_flags & ALLOC_CPUSET) && !__cpuset_zone_allowed(zone, gfp_mask)) // 0
 			continue;
 		/*
 		 * When allocating a page cache page for writing, we
@@ -3466,7 +3466,7 @@ retry:
 		 * will require awareness of nodes in the
 		 * dirty-throttling and the flusher threads.
 		 */
-		if (ac->spread_dirty_pages) {
+		if (ac->spread_dirty_pages) { // 脏页限制检查
 			if (last_pgdat_dirty_limit == zone->zone_pgdat)
 				continue;
 
@@ -3476,7 +3476,7 @@ retry:
 			}
 		}
 
-		if (no_fallback && nr_online_nodes > 1 && zone != ac->preferred_zoneref->zone) {
+		if (no_fallback && nr_online_nodes > 1 && zone != ac->preferred_zoneref->zone) { // 避免内存碎片化
 			int local_nid;
 
 			/*
@@ -3491,7 +3491,7 @@ retry:
 			}
 		}
 
-		mark = wmark_pages(zone, alloc_flags & ALLOC_WMARK_MASK);
+		mark = wmark_pages(zone, alloc_flags & ALLOC_WMARK_MASK); // watermark 检查
 		if (!zone_watermark_fast(zone, order, mark, ac_classzone_idx(ac), alloc_flags, gfp_mask)) {
 			int ret;
 
@@ -3558,7 +3558,7 @@ retry:
 	 * It's possible on a UMA machine to get through all zones that are
 	 * fragmented. If avoiding fragmentation, reset and try again.
 	 */
-	if (no_fallback) {
+	if (no_fallback) { // 就是分配连续内存可能会失败, 失败就重试
 		alloc_flags &= ~ALLOC_NOFRAGMENT;
 		goto retry;
 	}

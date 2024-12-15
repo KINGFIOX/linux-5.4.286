@@ -92,7 +92,7 @@ extern pmd_t *mm_find_pmd(struct mm_struct *mm, unsigned long address);
 /*
  * Structure for holding the mostly immutable allocation parameters passed
  * between functions involved in allocations, including the alloc_pages*
- * family of functions.
+ * family of functions. 用于封装与内存分配相关的各种参数和约束条件. 确保分配函数能够根据当前需求和系统状态做出合适的决策
  *
  * nodemask, migratetype and high_zoneidx are initialized only once in
  * __alloc_pages_nodemask() and then never change.
@@ -107,8 +107,8 @@ struct alloc_context {
 	nodemask_t *nodemask;
 	struct zoneref *preferred_zoneref;
 	int migratetype;
-	enum zone_type high_zoneidx;
-	bool spread_dirty_pages;
+	enum zone_type high_zoneidx; //
+	bool spread_dirty_pages; // 脏页分布均匀
 };
 
 #define ac_classzone_idx(ac) zonelist_zone_idx(ac->preferred_zoneref)

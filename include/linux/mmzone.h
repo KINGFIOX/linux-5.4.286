@@ -47,11 +47,11 @@
 #define PAGE_ALLOC_COSTLY_ORDER 3
 
 enum migratetype {
-	MIGRATE_UNMOVABLE,
-	MIGRATE_MOVABLE,
-	MIGRATE_RECLAIMABLE,
-	MIGRATE_PCPTYPES, /* the number of types on the pcp lists */
-	MIGRATE_HIGHATOMIC = MIGRATE_PCPTYPES,
+	MIGRATE_UNMOVABLE, // 分配后无法移动的页面. 使用场景: 必须驻留在固定物理地址的内核内存(比方说: swap block 与 page 的映射表)
+	MIGRATE_MOVABLE, // 可移动. 用户的内存页面
+	MIGRATE_RECLAIMABLE, // 在内存压力下可以被回收的页面, 缓存
+	MIGRATE_PCPTYPES, /* the number of types on the pcp(per cpu pages) lists. 目的: 减少锁争用 */
+	MIGRATE_HIGHATOMIC = MIGRATE_PCPTYPES, // alias MIGRATE_HIGHATOMIC=MIGRATE_PCPTYPES.
 #ifdef CONFIG_CMA
 	/*
 	 * MIGRATE_CMA migration type is designed to mimic the way
@@ -102,7 +102,7 @@ extern int page_group_by_mobility_disabled;
 #define get_pageblock_migratetype(page) get_pfnblock_flags_mask(page, page_to_pfn(page), PB_migrate_end, MIGRATETYPE_MASK)
 
 struct free_area {
-	struct list_head free_list[MIGRATE_TYPES];
+	struct list_head free_list[MIGRATE_TYPES]; // free_list 也有许多种
 	unsigned long nr_free;
 };
 
@@ -658,7 +658,7 @@ enum {
 
 /*
  * This struct contains information about a zone in a zonelist. It is stored
- * here to avoid dereferences into large structures and lookups of tables
+ * here to avoid dereferences into large structures and lookups of tables. 这只是包装一个指针 ?
  */
 struct zoneref {
 	struct zone *zone; /* Pointer to actual zone */

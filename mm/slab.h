@@ -527,18 +527,21 @@ static inline struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s, gfp_t
 	return s;
 }
 
-static inline void slab_post_alloc_hook(struct kmem_cache *s, gfp_t flags, size_t size, void **p)
+static inline void slab_post_alloc_hook(struct kmem_cache *s, //
+					gfp_t flags, //
+					size_t size, //
+					void **p) //
 {
 	size_t i;
 
-	flags &= gfp_allowed_mask;
+	flags &= gfp_allowed_mask; // flags in gfp_allowed_mask
 	for (i = 0; i < size; i++) {
-		p[i] = kasan_slab_alloc(s, p[i], flags);
+		p[i] = kasan_slab_alloc(s, p[i], flags); // p[i] = p[i]
 		/* As p[i] might get tagged, call kmemleak hook after KASAN. */
-		kmemleak_alloc_recursive(p[i], s->object_size, 1, s->flags, flags);
+		kmemleak_alloc_recursive(p[i], s->object_size, 1, s->flags, flags); // do nothing
 	}
 
-	if (memcg_kmem_enabled())
+	if (memcg_kmem_enabled()) // 0
 		memcg_kmem_put_cache(s);
 }
 
@@ -624,7 +627,7 @@ static inline void cache_random_seq_destroy(struct kmem_cache *cachep)
 
 static inline bool slab_want_init_on_alloc(gfp_t flags, struct kmem_cache *c)
 {
-	if (static_branch_unlikely(&init_on_alloc)) {
+	if (static_branch_unlikely(&init_on_alloc)) { // 0
 		if (c->ctor)
 			return false;
 		if (c->flags & (SLAB_TYPESAFE_BY_RCU | SLAB_POISON))
@@ -634,9 +637,9 @@ static inline bool slab_want_init_on_alloc(gfp_t flags, struct kmem_cache *c)
 	return flags & __GFP_ZERO;
 }
 
-static inline bool slab_want_init_on_free(struct kmem_cache *c)
+static inline bool slab_want_init_on_free(struct kmem_cache *c) // false
 {
-	if (static_branch_unlikely(&init_on_free))
+	if (static_branch_unlikely(&init_on_free)) // 0
 		return !(c->ctor || (c->flags & (SLAB_TYPESAFE_BY_RCU | SLAB_POISON)));
 	return false;
 }

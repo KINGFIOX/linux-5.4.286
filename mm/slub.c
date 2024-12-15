@@ -253,7 +253,7 @@ static inline void stat(const struct kmem_cache *s, enum stat_item si)
  * with an XOR of the address where the pointer is held and a per-cache
  * random number.
  */
-static inline void *freelist_ptr(const struct kmem_cache *s, void *ptr, unsigned long ptr_addr)
+static /*inline*/ __attribute__((optimize("O0"))) void *freelist_ptr(const struct kmem_cache *s, void *ptr, unsigned long ptr_addr)
 {
 #ifdef CONFIG_SLAB_FREELIST_HARDENED
 	/*
@@ -273,13 +273,15 @@ static inline void *freelist_ptr(const struct kmem_cache *s, void *ptr, unsigned
 }
 
 /* Returns the freelist pointer recorded at location ptr_addr. */
-static inline void *freelist_dereference(const struct kmem_cache *s, void *ptr_addr)
+static /*inline*/ __attribute__((optimize("O0"))) void *freelist_dereference(const struct kmem_cache *s, void *ptr_addr)
 {
+	// always return ptr_addr
 	return freelist_ptr(s, (void *)*(unsigned long *)(ptr_addr), (unsigned long)ptr_addr);
 }
 
-static inline void *get_freepointer(struct kmem_cache *s, void *object)
+static /*inline*/ __attribute__((optimize("O0"))) void *get_freepointer(struct kmem_cache *s, void *object)
 {
+	// always return object + s->offset
 	return freelist_dereference(s, object + s->offset);
 }
 
@@ -288,13 +290,13 @@ static void prefetch_freepointer(const struct kmem_cache *s, void *object)
 	prefetch(object + s->offset);
 }
 
-static inline void *get_freepointer_safe(struct kmem_cache *s, void *object)
+static /*inline*/ __attribute__((optimize("O0"))) void *get_freepointer_safe(struct kmem_cache *s, void *object)
 {
 	unsigned long freepointer_addr;
 	void *p;
 
-	if (!debug_pagealloc_enabled_static())
-		return get_freepointer(s, object);
+	if (!debug_pagealloc_enabled_static()) // 1
+		return get_freepointer(s, object); // return object + s->offset
 
 	freepointer_addr = (unsigned long)object + s->offset;
 	probe_kernel_read(&p, (void **)freepointer_addr, sizeof(p));
@@ -2444,7 +2446,7 @@ static /*inline*/ bool pfmemalloc_match(struct page *page, gfp_t gfpflags)
  *
  * This function must be called with interrupt disabled.
  */
-static inline void *get_freelist(struct kmem_cache *s, struct page *page)
+static /*inline*/ __attribute__((optimize("O0"))) void *get_freelist(struct kmem_cache *s, struct page *page)
 {
 	struct page new;
 	unsigned long counters;
@@ -2616,16 +2618,15 @@ static __attribute__((optimize("O0"))) void *__slab_alloc(struct kmem_cache *s, 
  * If the object has been wiped upon free, make sure it's fully initialized by
  * zeroing out freelist pointer.
  */
-static __always_inline void maybe_wipe_obj_freeptr(struct kmem_cache *s, void *obj)
+static /*__always_inline*/ __attribute__((optimize("O0"))) void maybe_wipe_obj_freeptr(struct kmem_cache *s, void *obj)
 {
-	if (unlikely(slab_want_init_on_free(s)) && obj)
+	if (unlikely(slab_want_init_on_free(s)) /*0*/ && obj)
 		memset((void *)((char *)obj + s->offset), 0, sizeof(void *));
 }
 
 /*
- * Inlined fastpath so that allocation functions (kmalloc, kmem_cache_alloc)
- * have the fastpath folded into their functions. So no function call
- * overhead for requests that can be satisfied on the fastpath.
+ * Inlined fastpath so that allocation functions (kmalloc, kmem_cache_alloc) have the fastpath folded into their functions.
+ * So no function call overhead for requests that can be satisfied on the fastpath.
  *
  * The fastpath works by first checking if the lockless freelist can be used.
  * If not then __slab_alloc is called for slow processing.
@@ -2680,11 +2681,11 @@ redo:
 
 	object = c->freelist;
 	page = c->page;
-	if (unlikely(!object || !page || !node_match(page, node))) {
+	if (unlikely(!object || !page || !node_match(page, node))) { // slow path
 		object = __slab_alloc(s, gfpflags, node, addr, c);
-		stat(s, ALLOC_SLOWPATH);
-	} else {
-		void *next_object = get_freepointer_safe(s, object);
+		stat(s, ALLOC_SLOWPATH); // do nothing
+	} else { // fast path
+		void *next_object = get_freepointer_safe(s, object); // object + s->offset
 
 		/*
 		 * The cmpxchg will only match if there was no additional
@@ -2698,22 +2699,22 @@ redo:
 		 *
 		 * Since this is without lock semantics the protection is only
 		 * against code executing on this cpu *not* from access by
-		 * other cpus.
+		 * other cpus. 自旋. 就是存在: 被其他 CPU 抢先修改的情况.
 		 */
 		if (unlikely(!this_cpu_cmpxchg_double(s->cpu_slab->freelist, s->cpu_slab->tid, object, tid, next_object, next_tid(tid)))) {
 			note_cmpxchg_failure("slab_alloc", s, tid);
 			goto redo;
 		}
-		prefetch_freepointer(s, next_object);
-		stat(s, ALLOC_FASTPATH);
+		prefetch_freepointer(s, next_object); // do nothing. but prefetch next_object
+		stat(s, ALLOC_FASTPATH); // do nothing
 	}
 
-	maybe_wipe_obj_freeptr(s, object);
+	maybe_wipe_obj_freeptr(s, object); // do nothing
 
-	if (unlikely(slab_want_init_on_alloc(gfpflags, s)) && object)
+	if (unlikely(slab_want_init_on_alloc(gfpflags, s)) && object) // if gfpflags & __GFP_ZERO && object != NULL => clear
 		memset(object, 0, s->object_size);
 
-	slab_post_alloc_hook(s, gfpflags, 1, &object);
+	slab_post_alloc_hook(s, gfpflags, 1, &object); // do nothing
 
 	return object;
 }

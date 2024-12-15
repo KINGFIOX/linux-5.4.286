@@ -13,9 +13,9 @@
  * hit rate for workloads with spatial locality.  Otherwise, use pages.
  */
 #ifdef CONFIG_MMU
-#define VMACACHE_SHIFT	PMD_SHIFT
+#define VMACACHE_SHIFT PMD_SHIFT
 #else
-#define VMACACHE_SHIFT	PAGE_SHIFT
+#define VMACACHE_SHIFT PAGE_SHIFT
 #endif
 #define VMACACHE_HASH(addr) ((addr >> VMACACHE_SHIFT) & VMACACHE_MASK)
 
@@ -90,9 +90,7 @@ struct vm_area_struct *vmacache_find(struct mm_struct *mm, unsigned long addr)
 }
 
 #ifndef CONFIG_MMU
-struct vm_area_struct *vmacache_find_exact(struct mm_struct *mm,
-					   unsigned long start,
-					   unsigned long end)
+struct vm_area_struct *vmacache_find_exact(struct mm_struct *mm, unsigned long start, unsigned long end)
 {
 	int idx = VMACACHE_HASH(start);
 	int i;

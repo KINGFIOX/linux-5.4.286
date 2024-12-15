@@ -15,12 +15,9 @@
 #ifdef CONFIG_DEBUG_KMEMLEAK
 
 extern void kmemleak_init(void) __init;
-extern void kmemleak_alloc(const void *ptr, size_t size, int min_count,
-			   gfp_t gfp) __ref;
-extern void kmemleak_alloc_percpu(const void __percpu *ptr, size_t size,
-				  gfp_t gfp) __ref;
-extern void kmemleak_vmalloc(const struct vm_struct *area, size_t size,
-			     gfp_t gfp) __ref;
+extern void kmemleak_alloc(const void *ptr, size_t size, int min_count, gfp_t gfp) __ref;
+extern void kmemleak_alloc_percpu(const void __percpu *ptr, size_t size, gfp_t gfp) __ref;
+extern void kmemleak_vmalloc(const struct vm_struct *area, size_t size, gfp_t gfp) __ref;
 extern void kmemleak_free(const void *ptr) __ref;
 extern void kmemleak_free_part(const void *ptr, size_t size) __ref;
 extern void kmemleak_free_percpu(const void __percpu *ptr) __ref;
@@ -29,15 +26,12 @@ extern void kmemleak_not_leak(const void *ptr) __ref;
 extern void kmemleak_ignore(const void *ptr) __ref;
 extern void kmemleak_scan_area(const void *ptr, size_t size, gfp_t gfp) __ref;
 extern void kmemleak_no_scan(const void *ptr) __ref;
-extern void kmemleak_alloc_phys(phys_addr_t phys, size_t size, int min_count,
-				gfp_t gfp) __ref;
+extern void kmemleak_alloc_phys(phys_addr_t phys, size_t size, int min_count, gfp_t gfp) __ref;
 extern void kmemleak_free_part_phys(phys_addr_t phys, size_t size) __ref;
 extern void kmemleak_not_leak_phys(phys_addr_t phys) __ref;
 extern void kmemleak_ignore_phys(phys_addr_t phys) __ref;
 
-static inline void kmemleak_alloc_recursive(const void *ptr, size_t size,
-					    int min_count, slab_flags_t flags,
-					    gfp_t gfp)
+static inline void kmemleak_alloc_recursive(const void *ptr, size_t size, int min_count, slab_flags_t flags, gfp_t gfp)
 {
 	if (!(flags & SLAB_NOLEAKTRACE))
 		kmemleak_alloc(ptr, size, min_count, gfp);
@@ -59,21 +53,16 @@ static inline void kmemleak_erase(void **ptr)
 static inline void kmemleak_init(void)
 {
 }
-static inline void kmemleak_alloc(const void *ptr, size_t size, int min_count,
-				  gfp_t gfp)
+static inline void kmemleak_alloc(const void *ptr, size_t size, int min_count, gfp_t gfp)
 {
 }
-static inline void kmemleak_alloc_recursive(const void *ptr, size_t size,
-					    int min_count, slab_flags_t flags,
-					    gfp_t gfp)
+static inline void kmemleak_alloc_recursive(const void *ptr, size_t size, int min_count, slab_flags_t flags, gfp_t gfp)
 {
 }
-static inline void kmemleak_alloc_percpu(const void __percpu *ptr, size_t size,
-					 gfp_t gfp)
+static inline void kmemleak_alloc_percpu(const void __percpu *ptr, size_t size, gfp_t gfp)
 {
 }
-static inline void kmemleak_vmalloc(const struct vm_struct *area, size_t size,
-				    gfp_t gfp)
+static inline void kmemleak_vmalloc(const struct vm_struct *area, size_t size, gfp_t gfp)
 {
 }
 static inline void kmemleak_free(const void *ptr)
@@ -106,8 +95,7 @@ static inline void kmemleak_erase(void **ptr)
 static inline void kmemleak_no_scan(const void *ptr)
 {
 }
-static inline void kmemleak_alloc_phys(phys_addr_t phys, size_t size,
-				       int min_count, gfp_t gfp)
+static inline void kmemleak_alloc_phys(phys_addr_t phys, size_t size, int min_count, gfp_t gfp)
 {
 }
 static inline void kmemleak_free_part_phys(phys_addr_t phys, size_t size)
@@ -120,6 +108,6 @@ static inline void kmemleak_ignore_phys(phys_addr_t phys)
 {
 }
 
-#endif	/* CONFIG_DEBUG_KMEMLEAK */
+#endif /* CONFIG_DEBUG_KMEMLEAK */
 
-#endif	/* __KMEMLEAK_H */
+#endif /* __KMEMLEAK_H */

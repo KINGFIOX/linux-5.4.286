@@ -2623,9 +2623,9 @@ static inline bool debug_pagealloc_enabled(void)
  * For use in fast paths after init_debug_pagealloc() has run, or when a
  * false negative result is not harmful when called too early.
  */
-static inline bool debug_pagealloc_enabled_static(void)
+static /*inline*/ __attribute__((optimize("O0"))) bool debug_pagealloc_enabled_static(void) // false
 {
-	if (!IS_ENABLED(CONFIG_DEBUG_PAGEALLOC))
+	if (!IS_ENABLED(CONFIG_DEBUG_PAGEALLOC)) // 1
 		return false;
 
 	return static_branch_unlikely(&_debug_pagealloc_enabled);
