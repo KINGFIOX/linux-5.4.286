@@ -65,17 +65,17 @@ static void __init setup_initrd(void)
 {
 	unsigned long size;
 
-	if (initrd_start >= initrd_end) {
+	if (initrd_start >= initrd_end) { // check
 		pr_info("initrd not found or empty");
 		goto disable;
 	}
-	if (__pa(initrd_end) > PFN_PHYS(max_low_pfn)) {
+	if (__pa(initrd_end) > PFN_PHYS(max_low_pfn)) { // check
 		pr_err("initrd extends beyond end of memory");
 		goto disable;
 	}
 
 	size = initrd_end - initrd_start;
-	memblock_reserve(__pa(initrd_start), size);
+	memblock_reserve(__pa(initrd_start), size); // reserved
 	initrd_below_start_ok = 1;
 
 	pr_info("Initial ramdisk at: 0x%p (%lu bytes)\n", (void *)(initrd_start), size);
@@ -97,11 +97,13 @@ void __init setup_bootmem(void)
 	phys_addr_t vmlinux_start = __pa(&_start);
 
 	/* Find the memory region containing the kernel */
-	for_each_memblock (memory, reg) {
+	// for (reg = memblock.memory.regions; reg < (memblock.memory.regions + memblock.memory.cnt); reg++) { // memblock defined in mm/memblock.c
+	// 查找包含内核的内存区域
+	for_each_memblock (memory, reg /*region*/) {
 		phys_addr_t end = reg->base + reg->size;
 
 		if (reg->base <= vmlinux_start && vmlinux_end <= end) {
-			mem_size = min(reg->size, (phys_addr_t)-PAGE_OFFSET);
+			mem_size = min(reg->size, (phys_addr_t)-PAGE_OFFSET); //
 
 			/*
 			 * Remove memblock from the end of usable area to the
@@ -114,14 +116,16 @@ void __init setup_bootmem(void)
 	BUG_ON(mem_size == 0);
 
 	/* Reserve from the start of the kernel to the end of the kernel */
+	// 保留内核使用的内存. 将内核代码所占用的内存标记为已保留, 防止被其他用途使用.
 	memblock_reserve(vmlinux_start, vmlinux_end - vmlinux_start);
 
+	// 设置系统的物理页面数量限制
 	max_pfn = PFN_DOWN(memblock_end_of_DRAM());
 	max_low_pfn = max_pfn;
-	set_max_mapnr(max_low_pfn);
+	set_max_mapnr(max_low_pfn); // 设置最大物理页号
 
 #ifdef CONFIG_BLK_DEV_INITRD
-	setup_initrd();
+	setup_initrd(); // 初始化 initrd
 #endif /* CONFIG_BLK_DEV_INITRD */
 
 	/*
@@ -131,8 +135,8 @@ void __init setup_bootmem(void)
 	memblock_reserve(dtb_early_pa, fdt_totalsize(dtb_early_va));
 
 	early_init_fdt_scan_reserved_mem();
-	memblock_allow_resize();
-	memblock_dump_all();
+	memblock_allow_resize(); // set memblock_can_resize
+	memblock_dump_all(); // print memblock info
 
 	for_each_memblock (memory, reg) {
 		unsigned long start_pfn = memblock_region_memory_base_pfn(reg);
@@ -147,10 +151,10 @@ EXPORT_SYMBOL(va_pa_offset);
 unsigned long pfn_base;
 EXPORT_SYMBOL(pfn_base);
 
-void *dtb_early_va;
+void *dtb_early_va; // 设备树早期的虚拟地址
 pgd_t swapper_pg_dir[PTRS_PER_PGD] __page_aligned_bss;
 pgd_t trampoline_pg_dir[PTRS_PER_PGD] __page_aligned_bss;
-pte_t fixmap_pte[PTRS_PER_PTE] __page_aligned_bss;
+pte_t fixmap_pte[PTRS_PER_PTE] __page_aligned_bss; // 固定映射区域的 pte
 static bool mmu_enabled;
 
 #define MAX_EARLY_MAPPING_SIZE SZ_128M
@@ -431,8 +435,8 @@ static void __init setup_vm_final(void)
 void __init paging_init(void)
 {
 	setup_vm_final();
-	memblocks_present();
-	sparse_init(); // sparse 稀疏的
+	memblocks_present(); // do nothing
+	sparse_init(); // sparse 稀疏的. do nothing
 	setup_zero_page();
 	zone_sizes_init();
 }

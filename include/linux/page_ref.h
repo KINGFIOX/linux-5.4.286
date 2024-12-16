@@ -74,8 +74,8 @@ static inline int page_count(struct page *page)
 
 static inline void set_page_count(struct page *page, int v)
 {
-	atomic_set(&page->_refcount, v);
-	if (page_ref_tracepoint_active(__tracepoint_page_ref_set))
+	atomic_set(&page->_refcount, v); // page->_refcount = v
+	if (page_ref_tracepoint_active(__tracepoint_page_ref_set)) // 0
 		__page_ref_set(page, v);
 }
 

@@ -491,7 +491,7 @@ void __init parse_early_options(char *cmdline)
 /* Arch code calls this early on, or if not, just before other parsing. */
 void __init parse_early_param(void)
 {
-	static int done __initdata;
+	static int done __initdata; //
 	static char tmp_cmdline[COMMAND_LINE_SIZE] __initdata;
 
 	if (done)

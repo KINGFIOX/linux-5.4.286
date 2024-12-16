@@ -1342,19 +1342,19 @@ void __meminit reserve_bootmem_region(phys_addr_t start, phys_addr_t end)
 
 	for (; start_pfn < end_pfn; start_pfn++) {
 		if (pfn_valid(start_pfn)) {
-			struct page *page = pfn_to_page(start_pfn);
+			struct page *page = pfn_to_page(start_pfn); // pfn to struct page
 
-			init_reserved_page(start_pfn);
+			init_reserved_page(start_pfn); // init struct page
 
 			/* Avoid false-positive PageTail() */
-			INIT_LIST_HEAD(&page->lru);
+			INIT_LIST_HEAD(&page->lru); // init node of page->lru
 
 			/*
 			 * no need for atomic set_bit because the struct
 			 * page is not visible yet so nobody should
 			 * access it yet.
 			 */
-			__SetPageReserved(page);
+			__SetPageReserved(page); // set PG_reserved
 		}
 	}
 }
@@ -1381,13 +1381,13 @@ void __free_pages_core(struct page *page, unsigned int order)
 	struct page *p = page;
 	unsigned int loop;
 
-	prefetchw(p);
+	prefetchw(p); // do nothing
 	for (loop = 0; loop < (nr_pages - 1); loop++, p++) {
-		prefetchw(p + 1);
-		__ClearPageReserved(p);
-		set_page_count(p, 0);
+		prefetchw(p + 1); // do nothing
+		__ClearPageReserved(p); // clear PG_reserved
+		set_page_count(p, 0); // set p.refcount = 0
 	}
-	__ClearPageReserved(p);
+	__ClearPageReserved(p); // clear PG_reserved
 	set_page_count(p, 0);
 
 	atomic_long_add(nr_pages, &page_zone(page)->managed_pages);
@@ -1435,7 +1435,7 @@ static inline bool __meminit early_pfn_in_nid(unsigned long pfn, int node)
 
 void __init memblock_free_pages(struct page *page, unsigned long pfn, unsigned int order)
 {
-	if (early_page_uninitialised(pfn))
+	if (early_page_uninitialised(pfn)) // 0
 		return;
 	__free_pages_core(page, order);
 }
@@ -3229,14 +3229,14 @@ late_initcall(fail_page_alloc_debugfs);
 
 #else /* CONFIG_FAIL_PAGE_ALLOC */
 
-static inline bool __should_fail_alloc_page(gfp_t gfp_mask, unsigned int order)
+static inline bool __should_fail_alloc_page(gfp_t gfp_mask, unsigned int order) // false
 {
 	return false;
 }
 
 #endif /* CONFIG_FAIL_PAGE_ALLOC */
 
-noinline bool should_fail_alloc_page(gfp_t gfp_mask, unsigned int order)
+noinline bool should_fail_alloc_page(gfp_t gfp_mask, unsigned int order) // false
 {
 	return __should_fail_alloc_page(gfp_mask, order);
 }
@@ -4492,7 +4492,7 @@ __attribute__((optimize("O0"))) static bool prepare_alloc_pages(gfp_t gfp_mask, 
 	ac->nodemask = nodemask;
 	ac->migratetype = gfpflags_to_migratetype(gfp_mask);
 
-	if (cpusets_enabled()) {
+	if (cpusets_enabled()) { // 0
 		*alloc_mask |= __GFP_HARDWALL;
 		if (!ac->nodemask)
 			ac->nodemask = &cpuset_current_mems_allowed;
@@ -4500,12 +4500,12 @@ __attribute__((optimize("O0"))) static bool prepare_alloc_pages(gfp_t gfp_mask, 
 			*alloc_flags |= ALLOC_CPUSET;
 	}
 
-	fs_reclaim_acquire(gfp_mask);
-	fs_reclaim_release(gfp_mask);
+	fs_reclaim_acquire(gfp_mask); // do nothing
+	fs_reclaim_release(gfp_mask); // do nothing
 
 	might_sleep_if(gfp_mask & __GFP_DIRECT_RECLAIM);
 
-	if (should_fail_alloc_page(gfp_mask, order))
+	if (should_fail_alloc_page(gfp_mask, order)) // 0
 		return false;
 
 	if (IS_ENABLED(CONFIG_CMA) && ac->migratetype == MIGRATE_MOVABLE)
@@ -4536,7 +4536,7 @@ static inline void finalise_ac(gfp_t gfp_mask, struct alloc_context *ac)
 __attribute__((optimize("O0"))) struct page *__alloc_pages_nodemask(gfp_t gfp_mask, // 分配掩码
 								    unsigned int order, // 分配阶数
 								    int preferred_nid, // 0
-								    nodemask_t *nodemask) // NULL
+								    nodemask_t *nodemask)
 {
 	struct page *page;
 	unsigned int alloc_flags = ALLOC_WMARK_LOW;
@@ -4545,9 +4545,8 @@ __attribute__((optimize("O0"))) struct page *__alloc_pages_nodemask(gfp_t gfp_ma
 
 	/*
 	 * There are several places where we assume that the order value is sane so bail out early if the request is out of bound.
-	 * check
 	 */
-	if (unlikely(order >= MAX_ORDER)) {
+	if (unlikely(order >= MAX_ORDER)) { // check
 		WARN_ON_ONCE(!(gfp_mask & __GFP_NOWARN));
 		return NULL;
 	}

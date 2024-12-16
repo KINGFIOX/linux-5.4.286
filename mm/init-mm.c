@@ -26,14 +26,17 @@
  * Since there is only one init_mm in the entire system, keep it simple
  * and size this cpu_bitmask to NR_CPUS.
  */
-struct mm_struct init_mm = { .mm_rb = RB_ROOT,
-			     .pgd = swapper_pg_dir,
-			     .mm_users = ATOMIC_INIT(2),
-			     .mm_count = ATOMIC_INIT(1),
-			     .mmap_sem = __RWSEM_INITIALIZER(init_mm.mmap_sem),
-			     .page_table_lock = __SPIN_LOCK_UNLOCKED(init_mm.page_table_lock),
-			     .arg_lock = __SPIN_LOCK_UNLOCKED(init_mm.arg_lock),
-			     .mmlist = LIST_HEAD_INIT(init_mm.mmlist),
-			     .user_ns = &init_user_ns,
-			     .cpu_bitmap = CPU_BITS_NONE,
-			     INIT_MM_CONTEXT(init_mm) };
+struct mm_struct init_mm = {
+	.mm_rb = RB_ROOT, // NULL
+	.pgd = swapper_pg_dir,
+	.mm_users = ATOMIC_INIT(2),
+	.mm_count = ATOMIC_INIT(1),
+	.mmap_sem = __RWSEM_INITIALIZER(init_mm.mmap_sem),
+	.page_table_lock = __SPIN_LOCK_UNLOCKED(init_mm.page_table_lock),
+	.arg_lock = __SPIN_LOCK_UNLOCKED(init_mm.arg_lock),
+	.mmlist = LIST_HEAD_INIT(init_mm.mmlist),
+	.user_ns = &init_user_ns,
+	.cpu_bitmap = CPU_BITS_NONE,
+	INIT_MM_CONTEXT(init_mm)
+	// 还有一部分, start_code, end_code 之类的, 在 setup_arch 中设置
+};

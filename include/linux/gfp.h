@@ -492,7 +492,7 @@ static inline int gfp_zonelist(gfp_t flags) // 0
  * For the case of non-NUMA systems the NODE_DATA() gets optimized to
  * &contig_page_data at compile-time.
  */
-__attribute__((optimize("O0"))) static /*inline*/ struct zonelist *node_zonelist(int nid, gfp_t flags)
+__attribute__((optimize("O0"))) static /*inline*/ struct zonelist *node_zonelist(int nid /*0*/, gfp_t flags)
 {
 	// return &contig_page_data.node_zonelists[0]
 	return NODE_DATA(nid)->node_zonelists + gfp_zonelist(flags) /*0*/;
@@ -521,7 +521,7 @@ static inline struct page *__alloc_pages(gfp_t gfp_mask /*分配掩码*/, unsign
  * The node must be valid and online.
  * For more general interface, see alloc_pages_node().
  */
-static inline struct page *__alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
+static inline struct page *__alloc_pages_node(int nid /*0*/, gfp_t gfp_mask, unsigned int order)
 {
 	VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES); // check
 	VM_WARN_ON((gfp_mask & __GFP_THISNODE) && !node_online(nid));
@@ -531,8 +531,7 @@ static inline struct page *__alloc_pages_node(int nid, gfp_t gfp_mask, unsigned 
 
 /*
  * Allocate pages, preferring the node given as nid. When nid == NUMA_NO_NODE,
- * prefer the current CPU's closest node. Otherwise node must be valid and
- * online.
+ * prefer the current CPU's closest node. Otherwise node must be valid and online.
  */
 static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
 {

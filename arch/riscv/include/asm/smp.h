@@ -20,7 +20,7 @@ extern unsigned long boot_cpu_hartid;
  * Mapping between linux logical cpu index and hartid.
  */
 extern unsigned long __cpuid_to_hartid_map[NR_CPUS];
-#define cpuid_to_hartid_map(cpu)    __cpuid_to_hartid_map[cpu]
+#define cpuid_to_hartid_map(cpu) __cpuid_to_hartid_map[cpu]
 
 /* print IPI stats */
 void show_ipi_stats(struct seq_file *p, int prec);

@@ -919,7 +919,7 @@ vm_fault_t finish_mkwrite_fault(struct vm_fault *vmf);
 /* Page flags: | [SECTION] | [NODE] | ZONE | [LAST_CPUPID] | ... | FLAGS | */
 #define SECTIONS_PGOFF ((sizeof(unsigned long) * 8) - SECTIONS_WIDTH) // sizeof(unsigned long) * 8 - SECTIONS_WIDTH == 64 - 0 == 64
 #define NODES_PGOFF (SECTIONS_PGOFF - NODES_WIDTH) // SECTIONS_PGOFF - NODES_WIDTH == 64 - 0 = 64
-#define ZONES_PGOFF (NODES_PGOFF - ZONES_WIDTH)
+#define ZONES_PGOFF (NODES_PGOFF - ZONES_WIDTH) // 64 - 2 = 62
 #define LAST_CPUPID_PGOFF (ZONES_PGOFF - LAST_CPUPID_WIDTH)
 #define KASAN_TAG_PGOFF (LAST_CPUPID_PGOFF - KASAN_TAG_WIDTH)
 
@@ -930,7 +930,7 @@ vm_fault_t finish_mkwrite_fault(struct vm_fault *vmf);
  */
 #define SECTIONS_PGSHIFT (SECTIONS_PGOFF * (SECTIONS_WIDTH != 0))
 #define NODES_PGSHIFT (NODES_PGOFF * (NODES_WIDTH != 0)) // NODES_PGOFF * ( NODES_WIDTH != 0 ) == 64 * ( 0 != 0 ) == 64 * 0 == 0
-#define ZONES_PGSHIFT (ZONES_PGOFF * (ZONES_WIDTH != 0))
+#define ZONES_PGSHIFT (ZONES_PGOFF * (ZONES_WIDTH != 0)) // 62 * ( 2 != 0 ) = 62 * 1 = 62
 #define LAST_CPUPID_PGSHIFT (LAST_CPUPID_PGOFF * (LAST_CPUPID_WIDTH != 0))
 #define KASAN_TAG_PGSHIFT (KASAN_TAG_PGOFF * (KASAN_TAG_WIDTH != 0))
 
@@ -949,7 +949,7 @@ vm_fault_t finish_mkwrite_fault(struct vm_fault *vmf);
 #error SECTIONS_WIDTH+NODES_WIDTH+ZONES_WIDTH > BITS_PER_LONG - NR_PAGEFLAGS
 #endif
 
-#define ZONES_MASK ((1UL << ZONES_WIDTH) - 1)
+#define ZONES_MASK ((1UL << ZONES_WIDTH) - 1) // (1 << 2) - 1 == 4 - 1 == 3
 #define NODES_MASK ((1UL << NODES_WIDTH) - 1) // (1 << 0) - 1 == 1 - 1 == 0
 #define SECTIONS_MASK ((1UL << SECTIONS_WIDTH) - 1)
 #define LAST_CPUPID_MASK ((1UL << LAST_CPUPID_SHIFT) - 1)
@@ -958,6 +958,7 @@ vm_fault_t finish_mkwrite_fault(struct vm_fault *vmf);
 
 static inline enum zone_type page_zonenum(const struct page *page)
 {
+	// ( page->flags >> 62 ) & 3
 	return (page->flags >> ZONES_PGSHIFT) & ZONES_MASK;
 }
 
@@ -1097,8 +1098,7 @@ static inline int page_zone_id(struct page *page)
 #ifdef NODE_NOT_IN_PAGE_FLAGS
 extern int page_to_nid(const struct page *page);
 #else
-// nid 代表 numa node id.
-static inline int page_to_nid(const struct page *page)
+static inline int page_to_nid(const struct page *page) // 0
 {
 	struct page *p = (struct page *)page; // put off the const
 
@@ -1262,6 +1262,7 @@ static inline void page_kasan_tag_reset(struct page *page)
 
 static inline struct zone *page_zone(const struct page *page)
 {
+	// contig_page_data.node_zones[page_zonenum(page)]
 	return &NODE_DATA(page_to_nid(page))->node_zones[page_zonenum(page)];
 }
 

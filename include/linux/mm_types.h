@@ -343,7 +343,7 @@ struct vm_area_struct {
 	 * or brk vma (with NULL file) can only be in an anon_vma list.
 	 */
 	struct list_head anon_vma_chain; /* Serialized by mmap_sem & * page_table_lock */
-	struct anon_vma *anon_vma; /* Serialized by page_table_lock. 用于管理 rmap */
+	struct anon_vma *anon_vma; /* Serialized by page_table_lock. 用于管理 rmap(反向映射). */
 
 	const struct vm_operations_struct *vm_ops; /* Function pointers to deal with this struct. */
 

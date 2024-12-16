@@ -2,10 +2,9 @@
 #ifndef _LINUX_STRING_H_
 #define _LINUX_STRING_H_
 
-
-#include <linux/compiler.h>	/* for inline */
-#include <linux/types.h>	/* for size_t */
-#include <linux/stddef.h>	/* for NULL */
+#include <linux/compiler.h> /* for inline */
+#include <linux/types.h> /* for size_t */
+#include <linux/stddef.h> /* for NULL */
 #include <stdarg.h>
 #include <uapi/linux/string.h>
 
@@ -20,10 +19,10 @@ extern void *memdup_user_nul(const void __user *, size_t);
 #include <asm/string.h>
 
 #ifndef __HAVE_ARCH_STRCPY
-extern char * strcpy(char *,const char *);
+extern char *strcpy(char *, const char *);
 #endif
 #ifndef __HAVE_ARCH_STRNCPY
-extern char * strncpy(char *,const char *, __kernel_size_t);
+extern char *strncpy(char *, const char *, __kernel_size_t);
 #endif
 #ifndef __HAVE_ARCH_STRLCPY
 size_t strlcpy(char *, const char *, size_t);
@@ -36,19 +35,19 @@ ssize_t strscpy(char *, const char *, size_t);
 ssize_t strscpy_pad(char *dest, const char *src, size_t count);
 
 #ifndef __HAVE_ARCH_STRCAT
-extern char * strcat(char *, const char *);
+extern char *strcat(char *, const char *);
 #endif
 #ifndef __HAVE_ARCH_STRNCAT
-extern char * strncat(char *, const char *, __kernel_size_t);
+extern char *strncat(char *, const char *, __kernel_size_t);
 #endif
 #ifndef __HAVE_ARCH_STRLCAT
 extern size_t strlcat(char *, const char *, __kernel_size_t);
 #endif
 #ifndef __HAVE_ARCH_STRCMP
-extern int strcmp(const char *,const char *);
+extern int strcmp(const char *, const char *);
 #endif
 #ifndef __HAVE_ARCH_STRNCMP
-extern int strncmp(const char *,const char *,__kernel_size_t);
+extern int strncmp(const char *, const char *, __kernel_size_t);
 #endif
 #ifndef __HAVE_ARCH_STRCASECMP
 extern int strcasecmp(const char *s1, const char *s2);
@@ -57,18 +56,18 @@ extern int strcasecmp(const char *s1, const char *s2);
 extern int strncasecmp(const char *s1, const char *s2, size_t n);
 #endif
 #ifndef __HAVE_ARCH_STRCHR
-extern char * strchr(const char *,int);
+extern char *strchr(const char *, int);
 #endif
 #ifndef __HAVE_ARCH_STRCHRNUL
-extern char * strchrnul(const char *,int);
+extern char *strchrnul(const char *, int);
 #endif
 #ifndef __HAVE_ARCH_STRNCHR
-extern char * strnchr(const char *, size_t, int);
+extern char *strnchr(const char *, size_t, int);
 #endif
 #ifndef __HAVE_ARCH_STRRCHR
-extern char * strrchr(const char *,int);
+extern char *strrchr(const char *, int);
 #endif
-extern char * __must_check skip_spaces(const char *);
+extern char *__must_check skip_spaces(const char *);
 
 extern char *strim(char *);
 
@@ -78,32 +77,32 @@ static inline __must_check char *strstrip(char *str)
 }
 
 #ifndef __HAVE_ARCH_STRSTR
-extern char * strstr(const char *, const char *);
+extern char *strstr(const char *, const char *);
 #endif
 #ifndef __HAVE_ARCH_STRNSTR
-extern char * strnstr(const char *, const char *, size_t);
+extern char *strnstr(const char *, const char *, size_t);
 #endif
 #ifndef __HAVE_ARCH_STRLEN
 extern __kernel_size_t strlen(const char *);
 #endif
 #ifndef __HAVE_ARCH_STRNLEN
-extern __kernel_size_t strnlen(const char *,__kernel_size_t);
+extern __kernel_size_t strnlen(const char *, __kernel_size_t);
 #endif
 #ifndef __HAVE_ARCH_STRPBRK
-extern char * strpbrk(const char *,const char *);
+extern char *strpbrk(const char *, const char *);
 #endif
 #ifndef __HAVE_ARCH_STRSEP
-extern char * strsep(char **,const char *);
+extern char *strsep(char **, const char *);
 #endif
 #ifndef __HAVE_ARCH_STRSPN
-extern __kernel_size_t strspn(const char *,const char *);
+extern __kernel_size_t strspn(const char *, const char *);
 #endif
 #ifndef __HAVE_ARCH_STRCSPN
-extern __kernel_size_t strcspn(const char *,const char *);
+extern __kernel_size_t strcspn(const char *, const char *);
 #endif
 
 #ifndef __HAVE_ARCH_MEMSET
-extern void * memset(void *,int,__kernel_size_t);
+extern void *memset(void *, int, __kernel_size_t);
 #endif
 
 #ifndef __HAVE_ARCH_MEMSET16
@@ -118,8 +117,7 @@ extern void *memset32(uint32_t *, uint32_t, __kernel_size_t);
 extern void *memset64(uint64_t *, uint64_t, __kernel_size_t);
 #endif
 
-static inline void *memset_l(unsigned long *p, unsigned long v,
-		__kernel_size_t n)
+static inline void *memset_l(unsigned long *p, unsigned long v, __kernel_size_t n)
 {
 	if (BITS_PER_LONG == 32)
 		return memset32((uint32_t *)p, v, n);
@@ -136,33 +134,32 @@ static inline void *memset_p(void **p, void *v, __kernel_size_t n)
 }
 
 extern void **__memcat_p(void **a, void **b);
-#define memcat_p(a, b) ({					\
-	BUILD_BUG_ON_MSG(!__same_type(*(a), *(b)),		\
-			 "type mismatch in memcat_p()");	\
-	(typeof(*a) *)__memcat_p((void **)(a), (void **)(b));	\
-})
+#define memcat_p(a, b)                                                                                                                                         \
+	({                                                                                                                                                     \
+		BUILD_BUG_ON_MSG(!__same_type(*(a), *(b)), "type mismatch in memcat_p()");                                                                     \
+		(typeof(*a) *)__memcat_p((void **)(a), (void **)(b));                                                                                          \
+	})
 
 #ifndef __HAVE_ARCH_MEMCPY
-extern void * memcpy(void *,const void *,__kernel_size_t);
+extern void *memcpy(void *, const void *, __kernel_size_t);
 #endif
 #ifndef __HAVE_ARCH_MEMMOVE
-extern void * memmove(void *,const void *,__kernel_size_t);
+extern void *memmove(void *, const void *, __kernel_size_t);
 #endif
 #ifndef __HAVE_ARCH_MEMSCAN
-extern void * memscan(void *,int,__kernel_size_t);
+extern void *memscan(void *, int, __kernel_size_t);
 #endif
 #ifndef __HAVE_ARCH_MEMCMP
-extern int memcmp(const void *,const void *,__kernel_size_t);
+extern int memcmp(const void *, const void *, __kernel_size_t);
 #endif
 #ifndef __HAVE_ARCH_BCMP
-extern int bcmp(const void *,const void *,__kernel_size_t);
+extern int bcmp(const void *, const void *, __kernel_size_t);
 #endif
 #ifndef __HAVE_ARCH_MEMCHR
-extern void * memchr(const void *,int,__kernel_size_t);
+extern void *memchr(const void *, int, __kernel_size_t);
 #endif
 #ifndef __HAVE_ARCH_MEMCPY_MCSAFE
-static inline __must_check unsigned long memcpy_mcsafe(void *dst,
-		const void *src, size_t cnt)
+static inline __must_check unsigned long memcpy_mcsafe(void *dst, const void *src, size_t cnt)
 {
 	memcpy(dst, src, cnt);
 	return 0;
@@ -195,8 +192,8 @@ static inline int strtobool(const char *s, bool *res)
 	return kstrtobool(s, res);
 }
 
-int match_string(const char * const *array, size_t n, const char *string);
-int __sysfs_match_string(const char * const *array, size_t n, const char *s);
+int match_string(const char *const *array, size_t n, const char *string);
+int __sysfs_match_string(const char *const *array, size_t n, const char *s);
 
 /**
  * sysfs_match_string - matches given string in an array
@@ -213,8 +210,7 @@ int bstr_printf(char *buf, size_t size, const char *fmt, const u32 *bin_buf);
 int bprintf(u32 *bin_buf, size_t size, const char *fmt, ...) __printf(3, 4);
 #endif
 
-extern ssize_t memory_read_from_buffer(void *to, size_t count, loff_t *ppos,
-				       const void *from, size_t available);
+extern ssize_t memory_read_from_buffer(void *to, size_t count, loff_t *ppos, const void *from, size_t available);
 
 /**
  * strstarts - does @str start with @prefix?
@@ -282,16 +278,16 @@ extern __kernel_size_t __underlying_strlen(const char *p) __RENAME(strlen);
 extern char *__underlying_strncat(char *p, const char *q, __kernel_size_t count) __RENAME(strncat);
 extern char *__underlying_strncpy(char *p, const char *q, __kernel_size_t size) __RENAME(strncpy);
 #else
-#define __underlying_memchr	__builtin_memchr
-#define __underlying_memcmp	__builtin_memcmp
-#define __underlying_memcpy	__builtin_memcpy
-#define __underlying_memmove	__builtin_memmove
-#define __underlying_memset	__builtin_memset
-#define __underlying_strcat	__builtin_strcat
-#define __underlying_strcpy	__builtin_strcpy
-#define __underlying_strlen	__builtin_strlen
-#define __underlying_strncat	__builtin_strncat
-#define __underlying_strncpy	__builtin_strncpy
+#define __underlying_memchr __builtin_memchr
+#define __underlying_memcmp __builtin_memcmp
+#define __underlying_memcpy __builtin_memcpy
+#define __underlying_memmove __builtin_memmove
+#define __underlying_memset __builtin_memset
+#define __underlying_strcat __builtin_strcat
+#define __underlying_strcpy __builtin_strcpy
+#define __underlying_strlen __builtin_strlen
+#define __underlying_strncat __builtin_strncat
+#define __underlying_strncpy __builtin_strncpy
 #endif
 
 __FORTIFY_INLINE char *strncpy(char *p, const char *q, __kernel_size_t size)
@@ -320,8 +316,7 @@ __FORTIFY_INLINE __kernel_size_t strlen(const char *p)
 	size_t p_size = __builtin_object_size(p, 0);
 
 	/* Work around gcc excess stack consumption issue */
-	if (p_size == (size_t)-1 ||
-	    (__builtin_constant_p(p[p_size - 1]) && p[p_size - 1] == '\0'))
+	if (p_size == (size_t)-1 || (__builtin_constant_p(p[p_size - 1]) && p[p_size - 1] == '\0'))
 		return __underlying_strlen(p);
 	ret = strnlen(p, p_size);
 	if (p_size <= ret)
@@ -508,12 +503,11 @@ __FORTIFY_INLINE char *strcpy(char *p, const char *q)
  * @count: The number of bytes to copy
  * @pad: Character to use for padding if space is left in destination.
  */
-static inline void memcpy_and_pad(void *dest, size_t dest_len,
-				  const void *src, size_t count, int pad)
+static inline void memcpy_and_pad(void *dest, size_t dest_len, const void *src, size_t count, int pad)
 {
 	if (dest_len > count) {
 		memcpy(dest, src, count);
-		memset(dest + count, pad,  dest_len - count);
+		memset(dest + count, pad, dest_len - count);
 	} else
 		memcpy(dest, src, dest_len);
 }

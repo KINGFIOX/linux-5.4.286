@@ -367,6 +367,11 @@ PAGEFLAG(Foreign, foreign, PF_NO_COMPOUND);
 PAGEFLAG(XenRemapped, xen_remapped, PF_NO_COMPOUND)
 TESTCLEARFLAG(XenRemapped, xen_remapped, PF_NO_COMPOUND)
 
+// -> 	static __always_inline void __SetPageReserved(struct page *page)
+// -> 	{
+// -> 		__set_bit(PG_reserved, &page->flags);
+// -> 	}
+
 PAGEFLAG(Reserved, reserved, PF_NO_COMPOUND)
 __CLEARPAGEFLAG(Reserved, reserved, PF_NO_COMPOUND)
 __SETPAGEFLAG(Reserved, reserved, PF_NO_COMPOUND)

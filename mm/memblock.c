@@ -114,12 +114,12 @@ static struct memblock_region memblock_physmem_init_regions[INIT_PHYSMEM_REGIONS
 struct memblock memblock __initdata_memblock = {
 	.memory.regions = memblock_memory_init_regions,
 	.memory.cnt = 1, /* empty dummy entry */
-	.memory.max = INIT_MEMBLOCK_REGIONS,
+	.memory.max = INIT_MEMBLOCK_REGIONS, // 128
 	.memory.name = "memory",
 
 	.reserved.regions = memblock_reserved_init_regions,
 	.reserved.cnt = 1, /* empty dummy entry */
-	.reserved.max = INIT_MEMBLOCK_RESERVED_REGIONS,
+	.reserved.max = INIT_MEMBLOCK_RESERVED_REGIONS, // 128
 	.reserved.name = "reserved",
 
 #ifdef CONFIG_HAVE_MEMBLOCK_PHYS_MAP
@@ -130,7 +130,7 @@ struct memblock memblock __initdata_memblock = {
 #endif
 
 	.bottom_up = false,
-	.current_limit = MEMBLOCK_ALLOC_ANYWHERE,
+	.current_limit = MEMBLOCK_ALLOC_ANYWHERE, // -1
 };
 
 int memblock_debug __initdata_memblock;
@@ -1753,12 +1753,12 @@ static void __init __free_pages_memory(unsigned long start, unsigned long end)
 	while (start < end) {
 		order = min(MAX_ORDER - 1UL, __ffs(start));
 
-		while (start + (1UL << order) > end)
+		while (start + (1UL << order) > end) // order 要恰好能装下
 			order--;
 
 		memblock_free_pages(pfn_to_page(start), start, order);
 
-		start += (1UL << order);
+		start += (1UL << order); // consume order 个 page
 	}
 }
 
@@ -1770,7 +1770,7 @@ static unsigned long __init __free_memory_core(phys_addr_t start, phys_addr_t en
 	if (start_pfn >= end_pfn)
 		return 0;
 
-	__free_pages_memory(start_pfn, end_pfn);
+	__free_pages_memory(start_pfn, end_pfn); // 通过 free 来初始化内存, 这个与 xv6 的 free_range 类似.
 
 	return end_pfn - start_pfn;
 }
