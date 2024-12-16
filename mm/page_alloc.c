@@ -5513,6 +5513,8 @@ static void build_zonelists(pg_data_t *pgdat)
 static void setup_pageset(struct per_cpu_pageset *p, unsigned long batch);
 static DEFINE_PER_CPU(struct per_cpu_pageset, boot_pageset);
 static DEFINE_PER_CPU(struct per_cpu_nodestat, boot_nodestats);
+// static __attribute__((section(".data"))) __typeof__(struct per_cpu_nodestat) boot_nodestats;
+// static struct per_cpu_nodestat boot_nodestats;
 
 static void __build_all_zonelists(void *data)
 {
@@ -6469,7 +6471,7 @@ static void __init free_area_init_core(struct pglist_data *pgdat)
 	enum zone_type j;
 	int nid = pgdat->node_id; // 0
 
-	pgdat_init_internals(pgdat);
+	pgdat_init_internals(pgdat); // waitqueue, lruvec
 	pgdat->per_cpu_nodestats = &boot_nodestats;
 
 	for (j = 0; j < MAX_NR_ZONES; j++) {

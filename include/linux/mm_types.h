@@ -84,12 +84,13 @@ struct page {
 			/**
 			 * @lru: Pageout list, eg. active_list protected by pgdat->lru_lock.
 			 * Sometimes used as a generic list by the page owner.
-			 * 在 slab 机制中, lru 使被用来把一个 slab 添加到 slab 满链表、slab 空闲链表、slab 部分满链表中.
 			 */
 			struct list_head lru;
 			// 当页面被用于文件缓存时, mapping 指向一个与文件缓存关联的 address_space 对象.
-			struct address_space *mapping; /* See page-flags.h for PAGE_MAPPING_FLAGS */
-			pgoff_t index; /* Our offset within mapping. */
+			struct address_space *mapping; /* See page-flags.h for PAGE_MAPPING_FLAGS. 文件/设备映射到内存 */
+			/* Our offset within mapping. 
+			 * 两个用途: 1. 文件映射的一部分, 那么他就是在文件中的偏移; 2. 高速缓存的一部分, (swapper_sapce)address_sapce 的偏移量 */
+			pgoff_t index;
 			/**
 			 * @private: Mapping-private opaque data.
 			 * Usually used for buffer_heads if PagePrivate.
@@ -109,6 +110,8 @@ struct page {
 		/* slab, slob and slub 都是内存分配器 */
 		struct {
 			union {
+				/* slab */
+				/* 在 slab 机制中, lru 使被用来把一个 slab 添加到 slab 满链表、slab 空闲链表、slab 部分满链表中. */
 				struct list_head slab_list;
 				struct { /* Partial pages */
 					struct page *next;
@@ -208,28 +211,6 @@ struct page {
 	/* Usage count. *DO NOT USE DIRECTLY*. See page_ref.h */
 	atomic_t _refcount; // 内核中引用页面的次数
 
-#ifdef CONFIG_MEMCG
-	struct mem_cgroup *mem_cgroup;
-#endif
-
-	/*
-	 * On machines where all RAM is mapped into kernel address space,
-	 * we can simply calculate the virtual address. On machines with
-	 * highmem some memory is mapped into kernel virtual memory
-	 * dynamically, so we need a place to store that address.
-	 * Note that this field could be 16 bits on x86 ... ;)
-	 *
-	 * Architectures with slow multiplication can define
-	 * WANT_PAGE_VIRTUAL in asm/page.h
-	 */
-#if defined(WANT_PAGE_VIRTUAL)
-	// 指向页面对应的虚拟地址的指针.
-	void *virtual; /* Kernel virtual address (NULL if not kmapped, ie. highmem) */
-#endif /* WANT_PAGE_VIRTUAL */
-
-#ifdef LAST_CPUPID_NOT_IN_PAGE_FLAGS
-	int _last_cpupid;
-#endif
 } _struct_page_alignment;
 
 static inline atomic_t *compound_mapcount_ptr(struct page *page)

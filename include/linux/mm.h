@@ -1263,7 +1263,9 @@ static inline void page_kasan_tag_reset(struct page *page)
 static inline struct zone *page_zone(const struct page *page)
 {
 	// contig_page_data.node_zones[page_zonenum(page)]
-	return &NODE_DATA(page_to_nid(page))->node_zones[page_zonenum(page)];
+	// return &NODE_DATA(page_to_nid(page))->node_zones[page_zonenum(page)];
+	enum zone_type zonenum = page_zonenum(page);
+	return &contig_page_data.node_zones[zonenum];
 }
 
 static inline pg_data_t *page_pgdat(const struct page *page)
