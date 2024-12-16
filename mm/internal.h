@@ -92,7 +92,7 @@ extern pmd_t *mm_find_pmd(struct mm_struct *mm, unsigned long address);
 /*
  * Structure for holding the mostly immutable allocation parameters passed
  * between functions involved in allocations, including the alloc_pages*
- * family of functions. 用于封装与内存分配相关的各种参数和约束条件. 确保分配函数能够根据当前需求和系统状态做出合适的决策
+ * family of functions. 伙伴系统分配函数用于保存相关参数的数据结构
  *
  * nodemask, migratetype and high_zoneidx are initialized only once in
  * __alloc_pages_nodemask() and then never change.

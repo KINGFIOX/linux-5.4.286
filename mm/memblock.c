@@ -648,7 +648,13 @@ int __init_memblock memblock_add(phys_addr_t base, phys_addr_t size)
  * Return:
  * 0 on success, -errno on failure.
  */
-static int __init_memblock memblock_isolate_range(struct memblock_type *type, phys_addr_t base, phys_addr_t size, int *start_rgn, int *end_rgn)
+static __attribute__((optimize("O0"))) int __init_memblock memblock_isolate_range( //
+	struct memblock_type *type, //
+	phys_addr_t base, //
+	phys_addr_t size, //
+	int *start_rgn, //
+	int *end_rgn //
+)
 {
 	phys_addr_t end = base + memblock_cap_size(base, &size);
 	int idx;

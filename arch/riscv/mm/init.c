@@ -120,13 +120,13 @@ void __init setup_bootmem(void)
 	memblock_reserve(vmlinux_start, vmlinux_end - vmlinux_start);
 
 	// 设置系统的物理页面数量限制
+	// find_max_pfn
 	max_pfn = PFN_DOWN(memblock_end_of_DRAM());
+	// find_max_low_pfn
 	max_low_pfn = max_pfn;
 	set_max_mapnr(max_low_pfn); // 设置最大物理页号
 
-#ifdef CONFIG_BLK_DEV_INITRD
 	setup_initrd(); // 初始化 initrd
-#endif /* CONFIG_BLK_DEV_INITRD */
 
 	/*
 	 * Avoid using early_init_fdt_reserve_self() since __pa() does

@@ -91,7 +91,7 @@
 unsigned long max_mapnr;
 EXPORT_SYMBOL(max_mapnr);
 
-struct page *mem_map;
+struct page *mem_map; // 数组. 通常放在 ZONE_NORMAL 的首部.
 EXPORT_SYMBOL(mem_map);
 #endif
 

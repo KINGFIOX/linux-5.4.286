@@ -4487,26 +4487,26 @@ __attribute__((optimize("O0"))) static bool prepare_alloc_pages(gfp_t gfp_mask, 
 								unsigned int *alloc_flags) //
 {
 	// record the alloc parameters
-	ac->high_zoneidx = gfp_zone(gfp_mask);
-	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
+	ac->high_zoneidx = gfp_zone(gfp_mask); // 根据掩码计算出 zoneidx
+	ac->zonelist = node_zonelist(preferred_nid, gfp_mask); // 返回首选内存节点 preferred_nid 对应的 zonelist
 	ac->nodemask = nodemask;
-	ac->migratetype = gfpflags_to_migratetype(gfp_mask);
+	ac->migratetype = gfpflags_to_migratetype(gfp_mask); // 根据掩码计算出迁移类型
 
-	if (cpusets_enabled()) { // 0
-		*alloc_mask |= __GFP_HARDWALL;
-		if (!ac->nodemask)
-			ac->nodemask = &cpuset_current_mems_allowed;
-		else
-			*alloc_flags |= ALLOC_CPUSET;
-	}
+	// if (cpusets_enabled()) { // 0
+	// 	*alloc_mask |= __GFP_HARDWALL;
+	// 	if (!ac->nodemask)
+	// 		ac->nodemask = &cpuset_current_mems_allowed;
+	// 	else
+	// 		*alloc_flags |= ALLOC_CPUSET;
+	// }
 
 	fs_reclaim_acquire(gfp_mask); // do nothing
 	fs_reclaim_release(gfp_mask); // do nothing
 
-	might_sleep_if(gfp_mask & __GFP_DIRECT_RECLAIM);
+	// might_sleep_if(gfp_mask & __GFP_DIRECT_RECLAIM);
 
-	if (should_fail_alloc_page(gfp_mask, order)) // 0
-		return false;
+	// if (should_fail_alloc_page(gfp_mask, order)) // 0. 这个是故障注入
+	// 	return false;
 
 	if (IS_ENABLED(CONFIG_CMA) && ac->migratetype == MIGRATE_MOVABLE)
 		*alloc_flags |= ALLOC_CMA;
@@ -4514,7 +4514,7 @@ __attribute__((optimize("O0"))) static bool prepare_alloc_pages(gfp_t gfp_mask, 
 	return true;
 }
 
-/* Determine whether to spread dirty pages and what the first usable zone */
+/* Determine whether to spread dirty pages and what the first usable zone. 用于确定首选的 zone */
 static inline void finalise_ac(gfp_t gfp_mask, struct alloc_context *ac)
 {
 	/* Dirty zone balancing only done in the fast path */
@@ -4553,20 +4553,22 @@ __attribute__((optimize("O0"))) struct page *__alloc_pages_nodemask(gfp_t gfp_ma
 
 	gfp_mask &= gfp_allowed_mask; // gfp in gfp_allowed_mask
 	alloc_mask = gfp_mask;
+	// 初始化分配器相关的参数
 	if (!prepare_alloc_pages(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
 		return NULL;
 
+	// 确定首选的 zone
 	finalise_ac(gfp_mask, &ac);
 
 	/*
 	 * Forbid the first pass from falling back to types that fragment
-	 * memory until all local zones are considered.
+	 * memory until all local zones are considered. 
 	 */
 	alloc_flags |= alloc_flags_nofragment(ac.preferred_zoneref->zone, gfp_mask);
 
-	/* First allocation attempt */
+	/* First allocation attempt. */
 	page = get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
-	if (likely(page))
+	if (likely(page)) // 分配成功 goto out
 		goto out;
 
 	/*
@@ -4588,10 +4590,11 @@ __attribute__((optimize("O0"))) struct page *__alloc_pages_nodemask(gfp_t gfp_ma
 	page = __alloc_pages_slowpath(alloc_mask, order, &ac);
 
 out:
-	if (memcg_kmem_enabled() && (gfp_mask & __GFP_ACCOUNT) && page && unlikely(__memcg_kmem_charge(page, gfp_mask, order) != 0)) {
-		__free_pages(page, order);
-		page = NULL;
-	}
+	// memcg(memory control group) 内存控制组. 为了支持: 内核内存的记账功能
+	// if (memcg_kmem_enabled() /*0*/ && (gfp_mask & __GFP_ACCOUNT) && page && unlikely(__memcg_kmem_charge(page, gfp_mask, order) != 0)) {
+	// 	__free_pages(page, order);
+	// 	page = NULL;
+	// }
 
 	trace_mm_page_alloc(page, order, alloc_mask, ac.migratetype);
 
@@ -6409,15 +6412,15 @@ static void pgdat_init_kcompactd(struct pglist_data *pgdat)
 
 static void __meminit pgdat_init_internals(struct pglist_data *pgdat)
 {
-	pgdat_resize_init(pgdat);
+	// pgdat_resize_init(pgdat);
 
-	pgdat_init_split_queue(pgdat);
-	pgdat_init_kcompactd(pgdat);
+	// pgdat_init_split_queue(pgdat);
+	// pgdat_init_kcompactd(pgdat);
 
 	init_waitqueue_head(&pgdat->kswapd_wait);
 	init_waitqueue_head(&pgdat->pfmemalloc_wait);
 
-	pgdat_page_ext_init(pgdat);
+	// pgdat_page_ext_init(pgdat);
 	spin_lock_init(&pgdat->lru_lock);
 	lruvec_init(node_lruvec(pgdat));
 }
@@ -6464,7 +6467,7 @@ void __ref free_area_init_core_hotplug(int nid)
 static void __init free_area_init_core(struct pglist_data *pgdat)
 {
 	enum zone_type j;
-	int nid = pgdat->node_id;
+	int nid = pgdat->node_id; // 0
 
 	pgdat_init_internals(pgdat);
 	pgdat->per_cpu_nodestats = &boot_nodestats;
@@ -6583,9 +6586,13 @@ static inline void pgdat_set_deferred_range(pg_data_t *pgdat)
 }
 #endif
 
-void __init free_area_init_node(int nid, unsigned long *zones_size, unsigned long node_start_pfn, unsigned long *zholes_size)
+void __init free_area_init_node(int nid, //
+				unsigned long *zones_size, //
+				unsigned long node_start_pfn, //
+				unsigned long *zholes_size) //
 {
-	pg_data_t *pgdat = NODE_DATA(nid);
+	// pg_data_t *pgdat = NODE_DATA(nid);
+	pg_data_t *pgdat = &contig_page_data;
 	unsigned long start_pfn = 0;
 	unsigned long end_pfn = 0;
 
@@ -6597,6 +6604,7 @@ void __init free_area_init_node(int nid, unsigned long *zones_size, unsigned lon
 	pgdat->per_cpu_nodestats = NULL;
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
 	get_pfn_range_for_nid(nid, &start_pfn, &end_pfn);
+	// 这一条会打印在启动 linux 的日志中
 	pr_info("Initmem setup node %d [mem %#018Lx-%#018Lx]\n", nid, (u64)start_pfn << PAGE_SHIFT, end_pfn ? ((u64)end_pfn << PAGE_SHIFT) - 1 : 0);
 #else
 	start_pfn = node_start_pfn;

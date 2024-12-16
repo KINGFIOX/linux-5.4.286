@@ -259,12 +259,12 @@ enum node_stat_item {
 #define LRU_FILE 2
 
 enum lru_list {
-	LRU_INACTIVE_ANON = LRU_BASE,
-	LRU_ACTIVE_ANON = LRU_BASE + LRU_ACTIVE,
-	LRU_INACTIVE_FILE = LRU_BASE + LRU_FILE,
-	LRU_ACTIVE_FILE = LRU_BASE + LRU_FILE + LRU_ACTIVE,
-	LRU_UNEVICTABLE,
-	NR_LRU_LISTS
+	LRU_INACTIVE_ANON = LRU_BASE, // 0
+	LRU_ACTIVE_ANON = LRU_BASE + LRU_ACTIVE, // 0 + 1 = 1
+	LRU_INACTIVE_FILE = LRU_BASE + LRU_FILE, // 0 + 2 = 2
+	LRU_ACTIVE_FILE = LRU_BASE + LRU_FILE + LRU_ACTIVE, // 0 + 2 + 1 = 3
+	LRU_UNEVICTABLE, // 4, evict 驱逐, 让出
+	NR_LRU_LISTS // 5
 };
 
 #define for_each_lru(lru) for (lru = 0; lru < NR_LRU_LISTS; lru++)
@@ -334,14 +334,6 @@ struct per_cpu_pages {
 
 struct per_cpu_pageset {
 	struct per_cpu_pages pcp;
-#ifdef CONFIG_NUMA
-	s8 expire;
-	u16 vm_numa_stat_diff[NR_VM_NUMA_STAT_ITEMS];
-#endif
-#ifdef CONFIG_SMP
-	s8 stat_threshold;
-	s8 vm_stat_diff[NR_VM_ZONE_STAT_ITEMS];
-#endif
 };
 
 struct per_cpu_nodestat {
@@ -354,9 +346,8 @@ struct per_cpu_nodestat {
 enum zone_type {
 #ifdef CONFIG_ZONE_DMA
 	/*
-	 * ZONE_DMA is used when there are devices that are not able
-	 * to do DMA to all of addressable memory (ZONE_NORMAL). Then we
-	 * carve out the portion of memory that is needed for these devices.
+	 * ZONE_DMA is used when there are devices that are not able to do DMA to all of addressable memory (ZONE_NORMAL).
+	 * Then we carve out the portion of memory that is needed for these devices.
 	 * The range is arch specific.
 	 *
 	 * Some examples
@@ -371,7 +362,7 @@ enum zone_type {
 	 * i386, x86_64 and multiple other arches
 	 * 			<16M.
 	 */
-	ZONE_DMA,
+	ZONE_DMA, // ZONE_DMA 内存的首部 16M (i386)
 #endif
 #ifdef CONFIG_ZONE_DMA32
 	/*
@@ -382,21 +373,20 @@ enum zone_type {
 	ZONE_DMA32,
 #endif
 	/*
-	 * Normal addressable memory is in ZONE_NORMAL. DMA operations can be
-	 * performed on pages in ZONE_NORMAL if the DMA devices support
+	 * Normal addressable memory is in ZONE_NORMAL.
+	 * DMA operations can be performed on pages in ZONE_NORMAL if the DMA devices support
 	 * transfers to all addressable memory.
+	 * 由内核直接映射到线性地址空间较高部分. 许多内核操作只有通过 ZONE_NORMAL 才能完成.
 	 */
-	ZONE_NORMAL,
+	ZONE_NORMAL, // 16~896 MB (i386)
 #ifdef CONFIG_HIGHMEM
 	/*
-	 * A memory area that is only addressable by the kernel through
-	 * mapping portions into its own address space. This is for example
-	 * used by i386 to allow the kernel to address the memory beyond
-	 * 900MB. The kernel will set up special mappings (page
-	 * table entries on i386) for each page that the kernel needs to
-	 * access.
+	 * A memory area that is only addressable by the kernel through mapping portions into its own address space.
+	 * This is for example used by i386 to allow the kernel to address the memory beyond 900MB.
+	 * The kernel will set up special mappings (page table entries on i386) for each page that the kernel needs to access.
+	 * 系统中预留的可用内存空间, 不被内核直接映射
 	 */
-	ZONE_HIGHMEM,
+	ZONE_HIGHMEM, // 896MB ~ 4G(end of physical memory) (i386)
 #endif
 	ZONE_MOVABLE,
 #ifdef CONFIG_ZONE_DEVICE
@@ -418,7 +408,7 @@ enum zone_type {
 //! 1. 内存分段: DMA, ...
 //! 2. 高效分配, 更加智能的决定在哪里分配页
 //! 3. 资源跟踪, 跟踪 zone 内存的状态, 例如: 空闲页, watermark, 统计信息
-
+// 每一个 zone 都用一个 struct zone 来描述.
 struct zone {
 	/* Read-mostly fields */
 
@@ -442,19 +432,14 @@ struct zone {
 	 */
 	long lowmem_reserve[MAX_NR_ZONES /*3*/];
 
-#ifdef CONFIG_NUMA
-	int node;
-#endif
 	struct pglist_data *zone_pgdat; // 反向引用
 	struct per_cpu_pageset __percpu *pageset; // 用于缓存已释放的页, 减少在频繁分配和释放期间对 zone 锁的争用.
 
-#ifndef CONFIG_SPARSEMEM // 稀疏内存, sparse(稀疏)
 	/*
 	 * Flags for a pageblock_nr_pages block. See pageblock-flags.h.
 	 * In SPARSEMEM, this map is stored in struct mem_section
 	 */
 	unsigned long *pageblock_flags;
-#endif /* CONFIG_SPARSEMEM */
 
 	/* zone_start_pfn == zone_start_paddr >> PAGE_SHIFT */
 	unsigned long zone_start_pfn; // 内存管理区, 开始页面的 physical frame number
@@ -496,27 +481,13 @@ struct zone {
 
 	const char *name;
 
-#ifdef CONFIG_MEMORY_ISOLATION
-	/*
-	 * Number of isolated pageblock. It is used to solve incorrect
-	 * freepage counting problem due to racy retrieving migratetype
-	 * of pageblock. Protected by zone->lock.
-	 */
-	unsigned long nr_isolate_pageblock;
-#endif
-
-#ifdef CONFIG_MEMORY_HOTPLUG
-	/* see spanned/present_pages for more description */
-	seqlock_t span_seqlock;
-#endif
-
 	int initialized; // flag
 
 	/* Write-intensive fields used from the page allocator */
 	ZONE_PADDING(_pad1_) // do nothing
 
-	/* free areas of different sizes. */
-	struct free_area free_area[MAX_ORDER]; // 这个就是 buddy system 的链表了, IMPORTANT
+	/* free areas of different sizes. 由 buddy system 管理 */
+	struct free_area free_area[MAX_ORDER]; // 这个就是 buddy system 的链表了, IMPORTANT.
 
 	/* zone flags, see below */
 	unsigned long flags;
@@ -542,37 +513,12 @@ struct zone {
 	 */
 	unsigned long percpu_drift_mark;
 
-#if defined CONFIG_COMPACTION || defined CONFIG_CMA
-	/* pfn where compaction free scanner should start */
-	unsigned long compact_cached_free_pfn;
-	/* pfn where async and sync compaction migration scanner should start */
-	unsigned long compact_cached_migrate_pfn[2];
-	unsigned long compact_init_migrate_pfn;
-	unsigned long compact_init_free_pfn;
-#endif
-
-#ifdef CONFIG_COMPACTION
-	/*
-	 * On compaction failure, 1<<compact_defer_shift compactions
-	 * are skipped before trying again. The number attempted since
-	 * last failure is tracked with compact_considered.
-	 */
-	unsigned int compact_considered;
-	unsigned int compact_defer_shift;
-	int compact_order_failed;
-#endif
-
-#if defined CONFIG_COMPACTION || defined CONFIG_CMA
-	/* Set to true when the PG_migrate_skip bits should be cleared */
-	bool compact_blockskip_flush;
-#endif
-
 	bool contiguous; // no hole
 
 	ZONE_PADDING(_pad3_) // do nothing
 	/* Zone statistics */
-	atomic_long_t vm_stat[NR_VM_ZONE_STAT_ITEMS];
-	atomic_long_t vm_numa_stat[NR_VM_NUMA_STAT_ITEMS]; // disable
+	atomic_long_t vm_stat[NR_VM_ZONE_STAT_ITEMS]; // vm_stat[NR_FREE_PAGES] 统计空闲页面
+	atomic_long_t vm_numa_stat[NR_VM_NUMA_STAT_ITEMS]; // 这个没用, 长度为0的数组
 } ____cacheline_internodealigned_in_smp;
 
 enum pgdat_flags {
@@ -696,6 +642,8 @@ struct deferred_split {
 };
 #endif
 
+struct bootmem_data;
+
 /*
  * On NUMA machines, each NUMA node would have a pg_data_t to describe it's memory layout.
  * NUMA 中, 会有多个内存节点, 每个 struct pglist_data 用于描述一个内存节点.
@@ -703,82 +651,34 @@ struct deferred_split {
  * UMA 中, 只有一个内存节点, 所以只有一个 struct pglist_data, 叫 contig_page_data
  *
  * Memory statistics and page replacement data structures are maintained on a per-zone basis.
+ * 内存中, 每个节点都由 pg_data_t 描述. 也就是: 一个节点一个 pg_data_t
  */
-struct bootmem_data;
 typedef struct pglist_data {
 	struct zone node_zones[MAX_NR_ZONES /*3*/]; // 一个内存节点会有很多个区域
-	struct zonelist node_zonelists[MAX_ZONELISTS /*1*/];
-	int nr_zones;
-#ifdef CONFIG_FLAT_NODE_MEM_MAP /* means !SPARSEMEM */
-	struct page *node_mem_map;
-#ifdef CONFIG_PAGE_EXTENSION
-	struct page_ext *node_page_ext;
-#endif
-#endif
-#if defined(CONFIG_MEMORY_HOTPLUG) || defined(CONFIG_DEFERRED_STRUCT_PAGE_INIT)
-	/*
-	 * Must be held any time you expect node_start_pfn,
-	 * node_present_pages, node_spanned_pages or nr_zones to stay constant.
-	 * Also synchronizes pgdat->first_deferred_pfn during deferred page
-	 * init.
-	 *
-	 * pgdat_resize_lock() and pgdat_resize_unlock() are provided to
-	 * manipulate node_size_lock without checking for CONFIG_MEMORY_HOTPLUG
-	 * or CONFIG_DEFERRED_STRUCT_PAGE_INIT.
-	 *
-	 * Nests above zone->lock and zone->span_seqlock
-	 */
-	spinlock_t node_size_lock;
-#endif
-	unsigned long node_start_pfn;
+	struct zonelist node_zonelists[MAX_ZONELISTS /*1*/]; // build_zonelists
+	int nr_zones; // number of zones
+	struct page *node_mem_map; // 指向 struct page 数组中的第一个页面, 代表改节点的每个 frame. 他被放置在 mem_map 数组中.
+	unsigned long node_start_pfn; // 节点起始的物理地址
 	unsigned long node_present_pages; /* total number of physical pages */
-	unsigned long node_spanned_pages; /* total size of physical page
-					     range, including holes */
+	unsigned long node_spanned_pages; /* total size of physical page range, including holes */
 	int node_id;
-	wait_queue_head_t kswapd_wait;
-	wait_queue_head_t pfmemalloc_wait;
-	struct task_struct *kswapd; /* Protected by
-					   mem_hotplug_begin/end() */
+	wait_queue_head_t kswapd_wait; // 当 node 压力较大时, kswapd 被唤醒, 释放 page
+	wait_queue_head_t pfmemalloc_wait; // 系统空闲页面不足, 内存分配失败时, 用于唤醒等待分配的任务.
+	struct task_struct *kswapd; /* Protected by mem_hotplug_begin/end() */
 	int kswapd_order;
 	enum zone_type kswapd_classzone_idx;
 
 	int kswapd_failures; /* Number of 'reclaimed == 0' runs */
-
-#ifdef CONFIG_COMPACTION
-	int kcompactd_max_order;
-	enum zone_type kcompactd_classzone_idx;
-	wait_queue_head_t kcompactd_wait;
-	struct task_struct *kcompactd;
-#endif
 	/*
+
 	 * This is a per-node reserve of pages that are not available
 	 * to userspace allocations.
 	 */
 	unsigned long totalreserve_pages;
 
-#ifdef CONFIG_NUMA
-	/*
-	 * zone reclaim becomes active if more unmapped pages exist.
-	 */
-	unsigned long min_unmapped_pages;
-	unsigned long min_slab_pages;
-#endif /* CONFIG_NUMA */
-
 	/* Write-intensive fields used by page reclaim */
 	ZONE_PADDING(_pad1_)
 	spinlock_t lru_lock;
-
-#ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
-	/*
-	 * If memory initialisation on large machines is deferred then this
-	 * is the first PFN that needs to be initialised.
-	 */
-	unsigned long first_deferred_pfn;
-#endif /* CONFIG_DEFERRED_STRUCT_PAGE_INIT */
-
-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-	struct deferred_split deferred_split_queue;
-#endif
 
 	/* Fields commonly accessed by the page reclaim scanner */
 	struct lruvec lruvec;
@@ -787,7 +687,7 @@ typedef struct pglist_data {
 
 	ZONE_PADDING(_pad2_)
 
-	/* Per-node vmstats */
+	/* Per-node vmstats. stats 是 statistics 的缩写 */
 	struct per_cpu_nodestat __percpu *per_cpu_nodestats;
 	atomic_long_t vm_stat[NR_VM_NODE_STAT_ITEMS]; // 内存管理区计数(这个计数这是统计数据)
 } pg_data_t;
@@ -1044,7 +944,9 @@ struct zoneref *__next_zones_zonelist(struct zoneref *z, enum zone_type highest_
  * being examined. It should be advanced by one before calling
  * next_zones_zonelist again.
  */
-static __always_inline struct zoneref *next_zones_zonelist(struct zoneref *z, enum zone_type highest_zoneidx, nodemask_t *nodes)
+static __always_inline struct zoneref *next_zones_zonelist(struct zoneref *z, //
+							   enum zone_type highest_zoneidx, //
+							   nodemask_t *nodes) //
 {
 	if (likely(!nodes && zonelist_zone_idx(z) <= highest_zoneidx))
 		return z;
@@ -1067,7 +969,9 @@ static __always_inline struct zoneref *next_zones_zonelist(struct zoneref *z, en
  * never NULL). This may happen either genuinely, or due to concurrent nodemask
  * update due to cpuset modification.
  */
-static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist, enum zone_type highest_zoneidx, nodemask_t *nodes)
+static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist, //
+						   enum zone_type highest_zoneidx, //
+						   nodemask_t *nodes) //
 {
 	return next_zones_zonelist(zonelist->_zonerefs, highest_zoneidx, nodes);
 }

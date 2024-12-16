@@ -265,7 +265,7 @@ static inline void __might_sleep(const char *file, int line, int preempt_offset)
 }
 #define might_sleep()                                                                                                                                          \
 	do {                                                                                                                                                   \
-		might_resched(); /* */                                                                                                                         \
+		might_resched(); /*do nothing*/                                                                                                                \
 	} while (0)
 #define cant_sleep()                                                                                                                                           \
 	do {                                                                                                                                                   \

@@ -523,7 +523,7 @@ static inline struct page *__alloc_pages(gfp_t gfp_mask /*分配掩码*/, unsign
  */
 static inline struct page *__alloc_pages_node(int nid /*0*/, gfp_t gfp_mask, unsigned int order)
 {
-	VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES); // check
+	// VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES); // check
 	VM_WARN_ON((gfp_mask & __GFP_THISNODE) && !node_online(nid));
 
 	return __alloc_pages(gfp_mask, order, nid);
@@ -535,8 +535,8 @@ static inline struct page *__alloc_pages_node(int nid /*0*/, gfp_t gfp_mask, uns
  */
 static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
 {
-	if (nid == NUMA_NO_NODE) // 0
-		nid = numa_mem_id();
+	// if (nid == NUMA_NO_NODE) // 0
+	// 	nid = numa_mem_id();
 
 	return __alloc_pages_node(nid, gfp_mask, order);
 }
