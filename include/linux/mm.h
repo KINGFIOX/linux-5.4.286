@@ -1979,7 +1979,7 @@ static inline void pgtable_pte_page_dtor(struct page *page)
 #define pte_unmap_unlock(pte, ptl)                                                                                                                             \
 	do {                                                                                                                                                   \
 		spin_unlock(ptl);                                                                                                                              \
-		pte_unmap(pte);                                                                                                                                \
+		/* pte_unmap(pte); */                                                                                                                          \
 	} while (0)
 
 #define pte_alloc(mm, pmd) (unlikely(pmd_none(*(pmd))) && __pte_alloc(mm, pmd))
@@ -2515,9 +2515,7 @@ struct page *follow_page(struct vm_area_struct *vma, unsigned long address, unsi
 #define FOLL_GET 0x04 /* do get_page on page */
 #define FOLL_DUMP 0x08 /* give error on hole if it would be zero */
 #define FOLL_FORCE 0x10 /* get_user_pages read/write w/o permission */
-#define FOLL_NOWAIT                                                                                                                                            \
-	0x20 /* if a disk transfer is needed, start the IO
-				 * and return without waiting upon it */
+#define FOLL_NOWAIT 0x20 /* if a disk transfer is needed, start the IO and return without waiting upon it */
 #define FOLL_POPULATE 0x40 /* fault in page */
 #define FOLL_SPLIT 0x80 /* don't return transhuge pages, split them */
 #define FOLL_HWPOISON 0x100 /* check page is hwpoisoned */

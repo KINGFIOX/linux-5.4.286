@@ -169,6 +169,7 @@ enum pageflags {
 
 struct page; /* forward declaration */
 
+// compound : 复合页, 多个物理页组成一个逻辑大页
 static inline struct page *compound_head(struct page *page)
 {
 	unsigned long head = READ_ONCE(page->compound_head);
@@ -728,7 +729,7 @@ static inline int TestClearPageDoubleMap(struct page *page)
 
 #else
 TESTPAGEFLAG_FALSE(TransHuge)
-TESTPAGEFLAG_FALSE(TransCompound)
+TESTPAGEFLAG_FALSE(TransCompound) // 0
 TESTPAGEFLAG_FALSE(TransCompoundMap)
 TESTPAGEFLAG_FALSE(TransTail)
 PAGEFLAG_FALSE(DoubleMap)

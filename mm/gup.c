@@ -180,7 +180,7 @@ static struct page *follow_page_pte(struct vm_area_struct *vma, unsigned long ad
 {
 	struct mm_struct *mm = vma->vm_mm;
 	struct page *page;
-	spinlock_t *ptl;
+	spinlock_t *ptl; // page table lock
 	pte_t *ptep, pte;
 
 	/*
@@ -195,10 +195,18 @@ static struct page *follow_page_pte(struct vm_area_struct *vma, unsigned long ad
 	// }
 
 retry:
-	if (unlikely(pmd_bad(*pmd)))
+	if (unlikely(pmd_bad(*pmd))) // check the parameter passed in
 		return no_page_table(vma, flags);
 
-	ptep = pte_offset_map_lock(mm, pmd, address, &ptl);
+	// ptep = pte_offset_map_lock(mm, pmd, address, &ptl);
+	ptep = ({
+		spinlock_t *__ptl = pte_lockptr(mm, pmd); // 🔐 住整个 mm 的 page table
+		pte_t *__pte = pte_offset_kernel((pmd), (address));
+		*(&ptl) = __ptl;
+		spin_lock(__ptl);
+		__pte;
+	});
+
 	pte = *ptep;
 	if (!pte_present(pte)) {
 		swp_entry_t entry;
@@ -212,21 +220,23 @@ retry:
 		if (pte_none(pte))
 			goto no_page;
 		entry = pte_to_swp_entry(pte);
-		if (!is_migration_entry(entry))
-			goto no_page;
-		pte_unmap_unlock(ptep, ptl);
-		migration_entry_wait(mm, pmd, address);
-		goto retry;
-	}
-	if ((flags & FOLL_NUMA) && pte_protnone(pte))
+		// if (!is_migration_entry(entry)) // 1
 		goto no_page;
+		// pte_unmap_unlock(ptep, ptl);
+		// // migration_entry_wait(mm, pmd, address);
+		// goto retry;
+	}
+	// if ((flags & FOLL_NUMA) && pte_protnone(pte)) // 0
+	// 	goto no_page;
 	if ((flags & FOLL_WRITE) && !can_follow_write_pte(pte, flags)) {
 		pte_unmap_unlock(ptep, ptl);
 		return NULL;
 	}
 
 	page = vm_normal_page(vma, address, pte);
-	if (!page && pte_devmap(pte) && (flags & FOLL_GET)) {
+
+	// page == NULL
+	if (!page && pte_devmap(pte) && (flags & FOLL_GET)) { // device
 		/*
 		 * Only return device mapping pages in the FOLL_GET case since
 		 * they are only valid while holding the pgmap reference.
@@ -236,7 +246,7 @@ retry:
 			page = pte_page(pte);
 		else
 			goto no_page;
-	} else if (unlikely(!page)) {
+	} else if (unlikely(!page)) { // page == NULL BUT not device
 		if (flags & FOLL_DUMP) {
 			/* Avoid special (like zero) pages in core dumps */
 			page = ERR_PTR(-EFAULT);
@@ -245,27 +255,26 @@ retry:
 
 		if (is_zero_pfn(pte_pfn(pte))) {
 			page = pte_page(pte);
-		} else {
-			int ret;
-
-			ret = follow_pfn_pte(vma, address, ptep, flags);
+		} else { // page == NULL BUT not device BUT not zero page
+			int ret = follow_pfn_pte(vma, address, ptep, flags);
 			page = ERR_PTR(ret);
 			goto out;
 		}
 	}
 
-	if (flags & FOLL_SPLIT && PageTransCompound(page)) {
-		int ret;
-		get_page(page);
-		pte_unmap_unlock(ptep, ptl);
-		lock_page(page);
-		ret = split_huge_page(page);
-		unlock_page(page);
-		put_page(page);
-		if (ret)
-			return ERR_PTR(ret);
-		goto retry;
-	}
+	// page != NULL
+	// if ((flags & FOLL_SPLIT) && PageTransCompound(page)) {
+	// 	int ret;
+	// 	get_page(page);
+	// 	pte_unmap_unlock(ptep, ptl);
+	// 	lock_page(page);
+	// 	ret = split_huge_page(page);
+	// 	unlock_page(page);
+	// 	put_page(page);
+	// 	if (ret)
+	// 		return ERR_PTR(ret);
+	// 	goto retry;
+	// }
 
 	if (flags & FOLL_GET) {
 		if (unlikely(!try_get_page(page))) {
@@ -548,7 +557,7 @@ struct page *follow_page(struct vm_area_struct *vma, unsigned long address, unsi
 	struct follow_page_context ctx = { NULL };
 	struct page *page;
 
-	page = follow_page_mask(vma, address, foll_flags, &ctx);
+	page = follow_page_mask(vma, address, foll_flags, &ctx); // 这个 ctx 是作为返回值的.
 	if (ctx.pgmap)
 		put_dev_pagemap(ctx.pgmap);
 	return page;
