@@ -16,11 +16,11 @@ struct pglist_data *first_online_pgdat(void)
 
 struct pglist_data *next_online_pgdat(struct pglist_data *pgdat)
 {
-	int nid = next_online_node(pgdat->node_id);
+	int nid = next_online_node(pgdat->node_id); // 1
 
-	if (nid == MAX_NUMNODES)
+	if (nid == MAX_NUMNODES) // 1
 		return NULL;
-	return NODE_DATA(nid);
+	return NODE_DATA(nid); // &contig_page_data
 }
 
 /*

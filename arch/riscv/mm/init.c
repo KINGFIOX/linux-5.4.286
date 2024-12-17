@@ -54,7 +54,7 @@ void __init mem_init(void)
 	BUG_ON(!mem_map);
 #endif /* CONFIG_FLATMEM */
 
-	high_memory = (void *)(__va(PFN_PHYS(max_low_pfn)));
+	high_memory = (void *)(__va(PFN_PHYS(max_low_pfn))); //
 	memblock_free_all();
 
 	mem_init_print_info(NULL);
@@ -430,6 +430,8 @@ static void __init setup_vm_final(void)
 
 	/* Move to swapper page table */
 	csr_write(CSR_SATP, PFN_DOWN(__pa(swapper_pg_dir)) | SATP_MODE); // switch page table
+	pr_info("swapper_pg_dir(pa): %lx\n", virt_to_phys(swapper_pg_dir));
+	pr_info("swapper_pg_dir(va): %lx\n", (unsigned long)swapper_pg_dir);
 	local_flush_tlb_all();
 }
 

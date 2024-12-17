@@ -13,17 +13,16 @@
  * hit rate for workloads with spatial locality.  Otherwise, use pages.
  */
 #ifdef CONFIG_MMU
-#define VMACACHE_SHIFT PMD_SHIFT
+#define VMACACHE_SHIFT PMD_SHIFT // 21
 #else
 #define VMACACHE_SHIFT PAGE_SHIFT
 #endif
-#define VMACACHE_HASH(addr) ((addr >> VMACACHE_SHIFT) & VMACACHE_MASK)
+#define VMACACHE_HASH(addr) ((addr >> VMACACHE_SHIFT) & VMACACHE_MASK) // (addr >> 21) & 0b11
 
 /*
- * This task may be accessing a foreign mm via (for example)
- * get_user_pages()->find_vma().  The vmacache is task-local and this
- * task's vmacache pertains to a different mm (ie, its own).  There is
- * nothing we can do here.
+ * This task may be accessing a foreign mm via (for example) get_user_pages()->find_vma().
+ * The vmacache is task-local and this task's vmacache pertains to a different mm (ie, its own).
+ * There is nothing we can do here.
  *
  * Also handle the case where a kernel thread has adopted this mm via use_mm().
  * That kernel thread's vmacache is not applicable to this mm.
@@ -43,11 +42,11 @@ static bool vmacache_valid(struct mm_struct *mm)
 {
 	struct task_struct *curr;
 
-	if (!vmacache_valid_mm(mm))
+	if (!vmacache_valid_mm(mm)) // can't be a kernel thread
 		return false;
 
 	curr = current;
-	if (mm->vmacache_seqnum != curr->vmacache.seqnum) {
+	if (mm->vmacache_seqnum != curr->vmacache.seqnum) { // seqnum 不一致, 说明要更新
 		/*
 		 * First attempt will always be invalid, initialize
 		 * the new cache for this task here.
@@ -64,7 +63,7 @@ struct vm_area_struct *vmacache_find(struct mm_struct *mm, unsigned long addr)
 	int idx = VMACACHE_HASH(addr);
 	int i;
 
-	count_vm_vmacache_event(VMACACHE_FIND_CALLS);
+	// count_vm_vmacache_event(VMACACHE_FIND_CALLS);
 
 	if (!vmacache_valid(mm))
 		return NULL;
@@ -73,16 +72,12 @@ struct vm_area_struct *vmacache_find(struct mm_struct *mm, unsigned long addr)
 		struct vm_area_struct *vma = current->vmacache.vmas[idx];
 
 		if (vma) {
-#ifdef CONFIG_DEBUG_VM_VMACACHE
-			if (WARN_ON_ONCE(vma->vm_mm != mm))
-				break;
-#endif
-			if (vma->vm_start <= addr && vma->vm_end > addr) {
-				count_vm_vmacache_event(VMACACHE_FIND_HITS);
+			if (vma->vm_start <= addr && addr < vma->vm_end) {
+				// count_vm_vmacache_event(VMACACHE_FIND_HITS);
 				return vma;
 			}
 		}
-		if (++idx == VMACACHE_SIZE)
+		if (++idx == VMACACHE_SIZE) // ring
 			idx = 0;
 	}
 

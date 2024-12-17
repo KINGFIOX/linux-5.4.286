@@ -11,13 +11,10 @@ static inline void vmacache_flush(struct task_struct *tsk)
 }
 
 extern void vmacache_update(unsigned long addr, struct vm_area_struct *newvma);
-extern struct vm_area_struct *vmacache_find(struct mm_struct *mm,
-						    unsigned long addr);
+extern struct vm_area_struct *vmacache_find(struct mm_struct *mm, unsigned long addr);
 
 #ifndef CONFIG_MMU
-extern struct vm_area_struct *vmacache_find_exact(struct mm_struct *mm,
-						  unsigned long start,
-						  unsigned long end);
+extern struct vm_area_struct *vmacache_find_exact(struct mm_struct *mm, unsigned long start, unsigned long end);
 #endif
 
 static inline void vmacache_invalidate(struct mm_struct *mm)

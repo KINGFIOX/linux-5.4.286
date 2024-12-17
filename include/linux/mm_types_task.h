@@ -19,17 +19,16 @@
 #include <asm/tlbbatch.h>
 #endif
 
-#define USE_SPLIT_PTE_PTLOCKS	(NR_CPUS >= CONFIG_SPLIT_PTLOCK_CPUS)
-#define USE_SPLIT_PMD_PTLOCKS	(USE_SPLIT_PTE_PTLOCKS && \
-		IS_ENABLED(CONFIG_ARCH_ENABLE_SPLIT_PMD_PTLOCK))
-#define ALLOC_SPLIT_PTLOCKS	(SPINLOCK_SIZE > BITS_PER_LONG/8)
+#define USE_SPLIT_PTE_PTLOCKS (NR_CPUS >= CONFIG_SPLIT_PTLOCK_CPUS)
+#define USE_SPLIT_PMD_PTLOCKS (USE_SPLIT_PTE_PTLOCKS && IS_ENABLED(CONFIG_ARCH_ENABLE_SPLIT_PMD_PTLOCK))
+#define ALLOC_SPLIT_PTLOCKS (SPINLOCK_SIZE > BITS_PER_LONG / 8)
 
 /*
  * The per task VMA cache array:
  */
 #define VMACACHE_BITS 2
-#define VMACACHE_SIZE (1U << VMACACHE_BITS)
-#define VMACACHE_MASK (VMACACHE_SIZE - 1)
+#define VMACACHE_SIZE (1U << VMACACHE_BITS) // 1 << 2 = 4
+#define VMACACHE_MASK (VMACACHE_SIZE - 1) // 0b11
 
 struct vmacache {
 	u64 seqnum;
@@ -41,10 +40,10 @@ struct vmacache {
  * kernel/fork.c
  */
 enum {
-	MM_FILEPAGES,	/* Resident file mapping pages */
-	MM_ANONPAGES,	/* Resident anonymous pages */
-	MM_SWAPENTS,	/* Anonymous swap entries */
-	MM_SHMEMPAGES,	/* Resident shared memory pages */
+	MM_FILEPAGES, /* Resident file mapping pages */
+	MM_ANONPAGES, /* Resident anonymous pages */
+	MM_SWAPENTS, /* Anonymous swap entries */
+	MM_SHMEMPAGES, /* Resident shared memory pages */
 	NR_MM_COUNTERS
 };
 
@@ -52,7 +51,7 @@ enum {
 #define SPLIT_RSS_COUNTING
 /* per-thread cached information, */
 struct task_rss_stat {
-	int events;	/* for synchronization threshold */
+	int events; /* for synchronization threshold */
 	int count[NR_MM_COUNTERS];
 };
 #endif /* USE_SPLIT_PTE_PTLOCKS */

@@ -2119,14 +2119,16 @@ struct vm_area_struct *find_vma(struct mm_struct *mm, unsigned long addr)
 	/* Check the cache first. */
 	vma = vmacache_find(mm, addr);
 	if (likely(vma))
-		return vma;
+		return vma; // fast path
+
+	// slow path
 
 	rb_node = mm->mm_rb.rb_node; // get the root node of the vma rbtree
 
-	while (rb_node) {
+	while (rb_node) { // find the vma
 		struct vm_area_struct *tmp = rb_entry(rb_node, struct vm_area_struct, vm_rb);
 
-		if (tmp->vm_end > addr) { // 相当于是做了一个有序遍历的工作
+		if (tmp->vm_end > addr) {
 			vma = tmp;
 			if (tmp->vm_start <= addr)
 				break;

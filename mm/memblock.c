@@ -100,7 +100,7 @@ struct pglist_data __refdata contig_page_data;
 EXPORT_SYMBOL(contig_page_data);
 #endif
 
-unsigned long max_low_pfn;
+unsigned long max_low_pfn; // 低区域内存的最小值
 unsigned long min_low_pfn;
 unsigned long max_pfn;
 unsigned long long max_possible_pfn;
@@ -361,7 +361,10 @@ void __init memblock_discard(void)
  * Return:
  * 0 on success, -1 on failure.
  */
-static int __init_memblock memblock_double_array(struct memblock_type *type, phys_addr_t new_area_start, phys_addr_t new_area_size)
+static int __init_memblock memblock_double_array( //
+	struct memblock_type *type, //
+	phys_addr_t new_area_start, //
+	phys_addr_t new_area_size)
 {
 	struct memblock_region *new_array, *old_array;
 	phys_addr_t old_alloc_size, new_alloc_size;
@@ -484,7 +487,11 @@ static void __init_memblock memblock_merge_regions(struct memblock_type *type)
  * Insert new memblock region [@base, @base + @size) into @type at @idx.
  * @type must already have extra room to accommodate the new region.
  */
-static void __init_memblock memblock_insert_region(struct memblock_type *type, int idx, phys_addr_t base, phys_addr_t size, int nid, enum memblock_flags flags)
+static void __init_memblock memblock_insert_region(struct memblock_type *type, //
+						   int idx, phys_addr_t base, //
+						   phys_addr_t size, //
+						   int nid, //
+						   enum memblock_flags flags) //
 {
 	struct memblock_region *rgn = &type->regions[idx];
 
@@ -637,7 +644,7 @@ int __init_memblock memblock_add(phys_addr_t base, phys_addr_t size)
  * @type: memblock type to isolate range for
  * @base: base of range to isolate
  * @size: size of range to isolate
- * @start_rgn: out parameter for the start of isolated region
+ * @start_rgn: out parameter for the start of isolated region (return)
  * @end_rgn: out parameter for the end of isolated region
  *
  * Walk @type and ensure that regions don't cross the boundaries defined by
@@ -769,7 +776,7 @@ int __init_memblock memblock_reserve(phys_addr_t base, phys_addr_t size)
  *
  * Return: 0 on success, -errno on failure.
  */
-static int __init_memblock memblock_setclr_flag(phys_addr_t base, phys_addr_t size, int set, int flag)
+static __attribute__((optimize("O0"))) int __init_memblock memblock_setclr_flag(phys_addr_t base, phys_addr_t size, int set, int flag)
 {
 	struct memblock_type *type = &memblock.memory;
 	int i, ret, start_rgn, end_rgn;
@@ -810,7 +817,7 @@ int __init_memblock memblock_mark_hotplug(phys_addr_t base, phys_addr_t size)
  *
  * Return: 0 on success, -errno on failure.
  */
-int __init_memblock memblock_clear_hotplug(phys_addr_t base, phys_addr_t size)
+int __init_memblock memblock_clear_hotplug(phys_addr_t base /*0*/, phys_addr_t size /*-1*/)
 {
 	return memblock_setclr_flag(base, size, 0, MEMBLOCK_HOTPLUG);
 }
@@ -1809,8 +1816,8 @@ void reset_node_managed_pages(pg_data_t *pgdat)
 {
 	struct zone *z;
 
-	for (z = pgdat->node_zones; z < pgdat->node_zones + MAX_NR_ZONES; z++)
-		atomic_long_set(&z->managed_pages, 0);
+	for (z = pgdat->node_zones; z < pgdat->node_zones + MAX_NR_ZONES; z++) // for each zone
+		atomic_long_set(&z->managed_pages, 0); // reset managed_pages
 }
 
 void __init reset_all_zones_managed_pages(void)
