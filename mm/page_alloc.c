@@ -4609,9 +4609,7 @@ EXPORT_SYMBOL(__alloc_pages_nodemask);
  */
 unsigned long __get_free_pages(gfp_t gfp_mask, unsigned int order)
 {
-	struct page *page;
-
-	page = alloc_pages(gfp_mask & ~__GFP_HIGHMEM, order);
+	struct page *page = alloc_pages(gfp_mask & ~__GFP_HIGHMEM, order);
 	if (!page)
 		return 0;
 	return (unsigned long)page_address(page);

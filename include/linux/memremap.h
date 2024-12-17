@@ -89,7 +89,7 @@ struct dev_pagemap_ops {
 	vm_fault_t (*migrate_to_ram)(struct vm_fault *vmf);
 };
 
-#define PGMAP_ALTMAP_VALID	(1 << 0)
+#define PGMAP_ALTMAP_VALID (1 << 0)
 
 /**
  * struct dev_pagemap - metadata for ZONE_DEVICE mappings
@@ -127,14 +127,12 @@ void *memremap_pages(struct dev_pagemap *pgmap, int nid);
 void memunmap_pages(struct dev_pagemap *pgmap);
 void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap);
 void devm_memunmap_pages(struct device *dev, struct dev_pagemap *pgmap);
-struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
-		struct dev_pagemap *pgmap);
+struct dev_pagemap *get_dev_pagemap(unsigned long pfn, struct dev_pagemap *pgmap);
 
 unsigned long vmem_altmap_offset(struct vmem_altmap *altmap);
 void vmem_altmap_free(struct vmem_altmap *altmap, unsigned long nr_pfns);
 #else
-static inline void *devm_memremap_pages(struct device *dev,
-		struct dev_pagemap *pgmap)
+static inline void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap)
 {
 	/*
 	 * Fail attempts to call devm_memremap_pages() without
@@ -145,13 +143,11 @@ static inline void *devm_memremap_pages(struct device *dev,
 	return ERR_PTR(-ENXIO);
 }
 
-static inline void devm_memunmap_pages(struct device *dev,
-		struct dev_pagemap *pgmap)
+static inline void devm_memunmap_pages(struct device *dev, struct dev_pagemap *pgmap)
 {
 }
 
-static inline struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
-		struct dev_pagemap *pgmap)
+static inline struct dev_pagemap *get_dev_pagemap(unsigned long pfn, struct dev_pagemap *pgmap)
 {
 	return NULL;
 }
@@ -161,8 +157,7 @@ static inline unsigned long vmem_altmap_offset(struct vmem_altmap *altmap)
 	return 0;
 }
 
-static inline void vmem_altmap_free(struct vmem_altmap *altmap,
-		unsigned long nr_pfns)
+static inline void vmem_altmap_free(struct vmem_altmap *altmap, unsigned long nr_pfns)
 {
 }
 #endif /* CONFIG_ZONE_DEVICE */

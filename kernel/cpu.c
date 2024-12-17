@@ -2370,10 +2370,6 @@ void __init boot_cpu_init(void)
 	set_cpu_active(cpu, true);
 	set_cpu_present(cpu, true);
 	set_cpu_possible(cpu, true);
-
-#ifdef CONFIG_SMP
-	__boot_cpu_id = cpu;
-#endif
 }
 
 /*
@@ -2381,9 +2377,26 @@ void __init boot_cpu_init(void)
  */
 void __init boot_cpu_hotplug_init(void)
 {
-#ifdef CONFIG_SMP
-	cpumask_set_cpu(smp_processor_id(), &cpus_booted_once_mask);
-#endif
+	// 	do {
+	//		switch (sizeof(cpuhp_state.state)) {
+	//		case 1:
+	//			this_cpu_write_1(cpuhp_state.state, CPUHP_ONLINE);
+	//			break;
+	//		case 2:
+	//			this_cpu_write_2(cpuhp_state.state, CPUHP_ONLINE);
+	//			break;
+	//		case 4:
+	//			this_cpu_write_4(cpuhp_state.state, CPUHP_ONLINE);
+	//			break;
+	//		case 8:
+	//			this_cpu_write_8(cpuhp_state.state, CPUHP_ONLINE);
+	//			break;
+	//		default:
+	//			__bad_size_call_parameter();
+	//			break;
+	//		}
+	//	} while (0)
+	// -> __pcpu_size_call(this_cpu_write_, cpuhp_state.state, CPUHP_ONLINE)
 	this_cpu_write(cpuhp_state.state, CPUHP_ONLINE);
 }
 

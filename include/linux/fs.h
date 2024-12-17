@@ -438,10 +438,6 @@ struct address_space {
 	struct xarray i_pages; // extensible array, 当成是一般的 array 使用就行了
 	gfp_t gfp_mask;
 	atomic_t i_mmap_writable;
-#ifdef CONFIG_READ_ONLY_THP_FOR_FS
-	/* number of thp, only for non-shmem files */
-	atomic_t nr_thps;
-#endif
 	struct rb_root_cached i_mmap;
 	struct rw_semaphore i_mmap_rwsem;
 	unsigned long nrpages;

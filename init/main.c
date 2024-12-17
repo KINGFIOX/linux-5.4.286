@@ -594,9 +594,9 @@ asmlinkage __visible void __init start_kernel(void)
 	char *command_line;
 	char *after_dashes;
 
-	set_task_stack_end_magic(&init_task);
-	smp_setup_processor_id();
-	debug_objects_early_init();
+	set_task_stack_end_magic(&init_task); // for overflow detection
+	// smp_setup_processor_id();
+	// debug_objects_early_init();
 
 	cgroup_init_early();
 
@@ -608,14 +608,14 @@ asmlinkage __visible void __init start_kernel(void)
 	 * enable them.
 	 */
 	boot_cpu_init();
-	page_address_init();
+	// page_address_init();
 	pr_notice("%s", linux_banner);
 	early_security_init();
 	setup_arch(&command_line); //
 	setup_command_line(command_line);
-	setup_nr_cpu_ids();
+	// setup_nr_cpu_ids();
 	setup_per_cpu_areas();
-	smp_prepare_boot_cpu(); /* arch-specific boot-cpu hooks */
+	// smp_prepare_boot_cpu(); /* arch-specific boot-cpu hooks */
 	boot_cpu_hotplug_init();
 
 	build_all_zonelists(NULL);

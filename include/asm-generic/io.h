@@ -19,48 +19,47 @@
 #include <asm-generic/pci_iomap.h>
 
 #ifndef __io_br
-#define __io_br()      barrier()
+#define __io_br() barrier()
 #endif
 
 /* prevent prefetching of coherent DMA data ahead of a dma-complete */
 #ifndef __io_ar
 #ifdef rmb
-#define __io_ar(v)      rmb()
+#define __io_ar(v) rmb()
 #else
-#define __io_ar(v)      barrier()
+#define __io_ar(v) barrier()
 #endif
 #endif
 
 /* flush writes to coherent DMA data before possibly triggering a DMA read */
 #ifndef __io_bw
 #ifdef wmb
-#define __io_bw()      wmb()
+#define __io_bw() wmb()
 #else
-#define __io_bw()      barrier()
+#define __io_bw() barrier()
 #endif
 #endif
 
 /* serialize device access against a spin_unlock, usually handled there. */
 #ifndef __io_aw
-#define __io_aw()      mmiowb_set_pending()
+#define __io_aw() mmiowb_set_pending()
 #endif
 
 #ifndef __io_pbw
-#define __io_pbw()     __io_bw()
+#define __io_pbw() __io_bw()
 #endif
 
 #ifndef __io_paw
-#define __io_paw()     __io_aw()
+#define __io_paw() __io_aw()
 #endif
 
 #ifndef __io_pbr
-#define __io_pbr()     __io_br()
+#define __io_pbr() __io_br()
 #endif
 
 #ifndef __io_par
-#define __io_par(v)     __io_ar(v)
+#define __io_par(v) __io_ar(v)
 #endif
-
 
 /*
  * __raw_{read,write}{b,w,l,q}() access memory in native endianness.
@@ -314,8 +313,7 @@ static inline void writeq_relaxed(u64 value, volatile void __iomem *addr)
  */
 #ifndef readsb
 #define readsb readsb
-static inline void readsb(const volatile void __iomem *addr, void *buffer,
-			  unsigned int count)
+static inline void readsb(const volatile void __iomem *addr, void *buffer, unsigned int count)
 {
 	if (count) {
 		u8 *buf = buffer;
@@ -330,8 +328,7 @@ static inline void readsb(const volatile void __iomem *addr, void *buffer,
 
 #ifndef readsw
 #define readsw readsw
-static inline void readsw(const volatile void __iomem *addr, void *buffer,
-			  unsigned int count)
+static inline void readsw(const volatile void __iomem *addr, void *buffer, unsigned int count)
 {
 	if (count) {
 		u16 *buf = buffer;
@@ -346,8 +343,7 @@ static inline void readsw(const volatile void __iomem *addr, void *buffer,
 
 #ifndef readsl
 #define readsl readsl
-static inline void readsl(const volatile void __iomem *addr, void *buffer,
-			  unsigned int count)
+static inline void readsl(const volatile void __iomem *addr, void *buffer, unsigned int count)
 {
 	if (count) {
 		u32 *buf = buffer;
@@ -363,8 +359,7 @@ static inline void readsl(const volatile void __iomem *addr, void *buffer,
 #ifdef CONFIG_64BIT
 #ifndef readsq
 #define readsq readsq
-static inline void readsq(const volatile void __iomem *addr, void *buffer,
-			  unsigned int count)
+static inline void readsq(const volatile void __iomem *addr, void *buffer, unsigned int count)
 {
 	if (count) {
 		u64 *buf = buffer;
@@ -380,8 +375,7 @@ static inline void readsq(const volatile void __iomem *addr, void *buffer,
 
 #ifndef writesb
 #define writesb writesb
-static inline void writesb(volatile void __iomem *addr, const void *buffer,
-			   unsigned int count)
+static inline void writesb(volatile void __iomem *addr, const void *buffer, unsigned int count)
 {
 	if (count) {
 		const u8 *buf = buffer;
@@ -395,8 +389,7 @@ static inline void writesb(volatile void __iomem *addr, const void *buffer,
 
 #ifndef writesw
 #define writesw writesw
-static inline void writesw(volatile void __iomem *addr, const void *buffer,
-			   unsigned int count)
+static inline void writesw(volatile void __iomem *addr, const void *buffer, unsigned int count)
 {
 	if (count) {
 		const u16 *buf = buffer;
@@ -410,8 +403,7 @@ static inline void writesw(volatile void __iomem *addr, const void *buffer,
 
 #ifndef writesl
 #define writesl writesl
-static inline void writesl(volatile void __iomem *addr, const void *buffer,
-			   unsigned int count)
+static inline void writesl(volatile void __iomem *addr, const void *buffer, unsigned int count)
 {
 	if (count) {
 		const u32 *buf = buffer;
@@ -426,8 +418,7 @@ static inline void writesl(volatile void __iomem *addr, const void *buffer,
 #ifdef CONFIG_64BIT
 #ifndef writesq
 #define writesq writesq
-static inline void writesq(volatile void __iomem *addr, const void *buffer,
-			   unsigned int count)
+static inline void writesq(volatile void __iomem *addr, const void *buffer, unsigned int count)
 {
 	if (count) {
 		const u64 *buf = buffer;
@@ -604,8 +595,7 @@ static inline void insl(unsigned long addr, void *buffer, unsigned int count)
 
 #ifndef outsb
 #define outsb outsb
-static inline void outsb(unsigned long addr, const void *buffer,
-			 unsigned int count)
+static inline void outsb(unsigned long addr, const void *buffer, unsigned int count)
 {
 	writesb(PCI_IOBASE + addr, buffer, count);
 }
@@ -613,8 +603,7 @@ static inline void outsb(unsigned long addr, const void *buffer,
 
 #ifndef outsw
 #define outsw outsw
-static inline void outsw(unsigned long addr, const void *buffer,
-			 unsigned int count)
+static inline void outsw(unsigned long addr, const void *buffer, unsigned int count)
 {
 	writesw(PCI_IOBASE + addr, buffer, count);
 }
@@ -622,8 +611,7 @@ static inline void outsw(unsigned long addr, const void *buffer,
 
 #ifndef outsl
 #define outsl outsl
-static inline void outsl(unsigned long addr, const void *buffer,
-			 unsigned int count)
+static inline void outsl(unsigned long addr, const void *buffer, unsigned int count)
 {
 	writesl(PCI_IOBASE + addr, buffer, count);
 }
@@ -655,8 +643,7 @@ static inline void insl_p(unsigned long addr, void *buffer, unsigned int count)
 
 #ifndef outsb_p
 #define outsb_p outsb_p
-static inline void outsb_p(unsigned long addr, const void *buffer,
-			   unsigned int count)
+static inline void outsb_p(unsigned long addr, const void *buffer, unsigned int count)
 {
 	outsb(addr, buffer, count);
 }
@@ -664,8 +651,7 @@ static inline void outsb_p(unsigned long addr, const void *buffer,
 
 #ifndef outsw_p
 #define outsw_p outsw_p
-static inline void outsw_p(unsigned long addr, const void *buffer,
-			   unsigned int count)
+static inline void outsw_p(unsigned long addr, const void *buffer, unsigned int count)
 {
 	outsw(addr, buffer, count);
 }
@@ -673,8 +659,7 @@ static inline void outsw_p(unsigned long addr, const void *buffer,
 
 #ifndef outsl_p
 #define outsl_p outsl_p
-static inline void outsl_p(unsigned long addr, const void *buffer,
-			   unsigned int count)
+static inline void outsl_p(unsigned long addr, const void *buffer, unsigned int count)
 {
 	outsl(addr, buffer, count);
 }
@@ -803,8 +788,7 @@ static inline void iowrite64be(u64 value, volatile void __iomem *addr)
 
 #ifndef ioread8_rep
 #define ioread8_rep ioread8_rep
-static inline void ioread8_rep(const volatile void __iomem *addr, void *buffer,
-			       unsigned int count)
+static inline void ioread8_rep(const volatile void __iomem *addr, void *buffer, unsigned int count)
 {
 	readsb(addr, buffer, count);
 }
@@ -812,8 +796,7 @@ static inline void ioread8_rep(const volatile void __iomem *addr, void *buffer,
 
 #ifndef ioread16_rep
 #define ioread16_rep ioread16_rep
-static inline void ioread16_rep(const volatile void __iomem *addr,
-				void *buffer, unsigned int count)
+static inline void ioread16_rep(const volatile void __iomem *addr, void *buffer, unsigned int count)
 {
 	readsw(addr, buffer, count);
 }
@@ -821,8 +804,7 @@ static inline void ioread16_rep(const volatile void __iomem *addr,
 
 #ifndef ioread32_rep
 #define ioread32_rep ioread32_rep
-static inline void ioread32_rep(const volatile void __iomem *addr,
-				void *buffer, unsigned int count)
+static inline void ioread32_rep(const volatile void __iomem *addr, void *buffer, unsigned int count)
 {
 	readsl(addr, buffer, count);
 }
@@ -831,8 +813,7 @@ static inline void ioread32_rep(const volatile void __iomem *addr,
 #ifdef CONFIG_64BIT
 #ifndef ioread64_rep
 #define ioread64_rep ioread64_rep
-static inline void ioread64_rep(const volatile void __iomem *addr,
-				void *buffer, unsigned int count)
+static inline void ioread64_rep(const volatile void __iomem *addr, void *buffer, unsigned int count)
 {
 	readsq(addr, buffer, count);
 }
@@ -841,9 +822,7 @@ static inline void ioread64_rep(const volatile void __iomem *addr,
 
 #ifndef iowrite8_rep
 #define iowrite8_rep iowrite8_rep
-static inline void iowrite8_rep(volatile void __iomem *addr,
-				const void *buffer,
-				unsigned int count)
+static inline void iowrite8_rep(volatile void __iomem *addr, const void *buffer, unsigned int count)
 {
 	writesb(addr, buffer, count);
 }
@@ -851,9 +830,7 @@ static inline void iowrite8_rep(volatile void __iomem *addr,
 
 #ifndef iowrite16_rep
 #define iowrite16_rep iowrite16_rep
-static inline void iowrite16_rep(volatile void __iomem *addr,
-				 const void *buffer,
-				 unsigned int count)
+static inline void iowrite16_rep(volatile void __iomem *addr, const void *buffer, unsigned int count)
 {
 	writesw(addr, buffer, count);
 }
@@ -861,9 +838,7 @@ static inline void iowrite16_rep(volatile void __iomem *addr,
 
 #ifndef iowrite32_rep
 #define iowrite32_rep iowrite32_rep
-static inline void iowrite32_rep(volatile void __iomem *addr,
-				 const void *buffer,
-				 unsigned int count)
+static inline void iowrite32_rep(volatile void __iomem *addr, const void *buffer, unsigned int count)
 {
 	writesl(addr, buffer, count);
 }
@@ -872,9 +847,7 @@ static inline void iowrite32_rep(volatile void __iomem *addr,
 #ifdef CONFIG_64BIT
 #ifndef iowrite64_rep
 #define iowrite64_rep iowrite64_rep
-static inline void iowrite64_rep(volatile void __iomem *addr,
-				 const void *buffer,
-				 unsigned int count)
+static inline void iowrite64_rep(volatile void __iomem *addr, const void *buffer, unsigned int count)
 {
 	writesq(addr, buffer, count);
 }
@@ -1077,8 +1050,7 @@ static inline void *bus_to_virt(unsigned long address)
  *
  * Set a range of I/O memory to a given value.
  */
-static inline void memset_io(volatile void __iomem *addr, int value,
-			     size_t size)
+static inline void memset_io(volatile void __iomem *addr, int value, size_t size)
 {
 	memset(__io_virt(addr), value, size);
 }
@@ -1094,9 +1066,7 @@ static inline void memset_io(volatile void __iomem *addr, int value,
  *
  * Copy a block of data from I/O memory.
  */
-static inline void memcpy_fromio(void *buffer,
-				 const volatile void __iomem *addr,
-				 size_t size)
+static inline void memcpy_fromio(void *buffer, const volatile void __iomem *addr, size_t size)
 {
 	memcpy(buffer, __io_virt(addr), size);
 }
@@ -1112,8 +1082,7 @@ static inline void memcpy_fromio(void *buffer,
  *
  * Copy a block of data to I/O memory.
  */
-static inline void memcpy_toio(volatile void __iomem *addr, const void *buffer,
-			       size_t size)
+static inline void memcpy_toio(volatile void __iomem *addr, const void *buffer, size_t size)
 {
 	memcpy(__io_virt(addr), buffer, size);
 }

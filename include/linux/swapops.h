@@ -31,6 +31,7 @@ static inline swp_entry_t swp_entry(unsigned long type, pgoff_t offset)
 {
 	swp_entry_t ret;
 
+	// (type << ((64 - 1) - 5)) | (offset & ((1UL << ((64 - 1) - 5)) - 1))
 	ret.val = (type << SWP_TYPE_SHIFT) | (offset & SWP_OFFSET_MASK);
 	return ret;
 }
@@ -65,12 +66,14 @@ static inline int is_swap_pte(pte_t pte)
  */
 static inline swp_entry_t pte_to_swp_entry(pte_t pte)
 {
-	swp_entry_t arch_entry;
-
 	// if (pte_swp_soft_dirty(pte))
 	// 	pte = pte_swp_clear_soft_dirty(pte);
-	arch_entry = __pte_to_swp_entry(pte);
-	return swp_entry(__swp_type(arch_entry), __swp_offset(arch_entry));
+	swp_entry_t arch_entry = __pte_to_swp_entry(pte);
+	// (((arch_entry).val >> 2) & ((1UL << 5) - 1)); // A | G | U | E | W
+	unsigned long type = __swp_type(arch_entry);
+	// ((arch_entry).val >> (5 + 2)); // PFN | reserved for SW
+	pgoff_t offset = __swp_offset(arch_entry); //
+	return swp_entry(type, offset);
 }
 
 /*

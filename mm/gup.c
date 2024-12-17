@@ -183,18 +183,6 @@ static struct page *follow_page_pte(struct vm_area_struct *vma, unsigned long ad
 	spinlock_t *ptl; // page table lock
 	pte_t *ptep, pte;
 
-	/*
-	 * Considering PTE level hugetlb, like continuous-PTE hugetlb on
-	 * ARM64 architecture.
-	 */
-	// if (is_vm_hugetlb_page(vma)) {
-	// 	page = follow_huge_pmd_pte(vma, address, flags);
-	// 	if (page)
-	// 		return page;
-	// 	return no_page_table(vma, flags);
-	// }
-
-retry:
 	if (unlikely(pmd_bad(*pmd))) // check the parameter passed in
 		return no_page_table(vma, flags);
 
@@ -208,28 +196,11 @@ retry:
 	});
 
 	pte = *ptep;
-	if (!pte_present(pte)) {
-		swp_entry_t entry;
-		/*
-		 * KSM's break_ksm() relies upon recognizing a ksm page
-		 * even while it is being migrated, so for that case we
-		 * need migration_entry_wait().
-		 */
-		if (likely(!(flags & FOLL_MIGRATION)))
-			goto no_page;
-		if (pte_none(pte))
-			goto no_page;
-		entry = pte_to_swp_entry(pte);
-		// if (!is_migration_entry(entry)) // 1
+	if (!pte_present(pte))
 		goto no_page;
-		// pte_unmap_unlock(ptep, ptl);
-		// // migration_entry_wait(mm, pmd, address);
-		// goto retry;
-	}
-	// if ((flags & FOLL_NUMA) && pte_protnone(pte)) // 0
-	// 	goto no_page;
+
 	if ((flags & FOLL_WRITE) && !can_follow_write_pte(pte, flags)) {
-		pte_unmap_unlock(ptep, ptl);
+		pte_unmap_unlock(ptep, ptl); // just unlock
 		return NULL;
 	}
 
@@ -237,15 +208,7 @@ retry:
 
 	// page == NULL
 	if (!page && pte_devmap(pte) && (flags & FOLL_GET)) { // device
-		/*
-		 * Only return device mapping pages in the FOLL_GET case since
-		 * they are only valid while holding the pgmap reference.
-		 */
-		*pgmap = get_dev_pagemap(pte_pfn(pte), *pgmap);
-		if (*pgmap)
-			page = pte_page(pte);
-		else
-			goto no_page;
+		goto no_page;
 	} else if (unlikely(!page)) { // page == NULL BUT not device
 		if (flags & FOLL_DUMP) {
 			/* Avoid special (like zero) pages in core dumps */
@@ -263,19 +226,6 @@ retry:
 	}
 
 	// page != NULL
-	// if ((flags & FOLL_SPLIT) && PageTransCompound(page)) {
-	// 	int ret;
-	// 	get_page(page);
-	// 	pte_unmap_unlock(ptep, ptl);
-	// 	lock_page(page);
-	// 	ret = split_huge_page(page);
-	// 	unlock_page(page);
-	// 	put_page(page);
-	// 	if (ret)
-	// 		return ERR_PTR(ret);
-	// 	goto retry;
-	// }
-
 	if (flags & FOLL_GET) {
 		if (unlikely(!try_get_page(page))) {
 			page = ERR_PTR(-ENOMEM);
@@ -294,8 +244,8 @@ retry:
 	}
 	if ((flags & FOLL_MLOCK) && (vma->vm_flags & VM_LOCKED)) {
 		/* Do not mlock pte-mapped THP */
-		if (PageTransCompound(page))
-			goto out;
+		// if (PageTransCompound(page)) // 0
+		// 	goto out;
 
 		/*
 		 * The preliminary mapping check is mainly to avoid the

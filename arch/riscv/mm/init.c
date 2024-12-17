@@ -288,10 +288,11 @@ static void __init create_pgd_mapping(pgd_t *pgdp, uintptr_t va, phys_addr_t pa,
 	phys_addr_t next_phys;
 	uintptr_t pgd_index = pgd_index(va);
 
-	if (sz == PGDIR_SIZE) {
-		if (pgd_val(pgdp[pgd_index]) == 0) // remap 并不会起作用
+	if (sz == PGDIR_SIZE) { // 判断映射的大小是否是一个 PGD entry 对应的空间, sv39 中: 512 * 512 * 4K = 1G
+		if (pgd_val(pgdp[pgd_index]) == 0)
 			pgdp[pgd_index] = pfn_pgd(PFN_DOWN(pa), prot);
 		return;
+		// 如果发生了 remap, 并不会更新
 	}
 
 	if (pgd_val(pgdp[pgd_index]) == 0) {
@@ -402,7 +403,7 @@ static void __init setup_vm_final(void)
 
 	/* Setup swapper PGD for fixmap */
 	// 这个时候实际上已经开启了分页了, 因为 setup_vm 里面也有 create_pgd_mapping
-	create_pgd_mapping(swapper_pg_dir, FIXADDR_START, __pa(fixmap_pgd_next), PGDIR_SIZE, PAGE_TABLE);
+	create_pgd_mapping(swapper_pg_dir, FIXADDR_START /*0xffff_ffce_fee0_0000*/, __pa(fixmap_pgd_next) /*0x80a7_a000*/, PGDIR_SIZE /*1G*/, PAGE_TABLE);
 
 	/* Map all memory banks */
 	for_each_memblock (memory, reg /*iterator*/) {
@@ -435,8 +436,8 @@ static void __init setup_vm_final(void)
 void __init paging_init(void)
 {
 	setup_vm_final();
-	memblocks_present(); // do nothing
-	sparse_init(); // sparse 稀疏的. do nothing
+	// memblocks_present(); // do nothing
+	// sparse_init(); // sparse 稀疏的. do nothing
 	setup_zero_page();
 	zone_sizes_init();
 }

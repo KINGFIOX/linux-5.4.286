@@ -26,11 +26,11 @@ struct debug_obj_descr;
  * @descr:	pointer to an object type specific debug description structure
  */
 struct debug_obj {
-	struct hlist_node	node;
-	enum debug_obj_state	state;
-	unsigned int		astate;
-	void			*object;
-	struct debug_obj_descr	*descr;
+	struct hlist_node node;
+	enum debug_obj_state state;
+	unsigned int astate;
+	void *object;
+	struct debug_obj_descr *descr;
 };
 
 /**
@@ -53,7 +53,7 @@ struct debug_obj {
  *			check fails
  */
 struct debug_obj_descr {
-	const char		*name;
+	const char *name;
 	void *(*debug_hint)(void *addr);
 	bool (*is_static_object)(void *addr);
 	bool (*fixup_init)(void *addr, enum debug_obj_state state);
@@ -64,13 +64,12 @@ struct debug_obj_descr {
 };
 
 #ifdef CONFIG_DEBUG_OBJECTS
-extern void debug_object_init      (void *addr, struct debug_obj_descr *descr);
-extern void
-debug_object_init_on_stack(void *addr, struct debug_obj_descr *descr);
-extern int debug_object_activate  (void *addr, struct debug_obj_descr *descr);
+extern void debug_object_init(void *addr, struct debug_obj_descr *descr);
+extern void debug_object_init_on_stack(void *addr, struct debug_obj_descr *descr);
+extern int debug_object_activate(void *addr, struct debug_obj_descr *descr);
 extern void debug_object_deactivate(void *addr, struct debug_obj_descr *descr);
-extern void debug_object_destroy   (void *addr, struct debug_obj_descr *descr);
-extern void debug_object_free      (void *addr, struct debug_obj_descr *descr);
+extern void debug_object_destroy(void *addr, struct debug_obj_descr *descr);
+extern void debug_object_free(void *addr, struct debug_obj_descr *descr);
 extern void debug_object_assert_init(void *addr, struct debug_obj_descr *descr);
 
 /*
@@ -78,37 +77,48 @@ extern void debug_object_assert_init(void *addr, struct debug_obj_descr *descr);
  * - Set at 0 upon initialization.
  * - Must return to 0 before deactivation.
  */
-extern void
-debug_object_active_state(void *addr, struct debug_obj_descr *descr,
-			  unsigned int expect, unsigned int next);
+extern void debug_object_active_state(void *addr, struct debug_obj_descr *descr, unsigned int expect, unsigned int next);
 
 extern void debug_objects_early_init(void);
 extern void debug_objects_mem_init(void);
 #else
-static inline void
-debug_object_init      (void *addr, struct debug_obj_descr *descr) { }
-static inline void
-debug_object_init_on_stack(void *addr, struct debug_obj_descr *descr) { }
-static inline int
-debug_object_activate  (void *addr, struct debug_obj_descr *descr) { return 0; }
-static inline void
-debug_object_deactivate(void *addr, struct debug_obj_descr *descr) { }
-static inline void
-debug_object_destroy   (void *addr, struct debug_obj_descr *descr) { }
-static inline void
-debug_object_free      (void *addr, struct debug_obj_descr *descr) { }
-static inline void
-debug_object_assert_init(void *addr, struct debug_obj_descr *descr) { }
+static inline void debug_object_init(void *addr, struct debug_obj_descr *descr)
+{
+}
+static inline void debug_object_init_on_stack(void *addr, struct debug_obj_descr *descr)
+{
+}
+static inline int debug_object_activate(void *addr, struct debug_obj_descr *descr)
+{
+	return 0;
+}
+static inline void debug_object_deactivate(void *addr, struct debug_obj_descr *descr)
+{
+}
+static inline void debug_object_destroy(void *addr, struct debug_obj_descr *descr)
+{
+}
+static inline void debug_object_free(void *addr, struct debug_obj_descr *descr)
+{
+}
+static inline void debug_object_assert_init(void *addr, struct debug_obj_descr *descr)
+{
+}
 
-static inline void debug_objects_early_init(void) { }
-static inline void debug_objects_mem_init(void) { }
+static inline void debug_objects_early_init(void)
+{
+}
+static inline void debug_objects_mem_init(void)
+{
+}
 #endif
 
 #ifdef CONFIG_DEBUG_OBJECTS_FREE
 extern void debug_check_no_obj_freed(const void *address, unsigned long size);
 #else
-static inline void
-debug_check_no_obj_freed(const void *address, unsigned long size) { }
+static inline void debug_check_no_obj_freed(const void *address, unsigned long size)
+{
+}
 #endif
 
 #endif
